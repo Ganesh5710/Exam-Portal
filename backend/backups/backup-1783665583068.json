@@ -1,0 +1,263 @@
+{
+  "timestamp": "2026-07-10T06:39:43.068Z",
+  "data": {
+    "users": [
+      {
+        "id": "16c19fff-935c-4702-bd79-759e8275d5f3",
+        "email": "admin@onlineexam.com",
+        "passwordHash": "$2a$10$Z242bDPJuGxyRd/CA6jsKuPM.HDSC6oJJbmKI513Tea4UsZU0EWUS",
+        "firstName": "System",
+        "lastName": "Administrator",
+        "role": "ADMIN",
+        "status": "ACTIVE",
+        "loginAttempts": 0,
+        "lockUntil": null,
+        "departmentId": null,
+        "createdAt": "2026-06-30T11:57:28.887Z",
+        "updatedAt": "2026-07-10T06:38:39.975Z"
+      },
+      {
+        "id": "70ff754d-6621-416f-b609-254597dfa697",
+        "email": "student@onlineexam.com",
+        "passwordHash": "$2a$10$XZ1jNsf8mdcdWiTTKRVXu.JFTOpWOXaTxQtIpIXzAaCl7ZpKGzqOO",
+        "firstName": "Ganesh",
+        "lastName": "Bathula",
+        "role": "STUDENT",
+        "status": "ACTIVE",
+        "loginAttempts": 0,
+        "lockUntil": null,
+        "departmentId": null,
+        "createdAt": "2026-06-30T12:50:59.753Z",
+        "updatedAt": "2026-07-10T06:23:43.530Z"
+      },
+      {
+        "id": "29759e3c-62d8-41f0-a981-aafacf59196a",
+        "email": "bathullaganesh5@gmail.com",
+        "passwordHash": "$2a$10$1ZyQG40vGSn98ySLIH02neeGuqOgVZBMOjFr1IIG9WT5TS8/FazwS",
+        "firstName": "GANESH",
+        "lastName": "B",
+        "role": "STUDENT",
+        "status": "ACTIVE",
+        "loginAttempts": 0,
+        "lockUntil": null,
+        "departmentId": "c2ab55a5-eda0-4325-80cd-acc9c27dd3c8",
+        "createdAt": "2026-06-30T13:29:01.989Z",
+        "updatedAt": "2026-06-30T13:29:36.916Z"
+      },
+      {
+        "id": "00189546-2da7-4d93-ae25-c71e2f4ad938",
+        "email": "nirmala@gmail.com",
+        "passwordHash": "$2a$10$mOzplEojeT7YU4wqHuXepO1TNKarSNhtvIaC2/3xukcutEldC/bHK",
+        "firstName": "Nirmala ",
+        "lastName": "B",
+        "role": "STUDENT",
+        "status": "ACTIVE",
+        "loginAttempts": 0,
+        "lockUntil": null,
+        "departmentId": "c2ab55a5-eda0-4325-80cd-acc9c27dd3c8",
+        "createdAt": "2026-07-10T06:22:51.823Z",
+        "updatedAt": "2026-07-10T06:23:33.385Z"
+      }
+    ],
+    "departments": [
+      {
+        "id": "c2ab55a5-eda0-4325-80cd-acc9c27dd3c8",
+        "name": "CSE",
+        "code": "CS",
+        "description": "SAQCERG5EH",
+        "createdAt": "2026-06-30T13:28:24.928Z",
+        "updatedAt": "2026-06-30T13:28:24.928Z"
+      }
+    ],
+    "subjects": [
+      {
+        "id": "e35250c6-cbbd-4bcd-bb01-7f886d7e49c4",
+        "name": "Data Structures & Algorithms",
+        "code": "CS201",
+        "course": "B.Tech CSE",
+        "semester": 4,
+        "departmentId": "c2ab55a5-eda0-4325-80cd-acc9c27dd3c8",
+        "createdAt": "2026-07-10T06:14:40.861Z",
+        "updatedAt": "2026-07-10T06:14:40.861Z"
+      }
+    ],
+    "questions": [
+      {
+        "id": "8f7720a3-aff2-451a-93d0-b6f2260b076c",
+        "type": "MCQ",
+        "content": "Which of the following data structures operates on a Last In First Out (LIFO) basis?",
+        "options": [
+          "Queue",
+          "Stack",
+          "Linked List",
+          "Binary Tree"
+        ],
+        "answers": [
+          "Stack"
+        ],
+        "explanation": null,
+        "score": 5,
+        "negativeMarks": 0,
+        "difficulty": "EASY",
+        "tags": null,
+        "fileUrl": null,
+        "subjectId": "e35250c6-cbbd-4bcd-bb01-7f886d7e49c4",
+        "createdAt": "2026-07-10T06:14:40.876Z",
+        "updatedAt": "2026-07-10T06:14:40.876Z"
+      },
+      {
+        "id": "d3f0a031-a74b-4cf1-974d-7f7631a7c421",
+        "type": "CODING",
+        "content": "Write a program in Python or JavaScript that receives an integer as input on stdin, and outputs its square (integer multiplied by itself) on stdout.",
+        "options": [],
+        "answers": {
+          "testCases": [
+            {
+              "input": "5",
+              "expectedOutput": "25"
+            }
+          ]
+        },
+        "explanation": null,
+        "score": 15,
+        "negativeMarks": 0,
+        "difficulty": "MEDIUM",
+        "tags": null,
+        "fileUrl": null,
+        "subjectId": "e35250c6-cbbd-4bcd-bb01-7f886d7e49c4",
+        "createdAt": "2026-07-10T06:14:40.885Z",
+        "updatedAt": "2026-07-10T06:14:40.885Z"
+      }
+    ],
+    "exams": [
+      {
+        "id": "cff3a62f-68b9-40b3-9a74-2c92fcfafb3b",
+        "title": "CSE Semester Midterm Assessment",
+        "description": "Midterm test checking basic knowledge of stack and array algorithms.",
+        "instructions": null,
+        "duration": 30,
+        "passingMarks": 10,
+        "allowNegativeMarking": false,
+        "shuffleQuestions": false,
+        "shuffleOptions": false,
+        "fullscreenRequired": true,
+        "startTime": "2026-07-10T06:14:40.889Z",
+        "endTime": "2026-07-11T06:14:40.889Z",
+        "status": "PUBLISHED",
+        "subjectId": "e35250c6-cbbd-4bcd-bb01-7f886d7e49c4",
+        "createdAt": "2026-07-10T06:14:40.898Z",
+        "updatedAt": "2026-07-10T06:14:40.898Z"
+      }
+    ],
+    "examQuestions": [
+      {
+        "id": "575dcf59-d683-4660-a6eb-b20b28bc8d79",
+        "examId": "cff3a62f-68b9-40b3-9a74-2c92fcfafb3b",
+        "questionId": "8f7720a3-aff2-451a-93d0-b6f2260b076c",
+        "orderIndex": 0
+      },
+      {
+        "id": "c97881e8-e2ee-4519-bd69-360c8b288281",
+        "examId": "cff3a62f-68b9-40b3-9a74-2c92fcfafb3b",
+        "questionId": "d3f0a031-a74b-4cf1-974d-7f7631a7c421",
+        "orderIndex": 1
+      }
+    ],
+    "examAssignments": [
+      {
+        "id": "53e49baa-b2fa-46ea-9244-0272b20af402",
+        "examId": "cff3a62f-68b9-40b3-9a74-2c92fcfafb3b",
+        "studentId": "70ff754d-6621-416f-b609-254597dfa697",
+        "status": "SUBMITTED",
+        "startTime": "2026-07-10T06:23:58.213Z",
+        "submitTime": "2026-07-10T06:24:11.326Z",
+        "tabSwitchCount": 0,
+        "exitFullscreenCount": 0,
+        "createdAt": "2026-07-10T06:14:40.898Z",
+        "updatedAt": "2026-07-10T06:24:11.327Z"
+      }
+    ],
+    "submissions": [
+      {
+        "id": "abb7842d-7f8f-4109-9a94-0757b9e03a91",
+        "examId": "cff3a62f-68b9-40b3-9a74-2c92fcfafb3b",
+        "studentId": "70ff754d-6621-416f-b609-254597dfa697",
+        "totalScore": 0,
+        "percentage": 0,
+        "grade": "F",
+        "isPassed": false,
+        "status": "COMPLETED",
+        "violationsCount": 0,
+        "startTime": "2026-07-10T06:24:11.283Z",
+        "submitTime": "2026-07-10T06:24:11.351Z",
+        "createdAt": "2026-07-10T06:24:11.283Z",
+        "updatedAt": "2026-07-10T06:24:11.352Z"
+      }
+    ],
+    "answers": [
+      {
+        "id": "dbefc46e-9660-4cd9-a516-6142aa3450b2",
+        "submissionId": "abb7842d-7f8f-4109-9a94-0757b9e03a91",
+        "questionId": "8f7720a3-aff2-451a-93d0-b6f2260b076c",
+        "studentAnswer": {
+          "selectedOption": "Queue"
+        },
+        "isCorrect": false,
+        "scoreAwarded": 0,
+        "feedback": null,
+        "createdAt": "2026-07-10T06:24:11.295Z",
+        "updatedAt": "2026-07-10T06:24:11.342Z"
+      }
+    ],
+    "settings": [
+      {
+        "id": "9242f769-5864-45d9-91f9-c36ad392c354",
+        "key": "INSTITUTION_NAME",
+        "value": "SecureExam Tech University",
+        "description": "Institution title branding"
+      },
+      {
+        "id": "eab402ae-9a80-4cc4-b310-a0e066deadff",
+        "key": "INSTITUTION_LOGO",
+        "value": "",
+        "description": "Branding logo asset path"
+      },
+      {
+        "id": "18a637c1-b164-4591-80cf-51400c7029d3",
+        "key": "THEME",
+        "value": "dark",
+        "description": "Portal base theme"
+      },
+      {
+        "id": "652bc9d4-2b0a-4cc4-8b7f-a5ab6353ccd4",
+        "key": "SMTP_HOST",
+        "value": "smtp.mailtrap.io",
+        "description": "Email server address"
+      },
+      {
+        "id": "9f64fd24-c5d0-4e33-912a-a7765bf890af",
+        "key": "SMTP_PORT",
+        "value": "2525",
+        "description": "Email server port"
+      },
+      {
+        "id": "efb85852-c9a8-4759-ac74-a835abc97972",
+        "key": "EXAM_PASS_PERCENT",
+        "value": "40",
+        "description": "Global default passing threshold percentage"
+      },
+      {
+        "id": "7a6fdca0-b5ed-4baf-bf61-77a9987dad18",
+        "key": "SESSION_TIMEOUT",
+        "value": "60",
+        "description": "Session timeout in minutes"
+      },
+      {
+        "id": "10d6347e-0e01-4489-a591-04d1aa1f9620",
+        "key": "MAINTENANCE_MODE",
+        "value": "false",
+        "description": "Block student access if true"
+      }
+    ]
+  }
+}

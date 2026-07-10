@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Database
+*.db
+
+# Prisma
+prisma/dev.db
+
+# Uploads
+uploads/
+
+# Backups
+backend/backups/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

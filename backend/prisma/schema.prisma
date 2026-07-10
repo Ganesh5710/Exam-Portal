@@ -1,0 +1,342 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum QuestionType {
+  MCQ
+  MULTI_CORRECT
+  TRUE_FALSE
+  FILL_BLANK
+  DESCRIPTIVE
+  CODING
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+  PAUSED
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  STARTED
+  SUBMITTED
+  EXPIRED
+  BLOCKED
+}
+
+enum SubmissionStatus {
+  PENDING
+  COMPLETED
+  GRADED
+  PUBLISHED
+}
+
+enum AnnouncementType {
+  GENERAL
+  WARNING
+  EMERGENCY
+}
+
+enum CheatType {
+  TAB_SWITCH
+  FULLSCREEN_EXIT
+  BROWSER_MINIMIZE
+  OFFLINE
+  FACE_LOOK_AWAY
+  MULTIPLE_FACES
+  NO_FACE_DETECTED
+}
+
+enum ReportType {
+  STUDENT
+  DEPARTMENT
+  SUBJECT
+  EXAM
+  ATTENDANCE
+  VIOLATION
+  ANALYTICS
+}
+
+model User {
+  id                   String               @id @default(uuid())
+  email                String               @unique
+  passwordHash         String
+  firstName            String
+  lastName             String
+  role                 Role                 @default(STUDENT)
+  status               UserStatus           @default(ACTIVE)
+  loginAttempts        Int                  @default(0)
+  lockUntil            DateTime?
+  departmentId         String?
+  department           Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  assignments          ExamAssignment[]
+  submissions          Submission[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  refreshTokens        RefreshToken[]
+  passwordResetTokens  PasswordResetToken[]
+  emailVerifyTokens    EmailVerificationToken[]
+  reports              ReportHistory[]
+
+  @@index([email])
+}
+
+model Department {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  code        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  users       User[]
+  subjects    Subject[]
+}
+
+model Subject {
+  id           String     @id @default(uuid())
+  name         String
+  code         String     @unique
+  course       String
+  semester     Int
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  questions    Question[]
+  exams        Exam[]
+}
+
+model Question {
+  id             String         @id @default(uuid())
+  type           QuestionType
+  content        String
+  options        Json?          // Array of option values/objects (e.g. for MCQs)
+  answers        Json           // Correct option keys, text values, or coding tests
+  explanation    String?
+  score          Float          @default(1.0)
+  negativeMarks  Float          @default(0.0)
+  difficulty     Difficulty     @default(MEDIUM)
+  tags           Json?
+  fileUrl        String?        // Media attachments (image, audio, video)
+  subjectId      String
+  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  examQuestions  ExamQuestion[]
+  answersSubmitted Answer[]
+}
+
+model Exam {
+  id                   String            @id @default(uuid())
+  title                String
+  description          String?
+  instructions         String?
+  duration             Int               // Duration in minutes
+  passingMarks         Float
+  allowNegativeMarking Boolean           @default(false)
+  shuffleQuestions     Boolean           @default(false)
+  shuffleOptions       Boolean           @default(false)
+  fullscreenRequired   Boolean           @default(true)
+  startTime            DateTime
+  endTime              DateTime
+  status               ExamStatus        @default(DRAFT)
+  subjectId            String
+  subject              Subject           @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  examQuestions        ExamQuestion[]
+  assignments          ExamAssignment[]
+  submissions          Submission[]
+  announcements        Announcement[]
+}
+
+model ExamQuestion {
+  id         String   @id @default(uuid())
+  examId     String
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  orderIndex Int
+
+  @@unique([examId, questionId])
+}
+
+model ExamAssignment {
+  id                   String           @id @default(uuid())
+  examId               String
+  exam                 Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId            String
+  student              User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status               AssignmentStatus @default(ASSIGNED)
+  startTime            DateTime?
+  submitTime           DateTime?
+  tabSwitchCount       Int              @default(0)
+  exitFullscreenCount  Int              @default(0)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  cheatLogs            CheatLog[]
+
+  @@unique([examId, studentId])
+}
+
+model Submission {
+  id              String           @id @default(uuid())
+  examId          String
+  exam            Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  totalScore      Float            @default(0.0)
+  percentage      Float            @default(0.0)
+  grade           String?
+  isPassed        Boolean          @default(false)
+  status          SubmissionStatus @default(PENDING)
+  violationsCount Int              @default(0)
+  startTime       DateTime         @default(now())
+  submitTime      DateTime?
+  answers         Answer[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([examId, studentId])
+}
+
+model Answer {
+  id            String     @id @default(uuid())
+  submissionId  String
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  questionId    String
+  question      Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  studentAnswer Json?      // JSON containing chosen options, filled text, code snippet, etc.
+  isCorrect     Boolean?
+  scoreAwarded  Float?
+  feedback      String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([submissionId, questionId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Announcement {
+  id        String           @id @default(uuid())
+  examId    String
+  exam      Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  message   String
+  type      AnnouncementType @default(GENERAL)
+  createdAt DateTime         @default(now())
+}
+
+model CheatLog {
+  id           String         @id @default(uuid())
+  assignmentId String
+  assignment   ExamAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  type         CheatType
+  timestamp    DateTime       @default(now())
+  details      String?
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model ReportHistory {
+  id           String     @id @default(uuid())
+  name         String
+  type         ReportType
+  format       String     // "PDF", "EXCEL", "CSV"
+  url          String
+  generatedById String?
+  generatedBy  User?      @relation(fields: [generatedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+}
+
+model SystemSettings {
+  id          String  @id @default(uuid())
+  key         String  @unique
+  value       String
+  description String?
+}
+
+model ImportJob {
+  id           String    @id @default(uuid())
+  fileName     String
+  status       String    // "PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"
+  progress     Int       @default(0)
+  totalItems   Int       @default(0)
+  processed    Int       @default(0)
+  failed       Int       @default(0)
+  duplicates   Int       @default(0)
+  errorMessage String?
+  resultData   String?   // JSON string of parsed questions for preview
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

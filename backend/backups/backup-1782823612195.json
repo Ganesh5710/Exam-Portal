@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-06-30T12:46:52.195Z",
+  "data": {
+    "users": [
+      {
+        "id": "16c19fff-935c-4702-bd79-759e8275d5f3",
+        "email": "admin@onlineexam.com",
+        "passwordHash": "$2a$10$Z242bDPJuGxyRd/CA6jsKuPM.HDSC6oJJbmKI513Tea4UsZU0EWUS",
+        "firstName": "System",
+        "lastName": "Administrator",
+        "role": "ADMIN",
+        "status": "ACTIVE",
+        "loginAttempts": 0,
+        "lockUntil": null,
+        "departmentId": null,
+        "createdAt": "2026-06-30T11:57:28.887Z",
+        "updatedAt": "2026-06-30T12:46:36.933Z"
+      }
+    ],
+    "departments": [],
+    "subjects": [],
+    "questions": [],
+    "exams": [],
+    "examQuestions": [],
+    "examAssignments": [],
+    "submissions": [],
+    "answers": [],
+    "settings": [
+      {
+        "id": "9242f769-5864-45d9-91f9-c36ad392c354",
+        "key": "INSTITUTION_NAME",
+        "value": "SecureExam Tech University",
+        "description": "Institution title branding"
+      },
+      {
+        "id": "eab402ae-9a80-4cc4-b310-a0e066deadff",
+        "key": "INSTITUTION_LOGO",
+        "value": "",
+        "description": "Branding logo asset path"
+      },
+      {
+        "id": "18a637c1-b164-4591-80cf-51400c7029d3",
+        "key": "THEME",
+        "value": "dark",
+        "description": "Portal base theme"
+      },
+      {
+        "id": "652bc9d4-2b0a-4cc4-8b7f-a5ab6353ccd4",
+        "key": "SMTP_HOST",
+        "value": "smtp.mailtrap.io",
+        "description": "Email server address"
+      },
+      {
+        "id": "9f64fd24-c5d0-4e33-912a-a7765bf890af",
+        "key": "SMTP_PORT",
+        "value": "2525",
+        "description": "Email server port"
+      },
+      {
+        "id": "efb85852-c9a8-4759-ac74-a835abc97972",
+        "key": "EXAM_PASS_PERCENT",
+        "value": "40",
+        "description": "Global default passing threshold percentage"
+      },
+      {
+        "id": "7a6fdca0-b5ed-4baf-bf61-77a9987dad18",
+        "key": "SESSION_TIMEOUT",
+        "value": "60",
+        "description": "Session timeout in minutes"
+      },
+      {
+        "id": "10d6347e-0e01-4489-a591-04d1aa1f9620",
+        "key": "MAINTENANCE_MODE",
+        "value": "false",
+        "description": "Block student access if true"
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const analytics_controller_1 = require("./analytics.controller");
+const auth_1 = require("../../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.protect);
+router.use((0, auth_1.restrictTo)('ADMIN'));
+router.get('/summary', analytics_controller_1.getDashboardSummaryMetrics);
+router.get('/exam/:examId', analytics_controller_1.getExamPerformanceAnalytics);
+exports.default = router;
