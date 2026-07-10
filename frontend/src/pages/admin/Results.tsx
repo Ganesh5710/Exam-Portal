@@ -14,7 +14,13 @@ import {
   TrendingUp,
   AlertTriangle,
   Send,
-  
+  Loader2,
+  InboxIcon,
+  Trash2,
+  Pencil,
+  AlertOctagon,
+  BarChart2,
+  CheckSquare,
   Square
 } from 'lucide-react';
 
