@@ -243,6 +243,7 @@ export const Results: React.FC = () => {
     }
   };
 
+  // Publishes the selected checkboxed exam submissions to the student workspace
   const handleBulkPublish = async () => {
     if (selectedIds.size === 0) return;
     try {
@@ -255,6 +256,7 @@ export const Results: React.FC = () => {
     }
   };
 
+  // Releases all completed and graded submissions to the user feed at once
   const handlePublishAll = async () => {
     const confirm = window.confirm("Are you sure you want to publish ALL unpublished exam results to the user feed at once?");
     if (!confirm) return;
