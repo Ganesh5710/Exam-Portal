@@ -24,6 +24,11 @@ interface Exam {
   } | null;
 }
 
+/**
+ * Student assessments list component
+ * Fetches and displays all exams assigned to the logged-in student
+ * Supports real-time countdown availability checks
+ */
 export const ExamList: React.FC = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
