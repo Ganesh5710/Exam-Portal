@@ -509,3 +509,44 @@ export const bulkDeleteSubmissions = async (req: AuthenticatedRequest, res: Resp
     return res.status(200).json({ success: true, message: `Deleted ${count} submission(s).` });
   } catch (error) { next(error); }
 };
+
+export const getMySubmission = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { examId } = req.params;
+  const studentId = req.user?.id || '';
+
+  try {
+    const submission = await prisma.submission.findUnique({
+      where: { examId_studentId: { examId, studentId } },
+      include: {
+        exam: {
+          include: {
+            examQuestions: {
+              include: { question: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!submission) {
+      return res.status(404).json({ success: false, message: 'Submission not found.' });
+    }
+
+    const maxPossibleScore = submission.exam.examQuestions.reduce((acc, eq) => acc + eq.question.score, 0);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: submission.id,
+        status: submission.status,
+        totalScore: submission.status === 'PUBLISHED' ? submission.totalScore : null,
+        percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
+        grade: submission.status === 'PUBLISHED' ? submission.grade : null,
+        isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+        maxPossibleScore
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

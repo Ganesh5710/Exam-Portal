@@ -13,6 +13,15 @@ interface Exam {
   endTime: string;
   status: string; // ASSIGNED, STARTED, SUBMITTED
   subject: { name: string; code: string };
+  submission?: {
+    id: string;
+    status: string;
+    totalScore: number | null;
+    percentage: number | null;
+    grade: string | null;
+    isPassed: boolean | null;
+    maxPossibleScore: number;
+  } | null;
 }
 
 export const ExamList: React.FC = () => {
@@ -103,9 +112,24 @@ export const ExamList: React.FC = () => {
                 {/* Status Trigger */}
                 <div>
                   {isSubmitted ? (
-                    <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20">
-                      Completed & Submitted
-                    </span>
+                    exam.submission?.status === 'PUBLISHED' ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
+                          exam.submission.isPassed 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        }`}>
+                          Score: {exam.submission.totalScore} / {exam.submission.maxPossibleScore} ({exam.submission.grade})
+                        </span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                          Result Released ({exam.submission.isPassed ? 'Passed' : 'Failed'})
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-semibold bg-amber-500/10 text-amber-400 px-4 py-2 rounded-lg border border-amber-500/20">
+                        Awaiting Grade Release
+                      </span>
+                    )
                   ) : isNotStarted ? (
                     <span className="text-xs font-semibold bg-blue-500/10 text-blue-400 px-4 py-2 rounded-lg border border-blue-500/20">
                       Starts Scheduled Time

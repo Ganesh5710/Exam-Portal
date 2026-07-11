@@ -1,9 +1,38 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle2, Home } from 'lucide-react';
+import api from '../../services/api';
+
+interface SubmissionInfo {
+  status: string;
+  totalScore: number | null;
+  percentage: number | null;
+  grade: string | null;
+  isPassed: boolean | null;
+  maxPossibleScore: number;
+}
 
 export const SubmissionConfirmation: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResult = async () => {
+      try {
+        const res = await api.get(`/submissions/my-submission/${id}`);
+        setSubmission(res.data.data);
+      } catch (err) {
+        // silently fail (e.g. if submission not found yet)
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchResult();
+  }, [id]);
+
+  const isPublished = submission && submission.status === 'PUBLISHED';
 
   return (
     <div className="max-w-md mx-auto text-center space-y-8 py-12 animate-fade-in">
@@ -16,14 +45,47 @@ export const SubmissionConfirmation: React.FC = () => {
       </div>
 
       <div className="glass-card p-6 rounded-xl border border-border text-sm text-left space-y-4">
-        <div className="flex justify-between items-center py-1 border-b border-border last:border-0">
+        <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
           <span className="text-muted-foreground">Proctor Status</span>
           <span className="font-semibold text-emerald-400">Security Clearance Passed</span>
         </div>
-        <div className="flex justify-between items-center py-1 border-b border-border last:border-0">
+        <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
           <span className="text-muted-foreground">Evaluation status</span>
-          <span className="font-semibold text-violet-400">Awaiting Grade Release</span>
+          {isPublished ? (
+            <span className="font-semibold text-emerald-400">Graded & Released</span>
+          ) : (
+            <span className="font-semibold text-violet-400">Awaiting Grade Release</span>
+          )}
         </div>
+
+        {isPublished && submission && (
+          <>
+            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+              <span className="text-muted-foreground">Score</span>
+              <span className="font-bold text-white">
+                {submission.totalScore} <span className="text-slate-500 text-xs font-normal">/ {submission.maxPossibleScore}</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+              <span className="text-muted-foreground">Percentage</span>
+              <span className="font-semibold text-white">
+                {submission.percentage !== null ? `${submission.percentage.toFixed(1)}%` : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+              <span className="text-muted-foreground">Grade</span>
+              <span className="font-bold text-violet-400">{submission.grade || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+              <span className="text-muted-foreground">Result Status</span>
+              <span className={`font-bold px-2 py-0.5 rounded text-xs ${
+                submission.isPassed ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
+              }`}>
+                {submission.isPassed ? 'PASSED' : 'FAILED'}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <button

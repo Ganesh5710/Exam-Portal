@@ -705,7 +705,29 @@ export const ExamsPortal: React.FC = () => {
               {/* Question Selection Checkboxes */}
               {formData.subjectId && (
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Questions ({formData.selectedQuestions.length} selected)</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Questions ({formData.selectedQuestions.length} selected)</label>
+                    {questions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allSelected = questions.every(q => formData.selectedQuestions.includes(q.id));
+                          if (allSelected) {
+                            setFormData(prev => ({
+                              ...prev,
+                              selectedQuestions: prev.selectedQuestions.filter(id => !questions.some(q => q.id === id))
+                            }));
+                          } else {
+                            const uniqueSelected = Array.from(new Set([...formData.selectedQuestions, ...questions.map(q => q.id)]));
+                            setFormData(prev => ({ ...prev, selectedQuestions: uniqueSelected }));
+                          }
+                        }}
+                        className="text-[10px] font-bold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-wider"
+                      >
+                        {questions.every(q => formData.selectedQuestions.includes(q.id)) ? 'Deselect All' : 'Select All'}
+                      </button>
+                    )}
+                  </div>
                   <div className="border border-slate-850 bg-slate-950 rounded-lg p-3 max-h-[150px] overflow-y-auto space-y-2">
                     {questions.length === 0 ? (
                       <p className="text-xs text-slate-600">No questions available for this subject.</p>
@@ -862,7 +884,29 @@ export const ExamsPortal: React.FC = () => {
 
               {formData.subjectId && (
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Questions ({formData.selectedQuestions.length} selected)</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Questions ({formData.selectedQuestions.length} selected)</label>
+                    {questions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allSelected = questions.every(q => formData.selectedQuestions.includes(q.id));
+                          if (allSelected) {
+                            setFormData(prev => ({
+                              ...prev,
+                              selectedQuestions: prev.selectedQuestions.filter(id => !questions.some(q => q.id === id))
+                            }));
+                          } else {
+                            const uniqueSelected = Array.from(new Set([...formData.selectedQuestions, ...questions.map(q => q.id)]));
+                            setFormData(prev => ({ ...prev, selectedQuestions: uniqueSelected }));
+                          }
+                        }}
+                        className="text-[10px] font-bold text-violet-400 hover:text-violet-300 transition-colors uppercase tracking-wider"
+                      >
+                        {questions.every(q => formData.selectedQuestions.includes(q.id)) ? 'Deselect All' : 'Select All'}
+                      </button>
+                    )}
+                  </div>
                   <div className="border border-slate-855 bg-slate-955 rounded-lg p-3 max-h-[150px] overflow-y-auto space-y-2">
                     {questions.map(q => (
                       <label key={q.id} className="flex items-center justify-between text-xs text-slate-300 border-b border-slate-900 pb-1.5 cursor-pointer">

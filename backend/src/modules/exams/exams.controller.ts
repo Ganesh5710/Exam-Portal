@@ -36,12 +36,40 @@ export const getExams = async (req: AuthenticatedRequest, res: Response, next: N
         orderBy: { exam: { startTime: 'asc' } }
       });
 
-      const exams = assignments.map(a => ({
-        ...a.exam,
-        assignmentId: a.id,
-        status: a.status,
-        startTime: a.startTime || a.exam.startTime,
-        submitTime: a.submitTime
+      const exams = await Promise.all(assignments.map(async (a) => {
+        const submission = await prisma.submission.findUnique({
+          where: { examId_studentId: { examId: a.examId, studentId: userId as string } },
+          include: {
+            exam: {
+              include: {
+                examQuestions: {
+                  include: { question: { select: { score: true } } }
+                }
+              }
+            }
+          }
+        });
+
+        const maxScore = submission 
+          ? (submission as any).exam.examQuestions.reduce((sum: number, eq: any) => sum + eq.question.score, 0)
+          : 0;
+
+        return {
+          ...a.exam,
+          assignmentId: a.id,
+          status: a.status,
+          startTime: a.startTime || a.exam.startTime,
+          submitTime: a.submitTime,
+          submission: submission ? {
+            id: submission.id,
+            status: submission.status,
+            totalScore: submission.status === 'PUBLISHED' ? submission.totalScore : null,
+            percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
+            grade: submission.status === 'PUBLISHED' ? submission.grade : null,
+            isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+            maxPossibleScore: maxScore
+          } : null
+        };
       }));
 
       return res.status(200).json({ success: true, data: exams });
