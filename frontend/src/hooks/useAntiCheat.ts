@@ -10,6 +10,11 @@ interface UseAntiCheatProps {
   onAutoSubmit: () => void;
 }
 
+/**
+ * useAntiCheat custom React hook
+ * Prevents copy-paste, right click, developer tools, tab switches, and fullscreen escapes.
+ * Triggers an auto-submit action if warnings threshold is crossed.
+ */
 export const useAntiCheat = ({
   examId,
   studentId,
