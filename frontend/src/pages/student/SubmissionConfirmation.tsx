@@ -29,7 +29,12 @@ export const SubmissionConfirmation: React.FC = () => {
         setLoading(false);
       }
     };
-    if (id) fetchResult();
+
+    if (id) {
+      fetchResult();
+      const interval = setInterval(fetchResult, 30000); // Poll every 30 seconds
+      return () => clearInterval(interval);
+    }
   }, [id]);
 
   const isPublished = submission && submission.status === 'PUBLISHED';
@@ -54,9 +59,15 @@ export const SubmissionConfirmation: React.FC = () => {
           {isPublished ? (
             <span className="font-semibold text-emerald-400">Graded & Released</span>
           ) : (
-            <span className="font-semibold text-violet-400">Awaiting Grade Release</span>
+            <span className="font-semibold text-violet-400 animate-pulse">Awaiting Grade Release</span>
           )}
         </div>
+
+        {!isPublished && (
+          <div className="p-4 bg-violet-950/20 border border-violet-500/20 rounded-lg text-xs text-violet-300 text-center leading-relaxed">
+            ⏱️ Your results will be announced soon. Please stay on this page. The system is checking for released grades automatically in the background.
+          </div>
+        )}
 
         {isPublished && submission && (
           <>

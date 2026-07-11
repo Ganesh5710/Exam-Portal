@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { saveAnswers, submitExam, getSubmissionsForExam, gradeDescriptiveAnswer, getSubmissions, updateSubmission, deleteSubmission, bulkDeleteSubmissions, getMySubmission } from './submissions.controller';
+import { saveAnswers, submitExam, getSubmissionsForExam, gradeDescriptiveAnswer, getSubmissions, updateSubmission, deleteSubmission, bulkDeleteSubmissions, getMySubmission, bulkPublishSubmissions } from './submissions.controller';
 import { protect, restrictTo } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { z } from 'zod';
@@ -33,6 +33,7 @@ router.get('/my-submission/:examId', restrictTo('STUDENT'), getMySubmission);
 // Admin-only routing
 router.get('/', restrictTo('ADMIN'), getSubmissions);
 router.put('/:id', restrictTo('ADMIN'), updateSubmission);
+router.post('/bulk-publish', restrictTo('ADMIN'), bulkPublishSubmissions);
 router.delete('/bulk', restrictTo('ADMIN'), bulkDeleteSubmissions);
 router.delete('/:id', restrictTo('ADMIN'), deleteSubmission);
 router.get('/exam/:examId', restrictTo('ADMIN'), getSubmissionsForExam);

@@ -579,3 +579,33 @@ export const getMySubmission = async (req: AuthenticatedRequest, res: Response, 
     next(error);
   }
 };
+
+export const bulkPublishSubmissions = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { ids } = req.body;
+  try {
+    const whereClause: any = {};
+    if (Array.isArray(ids) && ids.length > 0) {
+      whereClause.id = { in: ids };
+    } else {
+      whereClause.status = { in: ['COMPLETED', 'GRADED', 'PENDING'] };
+    }
+
+    const { count } = await prisma.submission.updateMany({
+      where: whereClause,
+      data: { status: 'PUBLISHED' }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user?.id,
+        action: 'BULK_PUBLISH_SUBMISSIONS',
+        target: `Published ${count} submissions`,
+        ipAddress: req.ip
+      }
+    });
+
+    return res.status(200).json({ success: true, message: `Successfully published ${count} result(s).` });
+  } catch (error) {
+    next(error);
+  }
+};

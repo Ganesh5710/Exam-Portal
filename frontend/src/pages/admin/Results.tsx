@@ -243,6 +243,31 @@ export const Results: React.FC = () => {
     }
   };
 
+  const handleBulkPublish = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await api.post('/submissions/bulk-publish', { ids: Array.from(selectedIds) });
+      toast.success(`Published ${selectedIds.size} result(s) successfully!`);
+      setSelectedIds(new Set());
+      fetchSubmissions(pagination.page);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Bulk publish failed.');
+    }
+  };
+
+  const handlePublishAll = async () => {
+    const confirm = window.confirm("Are you sure you want to publish ALL unpublished exam results to the user feed at once?");
+    if (!confirm) return;
+
+    try {
+      await api.post('/submissions/bulk-publish');
+      toast.success('Successfully published all exam results!');
+      fetchSubmissions(pagination.page);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to publish all results.');
+    }
+  };
+
   // ─── Helpers ───────────────────────────────────────────────────
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '—';
@@ -333,14 +358,22 @@ export const Results: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-          <TrendingUp className="text-violet-500" size={28} />
-          Exam Results
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Review, grade, edit, delete and publish student examination results.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <TrendingUp className="text-violet-500" size={28} />
+            Exam Results
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Review, grade, edit, delete and publish student examination results.
+          </p>
+        </div>
+        <button
+          onClick={handlePublishAll}
+          className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-semibold text-xs rounded-lg flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all uppercase tracking-wider"
+        >
+          <Award size={15} /> Publish All Results
+        </button>
       </div>
 
       {/* Filters & Search Bar */}
@@ -563,6 +596,12 @@ export const Results: React.FC = () => {
           </div>
           <div className="w-px h-5 bg-slate-700" />
           <button onClick={() => setSelectedIds(new Set())} className="text-xs text-slate-400 hover:text-white transition-colors">Clear</button>
+          <button
+            onClick={handleBulkPublish}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-emerald-500/20"
+          >
+            <Award size={14} /> Publish {selectedIds.size} Selected
+          </button>
           <button
             onClick={() => setShowBulkDeleteModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-red-500/20"
