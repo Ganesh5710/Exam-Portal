@@ -12,9 +12,15 @@ interface SubmissionInfo {
   maxPossibleScore: number;
 }
 
+/**
+ * SubmissionConfirmation Component
+ * Renders the exam submission confirmation page for students.
+ * Automatically checks for graded results in the background.
+ */
 export const SubmissionConfirmation: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // Holds the dynamically fetched student submission status and scores
   const [submission, setSubmission] = useState<SubmissionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
