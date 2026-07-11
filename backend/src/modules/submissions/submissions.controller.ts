@@ -490,6 +490,18 @@ export const deleteSubmission = async (req: AuthenticatedRequest, res: Response,
       return res.status(404).json({ success: false, message: 'Submission not found.' });
     }
 
+    // Reset ExamAssignment
+    await prisma.examAssignment.updateMany({
+      where: { examId: submission.examId, studentId: submission.studentId },
+      data: {
+        status: 'ASSIGNED',
+        startTime: null,
+        submitTime: null,
+        tabSwitchCount: 0,
+        exitFullscreenCount: 0
+      }
+    });
+
     await prisma.submission.delete({ where: { id } });
 
     return res.status(200).json({ success: true, message: 'Submission deleted successfully.' });
@@ -504,6 +516,23 @@ export const bulkDeleteSubmissions = async (req: AuthenticatedRequest, res: Resp
   if (!Array.isArray(ids) || ids.length === 0)
     return res.status(400).json({ success: false, message: 'Provide an array of submission IDs.' });
   try {
+    const submissions = await prisma.submission.findMany({
+      where: { id: { in: ids } }
+    });
+
+    for (const sub of submissions) {
+      await prisma.examAssignment.updateMany({
+        where: { examId: sub.examId, studentId: sub.studentId },
+        data: {
+          status: 'ASSIGNED',
+          startTime: null,
+          submitTime: null,
+          tabSwitchCount: 0,
+          exitFullscreenCount: 0
+        }
+      });
+    }
+
     await prisma.answer.deleteMany({ where: { submissionId: { in: ids } } });
     const { count } = await prisma.submission.deleteMany({ where: { id: { in: ids } } });
     return res.status(200).json({ success: true, message: `Deleted ${count} submission(s).` });

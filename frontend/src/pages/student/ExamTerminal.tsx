@@ -77,6 +77,7 @@ export const ExamTerminal: React.FC = () => {
   const [proctorActive, setProctorActive] = useState(false);
   const [proctorWarning, setProctorWarning] = useState<string | null>(null);
   const [faceCount, setFaceCount] = useState(0);
+  const [faceViolations, setFaceViolations] = useState(0);
   const violationSustainedSeconds = useRef<Record<string, number>>({});
 
   const isSubmitting = useRef(false);
@@ -209,6 +210,20 @@ export const ExamTerminal: React.FC = () => {
     onAutoSubmit: triggerSubmit
   });
 
+  useEffect(() => {
+    const total = tabSwitches + fullscreenExits + faceViolations;
+    if (total >= 5 && !isSubmitting.current) {
+      isSubmitting.current = true;
+      toast.error('Maximum security violations (5) exceeded. Auto-submitting exam...', {
+        duration: 10000,
+        id: 'force-submit-toast'
+      });
+      setTimeout(() => {
+        triggerSubmit();
+      }, 2000);
+    }
+  }, [tabSwitches, fullscreenExits, faceViolations]);
+
   // Dynamic Gaze/Face AI Proctoring Hook Setup
   useEffect(() => {
     if (loading || !exam || !user) return;
@@ -242,7 +257,7 @@ export const ExamTerminal: React.FC = () => {
 
         const blazeface = (window as any).blazeface;
         if (blazeface) {
-          model = await blazeface.load();
+          model = await blazeface.load({ maxFaces: 5, scoreThreshold: 0.5 });
           setProctorActive(true);
 
           intervalId = setInterval(async () => {
@@ -336,6 +351,7 @@ export const ExamTerminal: React.FC = () => {
                         details: violationDetails
                       });
                       toast.error(`Security Warning: ${warning}! Flagged to Admin proctor.`, { id: `warn-${violationType}` });
+                      setFaceViolations(prev => prev + 1);
                     }
                     violationSustainedSeconds.current[violationType] = 0; // throttle repeated alerts
                   }
@@ -937,13 +953,13 @@ export const ExamTerminal: React.FC = () => {
           </div>
 
           {/* Proctor Warnings warning cards */}
-          {(tabSwitches > 0 || fullscreenExits > 0) && (
+          {(tabSwitches > 0 || fullscreenExits > 0 || faceViolations > 0) && (
             <div className="border-t border-slate-800 pt-6">
               <div className="p-4 bg-red-950/20 border border-red-500/20 rounded-lg flex gap-3 text-xs text-red-400">
                 <AlertOctagon size={16} className="flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold">Proctor Warnings Active</p>
-                  <p className="mt-1">Violations: Tab Switches ({tabSwitches}), Fullscreen Exits ({fullscreenExits}). Exceeding 5 warnings triggers auto-submit.</p>
+                  <p className="mt-1">Violations: Tab Switches ({tabSwitches}), Fullscreen Exits ({fullscreenExits}), Face Warnings ({faceViolations}). Exceeding 5 total warnings triggers auto-submit.</p>
                 </div>
               </div>
             </div>

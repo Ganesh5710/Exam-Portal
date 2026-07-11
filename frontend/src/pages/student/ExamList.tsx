@@ -27,7 +27,15 @@ interface Exam {
 export const ExamList: React.FC = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchExams = async () => {
@@ -79,11 +87,10 @@ export const ExamList: React.FC = () => {
         <div className="space-y-6">
           {exams.map((exam) => {
             const isSubmitted = exam.status === 'SUBMITTED';
-            const now = new Date();
             const examStart = new Date(exam.startTime);
             const examEnd = new Date(exam.endTime);
-            const isNotStarted = now < examStart;
-            const isExpired = now > examEnd;
+            const isNotStarted = currentTime < examStart;
+            const isExpired = currentTime > examEnd;
             const isAvailable = !isSubmitted && !isNotStarted && !isExpired;
 
             return (
