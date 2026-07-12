@@ -1,3 +1,9 @@
+/**
+ * auth.controller.ts
+ * Handles login, logout, and JWT token refresh with secure HttpOnly cookies.
+ * Implements brute-force protection (5 attempts → 15 min lockout) and
+ * refresh token rotation for enhanced session security.
+ */
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
