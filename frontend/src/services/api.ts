@@ -1,3 +1,9 @@
+/**
+ * api.ts
+ * Axios HTTP client instance configured for the Exam Portal REST API.
+ * Automatically injects JWT Bearer token from localStorage on every request.
+ * Handles 401 responses by clearing session and redirecting to login.
+ */
 import axios from 'axios';
 
 const api = axios.create({
