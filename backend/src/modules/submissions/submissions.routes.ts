@@ -1,3 +1,9 @@
+/**
+ * submissions.routes.ts
+ * Defines all REST API routes for exam submission management.
+ * Student routes: save answers, submit exam, view own result.
+ * Admin routes: view all, grade, publish, bulk-publish, delete.
+ */
 import { Router } from 'express';
 import { saveAnswers, submitExam, getSubmissionsForExam, gradeDescriptiveAnswer, getSubmissions, updateSubmission, deleteSubmission, bulkDeleteSubmissions, getMySubmission, bulkPublishSubmissions } from './submissions.controller';
 import { protect, restrictTo } from '../../middleware/auth';
