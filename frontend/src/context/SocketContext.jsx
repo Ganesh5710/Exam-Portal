@@ -26,7 +26,8 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const socketUrl = window.location.origin; //vite proxy points to server
+    const configuredApiUrl = import.meta.env.VITE_API_URL || "";
+    const socketUrl = configuredApiUrl ? configuredApiUrl.replace(/\/api\/v1\/?$/, "") : window.location.origin;
     const newSocket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,
