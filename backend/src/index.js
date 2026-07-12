@@ -47,7 +47,9 @@ app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: false // Allow loading local uploads files on client
 }));
 app.use((0, cors_1.default)({
-    origin: '*',
+    origin: (origin, callback) => {
+        callback(null, true);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true
 }));
