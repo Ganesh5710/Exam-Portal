@@ -1,3 +1,9 @@
+/**
+ * seed.ts
+ * Database seeder that runs at application startup.
+ * Creates default department, subject, admin user, and student user
+ * if they do not already exist in the database.
+ */
 import { prisma } from './db';
 import bcrypt from 'bcryptjs';
 import { logger } from '../config/logger';
