@@ -8,16 +8,16 @@ const zod_1 = require("zod");
 const router = (0, express_1.Router)();
 const questionCreateSchema = zod_1.z.object({
     body: zod_1.z.object({
-        type: zod_1.z.enum(['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING']),
+        type: zod_1.z.preprocess(val => typeof val === 'string' ? val.toUpperCase() : val, zod_1.z.enum(['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'])),
         content: zod_1.z.string().min(1, 'Question text content is required'),
-        options: zod_1.z.any().optional(), // options holds array of choice options
+        options: zod_1.z.any().nullable().optional(), // options holds array of choice options
         answers: zod_1.z.any(), // correct indexes/answers map/strings
-        explanation: zod_1.z.string().optional(),
+        explanation: zod_1.z.string().nullable().optional(),
         score: zod_1.z.number().positive().optional(),
         negativeMarks: zod_1.z.number().nonnegative().optional(),
-        difficulty: zod_1.z.enum(['EASY', 'MEDIUM', 'HARD']),
-        tags: zod_1.z.array(zod_1.z.string()).optional(),
-        fileUrl: zod_1.z.string().optional(),
+        difficulty: zod_1.z.preprocess(val => typeof val === 'string' ? val.toUpperCase() : val, zod_1.z.enum(['EASY', 'MEDIUM', 'HARD'])),
+        tags: zod_1.z.array(zod_1.z.string()).nullable().optional(),
+        fileUrl: zod_1.z.string().nullable().optional(),
         subjectId: zod_1.z.string().uuid('Subject must be assigned')
     })
 });

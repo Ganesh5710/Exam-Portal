@@ -36,8 +36,10 @@ const getQuestions = async (req, res, next) => {
 };
 exports.getQuestions = getQuestions;
 const createQuestion = async (req, res, next) => {
-    const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
     try {
+        if (type) type = type.toUpperCase();
+        if (difficulty) difficulty = difficulty.toUpperCase();
         const question = await db_1.prisma.question.create({
             data: {
                 type,
@@ -70,8 +72,10 @@ const createQuestion = async (req, res, next) => {
 exports.createQuestion = createQuestion;
 const updateQuestion = async (req, res, next) => {
     const { id } = req.params;
-    const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
     try {
+        if (type) type = type.toUpperCase();
+        if (difficulty) difficulty = difficulty.toUpperCase();
         const existing = await db_1.prisma.question.findUnique({ where: { id } });
         if (!existing) {
             return res.status(404).json({ success: false, message: 'Question not found.' });
