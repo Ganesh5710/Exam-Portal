@@ -1,3 +1,9 @@
+/**
+ * AuthContext.tsx
+ * Global authentication state management for the exam portal.
+ * Persists user session in localStorage and exposes login/logout helpers.
+ * Consumed by all protected routes via useAuth() hook.
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
