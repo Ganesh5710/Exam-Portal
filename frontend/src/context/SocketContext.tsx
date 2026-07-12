@@ -1,3 +1,9 @@
+/**
+ * SocketContext.tsx
+ * Provides a real-time Socket.IO connection context to the entire app.
+ * Automatically connects when a user logs in and disconnects on logout.
+ * Used by proctoring, live monitoring, and exam terminal components.
+ */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
