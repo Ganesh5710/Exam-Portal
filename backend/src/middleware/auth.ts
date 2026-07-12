@@ -1,3 +1,9 @@
+/**
+ * auth.ts (middleware)
+ * JWT-based authentication guard and role-based access control.
+ * protect() verifies Bearer token and attaches user to request.
+ * restrictTo() enforces role-based authorization (ADMIN / STUDENT).
+ */
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../database/db';
