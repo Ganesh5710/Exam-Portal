@@ -1,5 +1,9 @@
 version: '3.8'
 
+# ─── SecureExam Docker Compose ─────────────────────────────────────────────
+# Runs 4 services: PostgreSQL (db), Redis (cache), Backend (API), Frontend (UI)
+# Use: docker-compose up -d   to start all services in detached mode
+# Note: For production, replace DATABASE_URL and JWT secrets with real values
 services:
   postgres:
     image: postgres:15-alpine
