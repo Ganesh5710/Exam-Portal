@@ -1,8 +1,12 @@
+// ─── Database Configuration ────────────────────────────────────────────────
+// Uses PostgreSQL (Supabase hosted). Set DATABASE_URL in backend/.env
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ─── Prisma Client Generator ───────────────────────────────────────────────
+// Generates the TypeScript client used throughout the backend services
 generator client {
   provider = "prisma-client-js"
 }
