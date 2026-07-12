@@ -1,3 +1,8 @@
+/**
+ * submissions.controller.ts
+ * Handles all exam submission operations including saving answers,
+ * auto-submission, scoring, grading, and result publication.
+ */
 import { Response, NextFunction } from 'express';
 import { prisma } from '../../database/db';
 import { AuthenticatedRequest } from '../../middleware/auth';
