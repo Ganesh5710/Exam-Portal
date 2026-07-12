@@ -1,3 +1,8 @@
+/**
+ * users.controller.ts
+ * Handles admin user management: listing students, creating accounts,
+ * updating profiles, blocking/unblocking, bulk delete, and password resets.
+ */
 import { Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../database/db';

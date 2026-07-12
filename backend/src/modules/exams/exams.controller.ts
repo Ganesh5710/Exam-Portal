@@ -1,3 +1,8 @@
+/**
+ * exams.controller.ts
+ * Manages exam CRUD operations, scheduling, status transitions,
+ * and question assignment for the admin dashboard.
+ */
 import { Response, NextFunction } from 'express';
 import { prisma } from '../../database/db';
 import { AuthenticatedRequest } from '../../middleware/auth';
