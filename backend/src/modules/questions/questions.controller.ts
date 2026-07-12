@@ -1,3 +1,8 @@
+/**
+ * questions.controller.ts
+ * Manages question bank CRUD operations for MCQ, coding, descriptive,
+ * true/false and fill-in-the-blank question types with scoring metadata.
+ */
 import { Response, NextFunction } from 'express';
 import { prisma } from '../../database/db';
 import { AuthenticatedRequest } from '../../middleware/auth';
