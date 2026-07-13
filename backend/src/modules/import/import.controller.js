@@ -104,71 +104,68 @@ const approveImport = async (req, res, next) => {
         let processedCount = 0;
         let duplicatesCount = 0;
         let failedCount = 0;
-        // Use Prisma transaction to guarantee database referential integrity
-        await db_1.prisma.$transaction(async (tx) => {
-            for (const q of questions) {
-                try {
-                    // Check for duplicate in the same subject code context
-                    const existing = await tx.question.findFirst({
-                        where: {
-                            subjectId,
-                            content: q.content
-                        }
-                    });
-                    if (existing) {
-                        const action = duplicateActions?.[q.content] || 'SKIP';
-                        if (action === 'SKIP') {
-                            duplicatesCount++;
-                            continue;
-                        }
-                        else if (action === 'REPLACE' || action === 'UPDATE') {
-                            await tx.question.update({
-                                where: { id: existing.id },
-                                data: {
-                                    options: q.options || null,
-                                    answers: q.answers,
-                                    explanation: q.explanation || null,
-                                    score: parseFloat(q.score) || 5.0,
-                                    negativeMarks: parseFloat(q.negativeMarks) || 0.0,
-                                    difficulty: q.difficulty || 'MEDIUM',
-                                    tags: q.tags || []
-                                }
-                            });
-                            processedCount++;
-                            continue;
-                        }
+        for (const q of questions) {
+            try {
+                // Check for duplicate in the same subject code context
+                const existing = await db_1.prisma.question.findFirst({
+                    where: {
+                        subjectId,
+                        content: q.content
                     }
-                    // Insert new question
-                    await tx.question.create({
-                        data: {
-                            type: q.type,
-                            content: q.content,
-                            options: q.options || null,
-                            answers: q.answers,
-                            explanation: q.explanation || null,
-                            score: parseFloat(q.score) || 5.0,
-                            negativeMarks: parseFloat(q.negativeMarks) || 0.0,
-                            difficulty: q.difficulty || 'MEDIUM',
-                            tags: q.tags || [],
-                            subjectId
-                        }
-                    });
-                    processedCount++;
+                });
+                if (existing) {
+                    const action = duplicateActions?.[q.content] || 'SKIP';
+                    if (action === 'SKIP') {
+                        duplicatesCount++;
+                        continue;
+                    }
+                    else if (action === 'REPLACE' || action === 'UPDATE') {
+                        await db_1.prisma.question.update({
+                            where: { id: existing.id },
+                            data: {
+                                options: q.options || null,
+                                answers: q.answers,
+                                explanation: q.explanation || null,
+                                score: parseFloat(q.score) || 5.0,
+                                negativeMarks: parseFloat(q.negativeMarks) || 0.0,
+                                difficulty: q.difficulty || 'MEDIUM',
+                                tags: q.tags || []
+                            }
+                        });
+                        processedCount++;
+                        continue;
+                    }
                 }
-                catch (itemErr) {
-                    logger_1.logger.error(`Error saving individual question: ${itemErr.message}`);
-                    failedCount++;
-                }
+                // Insert new question
+                await db_1.prisma.question.create({
+                    data: {
+                        type: q.type,
+                        content: q.content,
+                        options: q.options || null,
+                        answers: q.answers,
+                        explanation: q.explanation || null,
+                        score: parseFloat(q.score) || 5.0,
+                        negativeMarks: parseFloat(q.negativeMarks) || 0.0,
+                        difficulty: q.difficulty || 'MEDIUM',
+                        tags: q.tags || [],
+                        subjectId
+                    }
+                });
+                processedCount++;
             }
-            // Create Audit Log entry
-            await tx.auditLog.create({
-                data: {
-                    userId: req.user?.id,
-                    action: 'BULK_QUESTION_IMPORT',
-                    target: `Job: ${job.fileName} | Imported: ${processedCount} | Duplicates: ${duplicatesCount} | Failed: ${failedCount}`,
-                    ipAddress: req.ip
-                }
-            });
+            catch (itemErr) {
+                logger_1.logger.error(`Error saving individual question: ${itemErr.message}`);
+                failedCount++;
+            }
+        }
+        // Create Audit Log entry
+        await db_1.prisma.auditLog.create({
+            data: {
+                userId: req.user?.id,
+                action: 'BULK_QUESTION_IMPORT',
+                target: `Job: ${job.fileName} | Imported: ${processedCount} | Duplicates: ${duplicatesCount} | Failed: ${failedCount}`,
+                ipAddress: req.ip
+            }
         });
         // Update final job metadata in database
         await db_1.prisma.importJob.update({
