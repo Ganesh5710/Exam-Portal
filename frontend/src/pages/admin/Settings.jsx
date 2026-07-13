@@ -18,6 +18,8 @@ export const Settings = () => {
     THEME: "dark",
     SMTP_HOST: "",
     SMTP_PORT: "",
+    SMTP_USER: "",
+    SMTP_PASS: "",
     SESSION_TIMEOUT: "60",
     MAINTENANCE_MODE: "false",
   });
@@ -189,17 +191,18 @@ export const Settings = () => {
               <div className="flex items-center gap-2 text-muted-foreground text-sm font-semibold mb-2">
                 <Mail size={16} /> SMTP Dispatch Parameters
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                     SMTP Host
                   </label>
                   <input
                     type="text"
-                    value={settings.SMTP_HOST}
+                    value={settings.SMTP_HOST || ""}
                     onChange={(e) =>
                       handleUpdateSetting("SMTP_HOST", e.target.value)
                     }
+                    placeholder="e.g. smtp.gmail.com"
                     className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
@@ -209,10 +212,39 @@ export const Settings = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.SMTP_PORT}
+                    value={settings.SMTP_PORT || ""}
                     onChange={(e) =>
                       handleUpdateSetting("SMTP_PORT", e.target.value)
                     }
+                    placeholder="e.g. 587 or 465"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    SMTP Username (Email)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.SMTP_USER || ""}
+                    onChange={(e) =>
+                      handleUpdateSetting("SMTP_USER", e.target.value)
+                    }
+                    placeholder="e.g. your-email@gmail.com"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    SMTP Password / App Password
+                  </label>
+                  <input
+                    type="password"
+                    value={settings.SMTP_PASS || ""}
+                    onChange={(e) =>
+                      handleUpdateSetting("SMTP_PASS", e.target.value)
+                    }
+                    placeholder="••••••••••••"
                     className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
