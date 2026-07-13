@@ -94,6 +94,8 @@ model User {
   status               UserStatus           @default(ACTIVE)
   loginAttempts        Int                  @default(0)
   lockUntil            DateTime?
+  otp                  String?
+  otpExpiresAt         DateTime?
   departmentId         String?
   department           Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   createdAt            DateTime             @default(now())

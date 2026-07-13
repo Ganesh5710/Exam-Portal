@@ -61,6 +61,7 @@ export const ExamsPortal = () => {
   });
 
   const [assignedStudentIds, setAssignedStudentIds] = useState([]);
+  const [assignedEmails, setAssignedEmails] = useState("");
 
   const fetchSubjects = async () => {
     try {
@@ -228,7 +229,7 @@ export const ExamsPortal = () => {
     try {
       await api.post("/exams/assign", {
         examId: selectedExam.id,
-        studentIds: assignedStudentIds,
+        emails: assignedEmails,
       });
       toast.success("Students assigned successfully!");
       setShowAssignModal(false);
@@ -299,9 +300,7 @@ export const ExamsPortal = () => {
   const openAssignModal = (exam) => {
     setSelectedExam(exam);
     setAssignedStudentIds([]);
-
-    // Optional: fetch currently assigned student user ids to prefill checkboxes if API supports it
-    // For now we start with clean checklist
+    setAssignedEmails("");
     setShowAssignModal(true);
   };
 
@@ -1215,33 +1214,21 @@ export const ExamsPortal = () => {
             </div>
 
             <form onSubmit={handleAssignStudents} className="space-y-4">
-              <div className="border border-slate-850 bg-slate-950 rounded-lg p-3 max-h-[300px] overflow-y-auto space-y-3">
-                {students.length === 0 ? (
-                  <p className="text-xs text-slate-600 text-center py-4">
-                    No student records found.
-                  </p>
-                ) : (
-                  students.map((s) => (
-                    <label
-                      key={s.id}
-                      className="flex items-center gap-3 text-xs text-slate-300 border-b border-slate-900 pb-2 cursor-pointer last:border-b-0 last:pb-0"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={assignedStudentIds.includes(s.id)}
-                        onChange={() => handleToggleStudent(s.id)}
-                        className="rounded border-slate-800 text-violet-600"
-                      />
-
-                      <div>
-                        <p className="font-semibold text-white">
-                          {s.firstName} {s.lastName}
-                        </p>
-                        <p className="text-[10px] text-slate-500">{s.email}</p>
-                      </div>
-                    </label>
-                  ))
-                )}
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Student Email Addresses
+                </label>
+                <textarea
+                  value={assignedEmails}
+                  onChange={(e) => setAssignedEmails(e.target.value)}
+                  placeholder="Enter student emails separated by commas, spaces, or newlines&#10;e.g.&#10;student1@gmail.com&#10;student2@gmail.com"
+                  rows={8}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono leading-relaxed"
+                  required
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">
+                  You can assign multiple candidates at once. These student accounts will be automatically registered when they log in to the portal via OTP.
+                </span>
               </div>
 
               <div className="flex gap-3 pt-2">

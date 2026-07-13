@@ -38,6 +38,17 @@ export const AuthProvider = ({ children }) => {
     setUser(userProfile);
   };
 
+  const loginWithOtp = async (email, otp) => {
+    const res = await api.post("/auth/verify-otp", { email, otp });
+    const { user: userProfile, accessToken, refreshToken } = res.data.data;
+
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    localStorage.setItem("user", JSON.stringify(userProfile));
+
+    setUser(userProfile);
+  };
+
   const logout = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
@@ -54,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, isAuthenticated: !!user }}
+      value={{ user, loading, login, loginWithOtp, logout, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

@@ -200,17 +200,50 @@ const deleteExam = async (req, res, next) => {
 };
 exports.deleteExam = deleteExam;
 const assignExam = async (req, res, next) => {
-    const { examId, studentIds } = req.body; // array of student user ids
+    const { examId, studentIds, emails } = req.body;
     try {
         const exam = await db_1.prisma.exam.findUnique({ where: { id: examId } });
         if (!exam) {
             return res.status(404).json({ success: false, message: 'Exam not found.' });
         }
-        if (!Array.isArray(studentIds) || studentIds.length === 0) {
-            return res.status(400).json({ success: false, message: 'Student list is required.' });
+        let targetStudentIds = [];
+        if (Array.isArray(studentIds)) {
+            targetStudentIds = [...studentIds];
+        }
+        // Parse email list
+        let emailList = [];
+        if (typeof emails === 'string') {
+            emailList = emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e.length > 0 && e.includes('@'));
+        }
+        else if (Array.isArray(emails)) {
+            emailList = emails.map(e => e.trim()).filter(e => e.length > 0 && e.includes('@'));
+        }
+        // Find or create students on the fly for each email
+        for (const email of emailList) {
+            let student = await db_1.prisma.user.findUnique({ where: { email } });
+            if (!student) {
+                student = await db_1.prisma.user.create({
+                    data: {
+                        email,
+                        passwordHash: '',
+                        firstName: email.split('@')[0],
+                        lastName: '',
+                        role: 'STUDENT',
+                        status: 'ACTIVE'
+                    }
+                });
+            }
+            if (student.role === 'STUDENT') {
+                targetStudentIds.push(student.id);
+            }
+        }
+        // Deduplicate target student IDs
+        targetStudentIds = Array.from(new Set(targetStudentIds));
+        if (targetStudentIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid students or email addresses provided.' });
         }
         let assigned = 0;
-        for (const sId of studentIds) {
+        for (const sId of targetStudentIds) {
             const exist = await db_1.prisma.examAssignment.findUnique({
                 where: { examId_studentId: { examId, studentId: sId } }
             });
