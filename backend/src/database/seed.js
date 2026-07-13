@@ -16,7 +16,7 @@ const logger_1 = require("../config/logger");
 const seedDatabase = async () => {
     try {
         logger_1.logger.info('Database Seeder: Initializing Admin user check...');
-        const adminEmail = 'admin@onlineexam.com';
+        const adminEmail = 'admin@admin.in';
         let admin = await db_1.prisma.user.findUnique({ where: { email: adminEmail } });
         if (!admin) {
             const adminHash = await bcryptjs_1.default.hash('Admin@123', 10);
