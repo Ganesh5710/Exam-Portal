@@ -146,7 +146,7 @@ export const Settings = () => {
                   onChange={(e) =>
                     handleUpdateSetting("INSTITUTION_NAME", e.target.value)
                   }
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                  className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   required
                 />
               </div>
@@ -161,7 +161,7 @@ export const Settings = () => {
                     onChange={(e) =>
                       handleUpdateSetting("THEME", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   >
                     <option value="dark">Dark Theme</option>
                     <option value="light">Light Theme</option>
@@ -177,7 +177,7 @@ export const Settings = () => {
                     onChange={(e) =>
                       handleUpdateSetting("SESSION_TIMEOUT", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                     required
                   />
                 </div>
@@ -200,7 +200,7 @@ export const Settings = () => {
                     onChange={(e) =>
                       handleUpdateSetting("SMTP_HOST", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
                 <div>
@@ -213,7 +213,7 @@ export const Settings = () => {
                     onChange={(e) =>
                       handleUpdateSetting("SMTP_PORT", e.target.value)
                     }
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                    className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
                 </div>
               </div>

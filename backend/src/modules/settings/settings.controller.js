@@ -24,12 +24,14 @@ const updateSettings = async (req, res, next) => {
         if (keys.length === 0) {
             return res.status(400).json({ success: false, message: 'Settings payload is empty.' });
         }
-        // Update settings in transaction
-        await db_1.prisma.$transaction(keys.map(key => db_1.prisma.systemSettings.upsert({
-            where: { key },
-            update: { value: String(updates[key]) },
-            create: { key, value: String(updates[key]) }
-        })));
+        // Update settings sequentially without transaction for pooler compatibility
+        for (const key of keys) {
+            await db_1.prisma.systemSettings.upsert({
+                where: { key },
+                update: { value: String(updates[key]) },
+                create: { key, value: String(updates[key]) }
+            });
+        }
         await db_1.prisma.auditLog.create({
             data: {
                 userId: req.user?.id,
