@@ -658,7 +658,7 @@ export const ExamTerminal = () => {
           {/* Question Text */}
           <div className="space-y-6">
             <p className="text-lg font-medium leading-relaxed">
-              {currentQuestion?.content}
+              {currentQuestion?.content ? currentQuestion.content.replace(/^\d+[\s\.\)\-:]+\s*/, "") : ""}
             </p>
 
             {/* Render input components according to question types */}
