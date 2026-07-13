@@ -88,7 +88,6 @@ export const App = () => {
           {/* Admin module routes */}
           <Route path="students" element={<Students />} />
           <Route path="departments" element={<Departments />} />
-          <Route path="subjects" element={<Subjects />} />
           <Route path="questions" element={<Questions />} />
           <Route path="import" element={<QuestionImport />} />
           <Route path="exams" element={<ExamsPortal />} />
