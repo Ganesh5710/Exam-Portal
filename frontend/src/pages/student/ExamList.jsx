@@ -93,7 +93,7 @@ export const ExamList = () => {
                   {/* Title & Subject */}
                   <div>
                     <span className="text-xs font-semibold px-2.5 py-1 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
-                      {exam.subject.name} ({exam.subject.code})
+                      {exam.department?.name || exam.subject?.name || "General"} ({exam.department?.code || exam.subject?.code || "GEN"})
                     </span>
                     <h3 className="font-bold text-xl mt-2">{exam.title}</h3>
                   </div>
