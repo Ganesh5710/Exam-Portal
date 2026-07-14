@@ -53,8 +53,8 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true
 }));
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json({ limit: '50mb' }));
+app.use(express_1.default.urlencoded({ limit: '50mb', extended: true }));
 // Local media folder static route
 const uploadsPath = path_1.default.join(__dirname, '../../uploads');
 if (!fs_1.default.existsSync(uploadsPath)) {
