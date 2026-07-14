@@ -32,7 +32,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
-// Ultra-Premium Interactive Bento Card Component
+// Ultra-Premium Interactive Bento Card Component (With Perfect Alignment)
 const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -64,7 +64,7 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-[32px] border border-white/[0.03] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden rounded-[32px] border border-white/[0.03] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 flex flex-col h-full ${className}`}
       style={{
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.015 : 1}, ${isHovered ? 1.015 : 1}, 1)`,
         boxShadow: isHovered 
@@ -206,12 +206,15 @@ export const Landing = () => {
       badge: "Webcam-Ready",
       visualWidget: (
         <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group-hover:border-violet-500/20 transition-all min-h-[160px]">
-          {/* Target Scanning Lines */}
+          {/* Target Scanning HUD */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.06)_0%,transparent_70%)]" />
-          <div className="w-20 h-20 rounded-full border-2 border-dashed border-violet-500/30 flex items-center justify-center animate-spin relative" style={{ animationDuration: '12s' }}>
-            <Activity className="text-violet-400 absolute animate-pulse" size={24} />
+          <div className="w-20 h-20 rounded-full border border-violet-500/25 flex items-center justify-center relative bg-violet-600/5 shadow-inner">
+            <div className="absolute inset-1.5 border border-dashed border-violet-500/40 rounded-full animate-spin" style={{ animationDuration: '8s' }} />
+            <div className="absolute w-12 h-12 rounded-full border border-violet-500/30 flex items-center justify-center bg-[#070514]/95 shadow-md z-10">
+              <Activity className="text-violet-400 animate-pulse" size={20} />
+            </div>
           </div>
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center z-10">
             <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest block">AI Camera Feed</span>
             <span className="text-[11px] text-slate-300 font-medium block mt-0.5">Scanning Face / Gaze Locked</span>
           </div>
@@ -703,7 +706,7 @@ export const Landing = () => {
                   </div>
 
                   {/* Embedded Visual Widget */}
-                  <div className="mt-2">
+                  <div className="mt-auto">
                     {card.visualWidget}
                   </div>
                 </div>
