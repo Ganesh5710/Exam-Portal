@@ -52,8 +52,11 @@ export const AdminLayout = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden flex items-center justify-between w-full h-16 px-4 border-b border-border bg-card fixed top-0 left-0 z-40">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-            SecureExam
+          <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md shadow-violet-500/20">
+            SB
+          </div>
+          <span className="text-xl font-extrabold tracking-tight text-foreground">
+            Skill<span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">brix</span>
           </span>
         </div>
         <button
@@ -74,19 +77,19 @@ export const AdminLayout = () => {
       >
         {/* Brand Header */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          {!collapsed && (
-            <span className="text-xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-              SecureExam
-            </span>
-          )}
-          {collapsed && (
-            <span className="text-xl font-bold text-violet-500 mx-auto">
-              🛡️
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md shadow-violet-500/20 shrink-0">
+              SB
+            </div>
+            {!collapsed && (
+              <span className="text-xl font-extrabold tracking-tight text-foreground">
+                Skill<span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">brix</span>
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:block p-1 hover:bg-accent rounded text-muted-foreground"
+            className="hidden md:block p-1 hover:bg-accent rounded text-muted-foreground ml-auto"
           >
             {collapsed ? "→" : "←"}
           </button>

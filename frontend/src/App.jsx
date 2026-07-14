@@ -10,6 +10,7 @@ import StudentLayout from "./layouts/StudentLayout";
 
 // Page Imports
 import Login from "./pages/auth/Login";
+import Landing from "./pages/public/Landing";
 import Dashboard from "./pages/admin/Dashboard";
 import LiveMonitor from "./pages/admin/LiveMonitor";
 import Students from "./pages/admin/Students";
@@ -67,6 +68,9 @@ export const App = () => {
         }}
       />
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
+
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />

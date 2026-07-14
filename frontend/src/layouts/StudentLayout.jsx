@@ -20,11 +20,11 @@ export const StudentLayout = () => {
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white">
-              <Shield size={18} />
+            <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md shadow-violet-500/20">
+              SB
             </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-              SecureExam Student Workspace
+            <span className="text-lg font-extrabold tracking-tight text-foreground">
+              Skill<span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">brix</span> Student Workspace
             </span>
           </div>
 

@@ -47,11 +47,13 @@ export const Login = () => {
     <div className="glass-card p-8 rounded-2xl shadow-2xl border border-white/10 w-full max-w-md mx-auto animate-fade-in">
       {/* Brand Icon */}
       <div className="flex flex-col items-center gap-2 mb-8 text-center">
-        <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-          <Shield size={24} className="text-white" />
+        <div className="w-12 h-12 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-lg shadow-lg shadow-violet-500/20">
+          SB
         </div>
-        <h2 className="text-2xl font-bold tracking-tight">Access SecureExam</h2>
-        <p className="text-sm text-slate-400">Enterprise Examination Portal</p>
+        <h2 className="text-2xl font-extrabold tracking-tight text-white">
+          Skill<span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">brix</span>
+        </h2>
+        <p className="text-sm text-slate-400">Enterprise Assessment Portal</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
