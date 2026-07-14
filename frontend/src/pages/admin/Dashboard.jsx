@@ -22,7 +22,7 @@ export const Dashboard = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalDepartments: 0,
-    totalSubjects: 0,
+    totalExams: 0,
     totalQuestions: 0,
     activeExams: 0,
     completedExams: 0,
@@ -39,14 +39,12 @@ export const Dashboard = () => {
       const [
         usersRes,
         deptsRes,
-        subjectsRes,
         questionsRes,
         examsRes,
         submissionsRes,
       ] = await Promise.allSettled([
-        api.get("/users?limit=1000"),
+        api.get("/users?all=true"),
         api.get("/departments"),
-        api.get("/subjects"),
         api.get("/questions"),
         api.get("/exams"),
         api.get("/submissions"),
@@ -71,13 +69,6 @@ export const Dashboard = () => {
         totalDepartments = Array.isArray(deptsData) ? deptsData.length : 0;
       }
 
-      // Count subjects
-      let totalSubjects = 0;
-      if (subjectsRes.status === "fulfilled") {
-        const subjectsData = subjectsRes.value.data?.data;
-        totalSubjects = Array.isArray(subjectsData) ? subjectsData.length : 0;
-      }
-
       // Count questions
       let totalQuestions = 0;
       if (questionsRes.status === "fulfilled") {
@@ -90,9 +81,11 @@ export const Dashboard = () => {
       // Count exams by status
       let activeExams = 0;
       let completedExams = 0;
+      let totalExams = 0;
       if (examsRes.status === "fulfilled") {
         const examsData = examsRes.value.data?.data;
         if (Array.isArray(examsData)) {
+          totalExams = examsData.length;
           activeExams = examsData.filter(
             (e) => e.status === "PUBLISHED",
           ).length;
@@ -132,7 +125,7 @@ export const Dashboard = () => {
       setStats({
         totalStudents,
         totalDepartments,
-        totalSubjects,
+        totalExams,
         totalQuestions,
         activeExams,
         completedExams,
@@ -261,8 +254,8 @@ export const Dashboard = () => {
       borderColor: "border-violet-500/20",
     },
     {
-      label: "Subjects",
-      value: stats.totalSubjects,
+      label: "Total Exams",
+      value: stats.totalExams,
       icon: BookOpen,
       color: "text-cyan-400",
       bgColor: "bg-cyan-500/10",

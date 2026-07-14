@@ -124,7 +124,7 @@ export const Students = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, debouncedSearch, filterDepartment]);
+  }, [debouncedSearch, filterDepartment]);
 
   useEffect(() => {
     fetchDepartments();
