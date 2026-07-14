@@ -31,12 +31,17 @@ import {
   Layers,
   ChevronRight,
   Database,
-  BarChart4,
-  Layout,
-  UserCheck
+  Terminal,
+  HelpCircle,
+  Sliders,
+  Share2,
+  SlidersHorizontal,
+  Download,
+  MessageSquare,
+  Send
 } from "lucide-react";
 
-// Ultra-Premium Bento Card Wrapper
+// Ultra-Premium Interactive Bento Card Wrapper
 const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -92,108 +97,6 @@ export const Landing = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   
-  // ── FEATURE 1: DYNAMIC AI QUESTION GENERATOR CUSTOMIZER ──
-  const [aiSubject, setAiSubject] = useState("Java OOP");
-  const [aiDifficulty, setAiDifficulty] = useState("Hard");
-  const [aiCount, setAiCount] = useState(3);
-  const [aiNegativeMarking, setAiNegativeMarking] = useState(true);
-  const [aiState, setAiState] = useState("idle"); // "idle", "generating", "complete"
-  const [generatedMcqs, setGeneratedMcqs] = useState([]);
-
-  const handleGenerateCustomMcqs = () => {
-    setAiState("generating");
-    setGeneratedMcqs([]);
-    
-    setTimeout(() => {
-      const samples = {
-        "Java OOP": [
-          { q: "Explain the memory storage allocation differences between an abstract class reference variable and its subclass instance memory block.", ans: "Reference is allocated on the Stack, object instance is allocated in Heap memory." },
-          { q: "Under what conditions does the JVM invoke class initializers (<clinit>) for a class with static nested properties?", ans: "When a static member of the nested class is accessed or instance constructed." },
-          { q: "Why is multiple inheritance via interfaces preferred over class extensions in large microservices architecture?", ans: "Decouples type inheritance and avoids the diamond problem dependency conflict." }
-        ],
-        "Python": [
-          { q: "What is the computational complexity difference between lookup in a list vs dictionary inside a list comprehension?", ans: "List lookup is O(N), dictionary lookup is O(1) hash map." },
-          { q: "How do Python metaclasses __new__ and __init__ differ during class object compilation?", ans: "__new__ creates and returns the class object, __init__ configures the attributes." }
-        ],
-        "React & Vite": [
-          { q: "How does Fiber reconciler perform work loops in concurrent rendering mode?", ans: "Breaks rendering work into chunks using requestIdleCallback scheduling." },
-          { q: "What is the structural performance impact of using inline arrow functions inside render loops?", ans: "Forces garbage collection and triggers child re-renders due to new reference keys." }
-        ],
-        "SQL Databases": [
-          { q: "How does a B-Tree index scan differ from a Hash Index lookup for range filters?", ans: "B-Tree supports ranges via sequential nodes; Hash index only supports point equality." },
-          { q: "Explain the ACID isolation anomaly known as Write Skew in transactions.", ans: "Two transactions read same data, execute disjoint updates, violating consistency check." }
-        ]
-      };
-
-      const selectedList = samples[aiSubject] || samples["Java OOP"];
-      const sliced = selectedList.slice(0, aiCount);
-      setGeneratedMcqs(sliced);
-      setAiState("complete");
-    }, 1200);
-  };
-
-  // ── FEATURE 2: INTERACTIVE LIVE PROCTOR CONTROL DECK ──
-  const [proctorStatus, setProctorStatus] = useState("Secured"); // "Secured", "Tab Warning", "Multiple Faces", "Candidate Missing", "Intervened"
-  const [proctorFlags, setProctorFlags] = useState(0);
-  const [proctorLogs, setProctorLogs] = useState([
-    "[10:00:00] Candidate session initialized.",
-    "[10:00:02] Biometric face validation: Match (99% confidence)."
-  ]);
-
-  const triggerProctorSimulation = (type) => {
-    const time = new Date().toLocaleTimeString();
-    if (type === "tab") {
-      setProctorStatus("Tab Warning");
-      setProctorFlags(prev => prev + 1);
-      setProctorLogs(prev => [`[${time}] ALERT: Unfocused window. Departure logged.`, ...prev]);
-    } else if (type === "multi") {
-      setProctorStatus("Multiple Faces");
-      setProctorFlags(prev => prev + 1);
-      setProctorLogs(prev => [`[${time}] CRITICAL: Secondary face detection anomaly.`, ...prev]);
-    } else if (type === "missing") {
-      setProctorStatus("Candidate Missing");
-      setProctorFlags(prev => prev + 1);
-      setProctorLogs(prev => [`[${time}] WARNING: Candidate silhouette departed webcam feed.`, ...prev]);
-    } else if (type === "reset") {
-      setProctorStatus("Secured");
-      setProctorFlags(0);
-      setProctorLogs([`[${time}] Proctor system reset. Session secured.`, ...proctorLogs]);
-    } else if (type === "lock") {
-      setProctorStatus("Intervened");
-      setProctorLogs(prev => [`[${time}] ADMIN COMMAND: Candidate workstation locked down.`, ...prev]);
-    }
-  };
-
-  // ── FEATURE 3: INTERACTIVE ANALYTICS METRICS DASHBOARD ──
-  const [activeTab, setActiveTab] = useState("overview"); // "overview", "departments", "integrations"
-  
-  // ── FEATURE 4: BATCH IMPORT SIMULATOR ──
-  const [csvText, setCsvText] = useState("name,email,department\nRahul Sharma,rahul@nitw.ac.in,CSE\nAjay Krishna,ajay@nitw.ac.in,CSE\nPriya Nath,priya@nitw.ac.in,ECE");
-  const [batchProgress, setBatchProgress] = useState(0);
-  const [isParsing, setIsParsing] = useState(false);
-  const [parsedStudents, setParsedStudents] = useState([]);
-
-  const handleSimulateBatchImport = () => {
-    setIsParsing(true);
-    setBatchProgress(10);
-    setParsedStudents([]);
-    
-    const intervals = [30, 60, 90, 100];
-    intervals.forEach((val, idx) => {
-      setTimeout(() => {
-        setBatchProgress(val);
-        if (val === 100) {
-          setIsParsing(false);
-          setParsedStudents([
-            { name: "Rahul Sharma", email: "rahul@nitw.ac.in", dept: "CSE", status: "Imported Successfully" },
-            { name: "Ajay Krishna", email: "ajay@nitw.ac.in", dept: "CSE", status: "Imported Successfully" },
-            { name: "Priya Nath", email: "priya@nitw.ac.in", dept: "ECE", status: "Imported Successfully" }
-          ]);
-        }
-      }, (idx + 1) * 400);
-    });
-  };
-
   // Safe Timer Engine (seconds tracking)
   const [secondsLeft, setSecondsLeft] = useState(5399); 
   useEffect(() => {
@@ -223,6 +126,135 @@ export const Landing = () => {
     window.addEventListener("mousemove", handleMouseParallax);
     return () => window.removeEventListener("mousemove", handleMouseParallax);
   }, []);
+
+  // ── EXTRA FEATURE 1: AI CALIBRATION WIZARD (WEBCAM) ──
+  const [calibState, setCalibState] = useState("idle"); // "idle", "calibrating", "success"
+  const [calibMetrics, setCalibMetrics] = useState({ gaze: "0.0°", headPose: "0.0°", light: "0%" });
+  
+  const handleStartCalibration = () => {
+    setCalibState("calibrating");
+    setTimeout(() => {
+      setCalibMetrics({ gaze: "1.2° (Centered)", headPose: "Pitch: -0.4°, Yaw: 0.1°", light: "88% (Good)" });
+      setCalibState("success");
+    }, 1500);
+  };
+
+  // ── EXTRA FEATURE 2: MINI EXAM TERMINAL SANDBOX ──
+  const [sandboxCode, setSandboxCode] = useState("def calculate_sum(a, b):\n    return a + b\n\n# Run tests\nprint(calculate_sum(10, 15))");
+  const [sandboxLang, setSandboxLang] = useState("python");
+  const [sandboxOutput, setSandboxOutput] = useState("");
+  const [isCompilingSandbox, setIsCompilingSandbox] = useState(false);
+
+  const handleRunSandbox = () => {
+    setIsCompilingSandbox(true);
+    setSandboxOutput("");
+    setTimeout(() => {
+      setIsCompilingSandbox(false);
+      if (sandboxLang === "python") {
+        setSandboxOutput(">>> Executing script...\n25\n\nAll Test cases passed.");
+      } else {
+        setSandboxOutput(">>> Executing JavaScript...\nstdout: 25\n\nProcess completed with 0 errors.");
+      }
+    }, 1000);
+  };
+
+  // ── EXTRA FEATURE 3: LIVE WEBSOCKET LOGS STREAM ──
+  const [socketLogs, setSocketLogs] = useState([
+    "[SYSTEM] Database connections synchronized successfully.",
+    "[REDIS] Cache key pool initialized. TTL 3600s.",
+    "[WEBSOCKET] Proctor event loop active on port 5000."
+  ]);
+
+  useEffect(() => {
+    const logPool = [
+      "[WEBSOCKET] Candidate #8402 heartbeats verified.",
+      "[REDIS] Cache hit for exam session list configurations.",
+      "[SYSTEM] Auto-saving student exam draft buffer to DB.",
+      "[PROCTOR] Gaze threshold deviation check: NORMAL.",
+      "[INTEGRITY] Fullscreen focus validation check: MATCH."
+    ];
+    const logInterval = setInterval(() => {
+      const randomLog = logPool[Math.floor(Math.random() * logPool.length)];
+      const timestamp = new Date().toLocaleTimeString();
+      setSocketLogs(prev => [`[${timestamp}] ${randomLog}`, ...prev.slice(0, 7)]);
+    }, 4000);
+    return () => clearInterval(logInterval);
+  }, []);
+
+  // ── EXTRA FEATURE 4: BULK EXCEL/CSV TEMPLATE GENERATOR ──
+  const [selectedTemplate, setSelectedTemplate] = useState("questions");
+  const templates = {
+    questions: "content,type,options,answers,score,explanation\nWhich keyword is used to extend a class in Java?,MCQ,\"[\"\"extends\"\",\"\"implements\"\",\"\"imports\"\"]\",extends,1.0,extends is the inheritance keyword in class design.",
+    students: "firstName,lastName,email,departmentCode\nRahul,Sharma,rahul@nitw.ac.in,CSE\nAjay,Krishna,ajay@nitw.ac.in,CSE"
+  };
+
+  // ── EXTRA FEATURE 5: DYNAMIC SCORE & PENALTY SIMULATOR ──
+  const [correctWeight, setCorrectWeight] = useState(4);
+  const [penaltyWeight, setPenaltyWeight] = useState(1);
+  const [correctAnswers, setCorrectAnswers] = useState(8);
+  const [incorrectAnswers, setIncorrectAnswers] = useState(2);
+  const finalScore = (correctAnswers * correctWeight) - (incorrectAnswers * penaltyWeight);
+
+  // ── EXTRA FEATURE 6: SYSTEM INTEGRITY HEALTH CHECK ──
+  const [healthStatus, setHealthStatus] = useState("ONLINE");
+  const [pingTimes, setPingTimes] = useState({ postgres: "14ms", redis: "2ms", socket: "22ms" });
+
+  const triggerHealthRefresh = () => {
+    setHealthStatus("REFRESHING");
+    setTimeout(() => {
+      setPingTimes({
+        postgres: `${Math.floor(Math.random() * 20) + 8}ms`,
+        redis: `${Math.floor(Math.random() * 4) + 1}ms`,
+        socket: `${Math.floor(Math.random() * 30) + 15}ms`
+      });
+      setHealthStatus("ONLINE");
+    }, 800);
+  };
+
+  // ── EXTRA FEATURE 7: TIMELINE OF EXAM SESSION SLIDER ──
+  const [timelineVal, setTimelineVal] = useState(25);
+  const getTimelineState = () => {
+    if (timelineVal < 25) return { t: "0m - Initiation", d: "Webcam parameters validated, fullscreen mode locked on workspace." };
+    if (timelineVal < 50) return { t: "15m - In Progress", d: "First tab switch warnings detected. Real-time alert dispatched to proctor feed." };
+    if (timelineVal < 75) return { t: "30m - Flag Applied", d: "Second deviation detected. Automatical negative scoring penalty marked." };
+    return { t: "45m - Submission", d: "Exam countdown elapsed. Fail-safe script commits student draft automatically." };
+  };
+
+  // ── EXTRA FEATURE 8: INTERACTIVE STUDENT COHORT STATISTICS ──
+  const [selectedDept, setSelectedDept] = useState("CSE");
+  const deptStats = {
+    CSE: { avg: "82.4%", passRate: "96.5%", size: "542 Candidates" },
+    ECE: { avg: "78.1%", passRate: "92.2%", size: "412 Candidates" },
+    MECH: { avg: "71.5%", passRate: "88.0%", size: "294 Candidates" }
+  };
+
+  // ── EXTRA FEATURE 9: INTEGRATION APP CONNECTOR CONNECTIVITY ──
+  const [activeConn, setActiveConn] = useState(null);
+
+  // ── EXTRA FEATURE 10: INTERACTIVE HELPDESK CHAT BOX ──
+  const [chatInput, setChatInput] = useState("");
+  const [chatLogs, setChatLogs] = useState([
+    { sender: "AI Assistant", text: "Hello! How can I assist you with the Skillbrix Online Exam Portal today?" }
+  ]);
+
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput;
+    setChatLogs(prev => [...prev, { sender: "You", text: userText }]);
+    setChatInput("");
+
+    setTimeout(() => {
+      let reply = "I can assist you with bulk CSV questions formatting, setting up proctor tolerances, or locking exams.";
+      if (userText.toLowerCase().includes("proctor")) {
+        reply = "Our AI proctor scans candidate gaze via webcams and blocks tab switches. If warnings hit 5, it auto-submits.";
+      } else if (userText.toLowerCase().includes("csv") || userText.toLowerCase().includes("import")) {
+        reply = "You can download Excel templates, fill them out in bulk, and upload up to 2,000 questions in parallel blocks.";
+      }
+      setChatLogs(prev => [...prev, { sender: "AI Assistant", text: reply }]);
+    }, 800);
+  };
 
   const featureCards = [
     {
@@ -288,85 +320,13 @@ export const Landing = () => {
           <span className="text-[9px] text-slate-500 uppercase tracking-widest block mt-1">Countdown Lock</span>
         </div>
       )
-    },
-    {
-      id: "batch",
-      title: "Batch Optimized AI MCQ Parser",
-      description: "Instead of processing records one-by-one which causes gateway timeouts, Skillbrix utilizes chunked parallel inserts to safely commit up to 2,000 questions in 500-question batch intervals.",
-      icon: Cpu,
-      glowColor: "rgba(124, 92, 252, 0.45)",
-      badge: "Chunked DB Writes",
-      visualWidget: (
-        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex items-center gap-6 group-hover:border-violet-500/20 transition-all min-h-[160px]">
-          <div className="flex-1 space-y-2.5">
-            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-violet-500 w-[100%]" />
-            </div>
-            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-violet-500 w-[100%]" />
-            </div>
-            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-violet-500 w-[60%] animate-pulse" />
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Chunk Pipeline</span>
-            <span className="text-sm font-black text-white block mt-1">1,500/2,000</span>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "students",
-      title: "Clean Student Controls",
-      description: "Show students on a clean single page without annoying previous/next pagination buttons. Block/unblock credentials instantly.",
-      icon: Users,
-      glowColor: "rgba(52, 211, 153, 0.45)",
-      badge: "Clean Layout",
-      visualWidget: (
-        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[160px]">
-          <div className="flex items-center justify-between text-xs">
-            <div>
-              <span className="font-semibold text-white block">Rahul Sharma</span>
-              <span className="text-[9px] text-slate-500 block">rahul@example.com</span>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400 uppercase">Active</span>
-          </div>
-          <div className="flex items-center justify-between text-xs border-t border-white/[0.04] pt-3 mt-3">
-            <div>
-              <span className="font-semibold text-white block">Ajay Krishna</span>
-              <span className="text-[9px] text-slate-500 block">ajay@example.com</span>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-bold text-red-400 uppercase">Blocked</span>
-          </div>
-        </div>
-      )
-    }
-  ];
-
-  const faqs = [
-    {
-      q: "Can I import 2,000+ questions at once?",
-      a: "Yes! Skillbrix supports bulk imports of up to 5,000 questions in Excel, CSV, JSON, or TXT format. Our parser is optimized to process large question banks in quick parallel batches."
-    },
-    {
-      q: "How does the real-time student monitoring work?",
-      a: "The admin panel connects to active student terminals via real-time WebSockets, showing instantly if a student is actively taking the test, has finished, or exited the tab."
-    },
-    {
-      q: "Is negative marking supported?",
-      a: "Absolutely. You can set positive weights and negative mark margins (e.g., -0.25 or -1.0) globally or on a per-question level to mirror competitive exam structures."
-    },
-    {
-      q: "Are departments auto-detected during uploads?",
-      a: "Yes. When importing student records or question lists, the platform scans target columns to automatically identify existing departments or create new ones on the fly."
     }
   ];
 
   return (
     <div className="min-h-screen bg-[#02000A] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
       
-      {/* Global CSS for glows and animations */}
+      {/* Global CSS style overrides for premium dashboard features */}
       <style>{`
         @keyframes pulse-glow {
           0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
@@ -403,10 +363,10 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* Grid Background */}
+      {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22] pointer-events-none" />
       
-      {/* Background Glow */}
+      {/* Background Neon Orbs */}
       <div className="glow-radial-1 w-[800px] h-[500px] -top-40 left-[50%] -translate-x-[50%] -z-10 animate-pulse" />
 
       {/* Navigation Header */}
@@ -421,10 +381,12 @@ export const Landing = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-          <a href="#proctor-simulation" className="hover:text-white transition-colors">Proctor Deck</a>
-          <a href="#analytics-dashboard" className="hover:text-white transition-colors">Metrics</a>
-          <a href="#custom-ai-prompter" className="hover:text-white transition-colors">AI Sandbox</a>
-          <a href="#batch-import" className="hover:text-white transition-colors">Batch Tool</a>
+          <a href="#proctor-calibration" className="hover:text-white transition-colors">Calibration</a>
+          <a href="#code-sandbox" className="hover:text-white transition-colors">Sandbox</a>
+          <a href="#scoring-simulator" className="hover:text-white transition-colors">Score Simulator</a>
+          <a href="#session-timeline" className="hover:text-white transition-colors">Timeline</a>
+          <a href="#cohort-map" className="hover:text-white transition-colors">Cohorts</a>
+          <a href="#helpdesk-chat" className="hover:text-white transition-colors">AI Helpdesk</a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -437,7 +399,7 @@ export const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Header */}
       <header className="pt-44 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-8 animate-fade-in shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
@@ -452,7 +414,7 @@ export const Landing = () => {
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-        {/* Floating elements */}
+        {/* ── PARALLAX FLOATING WIDGETS ── */}
         <div 
           className="absolute top-1/2 left-[10%] pointer-events-none hidden lg:block border border-white/5 bg-[#0a0815]/80 backdrop-blur-md p-4 rounded-2xl shadow-xl transition-transform duration-100 ease-out"
           style={{ transform: `translate(${parallaxOffset.x * 2}px, ${parallaxOffset.y * 2}px)` }}
@@ -464,379 +426,390 @@ export const Landing = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-20 relative z-20">
-          <a href="#proctor-simulation" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
-            View Live Simulator <ArrowRight size={16} />
+          <a href="#proctor-calibration" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
+            Explore 10 Premium Features <ArrowRight size={16} />
           </a>
         </div>
       </header>
 
-      {/* ── FEATURE 1: INTERACTIVE LIVE PROCTOR CONTROL DECK ── */}
-      <section id="proctor-simulation" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Workstation Deck</div>
-          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Live Proctor Console</h2>
-          <p className="text-sm text-slate-400 mt-2">Simulate real-time candidate actions to test how our proctor engine automatically captures focus violations.</p>
-        </div>
+      {/* ── INTERACTIVE AREA: 10 PREMIUM ASSESSMENT TOOLS PANEL ── */}
+      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04] space-y-16">
+        
+        {/* 1. AI PROCTORING CALIBRATION WIZARD & 2. REAL-TIME LOGS STREAM */}
+        <div id="proctor-calibration" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Feature 1: AI Calibration Panel */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #1
+              </span>
+              <h3 className="text-xl font-bold text-white">AI Proctoring Calibration Wizard</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Pre-test system parameters to measure eye-gaze lock and head position index before starting the exam.
+              </p>
+              
+              <div className="bg-[#050212] p-5 rounded-2xl border border-white/5 space-y-4">
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div>
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Gaze Angle</span>
+                    <span className="text-white font-bold block mt-1">{calibMetrics.gaze}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Head Yaw</span>
+                    <span className="text-white font-bold block mt-1">{calibMetrics.headPose}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Ambient Light</span>
+                    <span className="text-white font-bold block mt-1">{calibMetrics.light}</span>
+                  </div>
+                </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-          
-          {/* Controls Panel */}
-          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 space-y-4">
-            <h4 className="text-base font-bold text-white mb-2 flex items-center gap-2">
-              <Zap className="text-violet-400" size={16} /> Event Control Deck
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">Click any simulation button to trigger a student anomaly event and see the logs react.</p>
-            
-            <button 
-              onClick={() => triggerProctorSimulation("tab")}
-              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
-            >
-              <span>Simulate Tab Departure</span>
-              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Focus Out</span>
-            </button>
-
-            <button 
-              onClick={() => triggerProctorSimulation("multi")}
-              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
-            >
-              <span>Simulate Multi-Face Detection</span>
-              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Camera Check</span>
-            </button>
-
-            <button 
-              onClick={() => triggerProctorSimulation("missing")}
-              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
-            >
-              <span>Simulate Candidate Missing</span>
-              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Webcam Anomaly</span>
-            </button>
-
-            <div className="border-t border-white/[0.04] pt-4 flex gap-2">
-              <button 
-                onClick={() => triggerProctorSimulation("reset")}
-                className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
-              >
-                Reset Session
-              </button>
-              <button 
-                onClick={() => triggerProctorSimulation("lock")}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
-              >
-                Lock Terminal
-              </button>
+                <button 
+                  onClick={handleStartCalibration}
+                  disabled={calibState === "calibrating"}
+                  className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                >
+                  {calibState === "calibrating" ? "Calibrating Sensors..." : "Run Calibration Check"}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Student Workstation Screen */}
-          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between min-h-[300px]">
-            <div>
-              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Candidate Terminal</span>
-                <span className="flex items-center gap-1.5 text-xs text-slate-300 font-bold">
-                  <Clock size={12} className="text-fuchsia-400" /> {formatTime(secondsLeft)}
-                </span>
-              </div>
-
-              {proctorStatus === "Intervened" ? (
-                <div className="text-center py-10 space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto animate-pulse">
-                    <Lock size={20} />
-                  </div>
-                  <h4 className="text-sm font-bold text-red-400">WORKSTATION TERMINATED</h4>
-                  <p className="text-[11px] text-slate-400">Locked by proctor administrator command.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Question 1 of 5</span>
-                  <h4 className="text-xs font-semibold text-white">Which keyword is used to make a class inherit from an interface in Java?</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-[11px] text-slate-300">A) extends</div>
-                    <div className="p-3 bg-violet-600/20 border border-violet-500/40 rounded-xl text-[11px] text-white font-bold">B) implements</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="text-[10px] text-slate-500 border-t border-white/5 pt-3 mt-4 flex justify-between items-center">
-              <span>Candidate: Rahul Sharma</span>
-              <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
-                proctorStatus === "Secured" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
-              }`}>{proctorStatus}</span>
-            </div>
-          </div>
-
-          {/* Admin Proctor Log Dashboard */}
-          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between min-h-[300px]">
-            <div>
-              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Security Watch Feed</span>
-                <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold animate-pulse">
-                  <Activity size={10} /> Live Monitoring
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#050212] border border-white/5 p-3.5 rounded-xl text-center">
-                  <span className="text-[8px] text-slate-500 font-bold block uppercase tracking-wider">Integrity Watch</span>
-                  <span className={`text-base font-bold block mt-0.5 ${proctorFlags > 1 ? "text-red-400" : "text-emerald-400"}`}>
-                    {proctorFlags === 0 ? "100%" : proctorFlags === 1 ? "80%" : "40%"}
-                  </span>
-                </div>
-                <div className="bg-[#050212] border border-white/5 p-3.5 rounded-xl text-center">
-                  <span className="text-[8px] text-slate-500 font-bold block uppercase tracking-wider">Anomaly Count</span>
-                  <span className="text-base font-bold block mt-0.5 text-white">{proctorFlags} Flags</span>
-                </div>
-              </div>
-
-              <div className="bg-slate-950 border border-white/5 rounded-xl p-3 font-mono text-[9px] text-slate-400 space-y-1.5 max-h-32 overflow-y-auto">
-                {proctorLogs.map((log, index) => (
-                  <div key={index} className="flex gap-2">
+          {/* Feature 2: WebSocket Logs Stream */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #2
+              </span>
+              <h3 className="text-xl font-bold text-white">Real-Time WebSocket Log Stream</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Active connections compile and stream client telemetry details directly into the database.
+              </p>
+              
+              <div className="bg-slate-950 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-slate-400 space-y-1.5 h-36 overflow-y-auto">
+                {socketLogs.map((log, idx) => (
+                  <div key={idx} className="flex gap-2">
                     <span className="text-slate-600">→</span>
-                    <span className={log.includes("ALERT") || log.includes("CRITICAL") ? "text-red-400" : ""}>{log}</span>
+                    <span className="text-slate-300">{log}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="text-[9px] text-slate-500 border-t border-white/5 pt-3 mt-4">
-              Real-time socket events sync on action event intervals.
-            </div>
           </div>
-
-        </div>
-      </section>
-
-      {/* ── FEATURE 2: INTERACTIVE ANALYTICS METRICS DASHBOARD ── */}
-      <section id="analytics-dashboard" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Live Metrics</div>
-          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Interactive Metrics</h2>
-          <p className="text-sm text-slate-400 mt-2">Toggle between different admin panel tabs to review automated scoring pipelines.</p>
         </div>
 
-        <div className="glass-card-wow rounded-3xl border border-white/5 p-6 md:p-8">
-          <div className="flex gap-2 border-b border-white/5 pb-4 mb-6">
-            {["overview", "departments", "integrations"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                  activeTab === tab ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" : "bg-white/5 text-slate-400 hover:text-white"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === "overview" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
-                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Average Test Duration</span>
-                <span className="text-3xl font-black text-white block mt-2">48m 12s</span>
-                <p className="text-xs text-slate-400 mt-2">Average compilation completion time.</p>
-              </div>
-              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
-                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Active Cohort Count</span>
-                <span className="text-3xl font-black text-violet-400 block mt-2">1,248 Candidates</span>
-                <p className="text-xs text-slate-400 mt-2">Active database record sessions.</p>
-              </div>
-              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
-                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Average Proctor Rating</span>
-                <span className="text-3xl font-black text-emerald-400 block mt-2">99.8%</span>
-                <p className="text-xs text-slate-400 mt-2">Accurate gaze confirmation score.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "departments" && (
+        {/* 3. MINI EXAM TERMINAL SANDBOX & 4. SYSTEM HEALTH CHECK */}
+        <div id="code-sandbox" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Feature 3: Code Sandbox */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
-                <span className="font-bold text-slate-400">Department</span>
-                <span className="font-bold text-slate-400">Allocated Candidates</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white font-semibold">Computer Science Engineering (CSE)</span>
-                <span className="text-violet-400 font-bold">542 Students</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white font-semibold">Electronics & Communications (ECE)</span>
-                <span className="text-violet-400 font-bold">412 Students</span>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "integrations" && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {["Slack Alerts", "Canvas LTI", "Microsoft Teams", "Google Sheets API"].map((tool) => (
-                <div key={tool} className="bg-[#050212] border border-white/5 p-4 rounded-xl text-center">
-                  <span className="text-xs font-bold text-white block">{tool}</span>
-                  <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[9px] font-semibold border border-emerald-500/20">Synced</span>
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #3
+              </span>
+              <h3 className="text-xl font-bold text-white">Interactive Code Editor Sandbox</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Test code compiles against dynamic test parameters inside the sandbox environment.
+              </p>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center bg-slate-950 px-3 py-1.5 border border-white/5 rounded-t-xl">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Editor pane</span>
+                  <select 
+                    value={sandboxLang} 
+                    onChange={(e) => setSandboxLang(e.target.value)}
+                    className="bg-transparent border-none text-[10px] text-violet-400 font-bold focus:outline-none"
+                  >
+                    <option value="python" className="bg-[#050212]">Python 3.10</option>
+                    <option value="javascript" className="bg-[#050212]">JavaScript (Node)</option>
+                  </select>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                
+                <textarea
+                  value={sandboxCode}
+                  onChange={(e) => setSandboxCode(e.target.value)}
+                  rows={4}
+                  className="w-full bg-[#050212] border border-white/10 rounded-b-xl p-3 text-[11px] text-slate-300 font-mono focus:outline-none"
+                />
 
-      {/* ── FEATURE 3: DYNAMIC AI QUESTION GENERATOR CUSTOMIZER ── */}
-      <section id="custom-ai-prompter" className="py-24 px-6 bg-slate-950/20 border-t border-white/[0.04]">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="max-w-xl mx-auto space-y-3">
-            <div className="text-xs font-bold text-violet-400 uppercase tracking-widest">AI Customizer</div>
-            <h2 className="text-3xl md:text-5xl font-black text-white">Dynamic AI Sandbox</h2>
-            <p className="text-sm text-slate-400">Select subjects, set negative marking options, and compile personalized MCQ test segments instantly.</p>
+                <button 
+                  onClick={handleRunSandbox}
+                  disabled={isCompilingSandbox}
+                  className="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all"
+                >
+                  {isCompilingSandbox ? "Executing..." : "Execute Test Case"}
+                </button>
+
+                {sandboxOutput && (
+                  <pre className="bg-slate-950 p-3 rounded-xl border border-white/5 font-mono text-[9px] text-emerald-400">
+                    {sandboxOutput}
+                  </pre>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="neon-border-glow p-0.5">
-            <div className="bg-[#050212] rounded-[22px] p-6 md:p-8 text-left border border-white/5 space-y-6">
-              
-              {/* Controls Configuration */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Subject</label>
-                  <select 
-                    value={aiSubject}
-                    onChange={(e) => setAiSubject(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                  >
-                    <option value="Java OOP" className="bg-[#050212]">Java OOP</option>
-                    <option value="Python" className="bg-[#050212]">Python</option>
-                    <option value="React & Vite" className="bg-[#050212]">React & Vite</option>
-                    <option value="SQL Databases" className="bg-[#050212]">SQL Databases</option>
-                  </select>
+          {/* Feature 4: System Integrity Health Check */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #4
+              </span>
+              <h3 className="text-xl font-bold text-white">System Integrity Health Checker</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Confirm backend database, caching, and network latency response rates globally.
+              </p>
+
+              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-3.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-semibold">PostgreSQL Ping</span>
+                  <span className="text-emerald-400 font-bold">{pingTimes.postgres}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-semibold">Redis Cache Speed</span>
+                  <span className="text-emerald-400 font-bold">{pingTimes.redis}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-semibold">Socket.IO Heartbeat</span>
+                  <span className="text-emerald-400 font-bold">{pingTimes.socket}</span>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Difficulty</label>
-                  <select 
-                    value={aiDifficulty}
-                    onChange={(e) => setAiDifficulty(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                  >
-                    <option value="Easy" className="bg-[#050212]">Easy</option>
-                    <option value="Medium" className="bg-[#050212]">Medium</option>
-                    <option value="Hard" className="bg-[#050212]">Hard</option>
-                  </select>
+                <button 
+                  onClick={triggerHealthRefresh}
+                  className="w-full py-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
+                >
+                  {healthStatus === "REFRESHING" ? "Querying Nodes..." : "Refresh Status"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. DYNAMIC SCORING SIMULATOR & 6. BULK TEMPLATE GENERATOR */}
+        <div id="scoring-simulator" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Feature 5: Score Simulator */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #5
+              </span>
+              <h3 className="text-xl font-bold text-white">Dynamic Score & Penalty Simulator</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Adjust marking weights and penalty indices to calculate simulated final exam scores.
+              </p>
+
+              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Correct Answer Value (+{correctWeight})</span>
+                    <input 
+                      type="range" min={1} max={4} value={correctWeight}
+                      onChange={(e) => setCorrectWeight(parseInt(e.target.value))}
+                      className="accent-violet-500"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Incorrect Answer Penalty (-{penaltyWeight})</span>
+                    <input 
+                      type="range" min={0} max={2} value={penaltyWeight}
+                      onChange={(e) => setPenaltyWeight(parseInt(e.target.value))}
+                      className="accent-violet-500"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Count</label>
-                  <input 
-                    type="number" 
-                    min={1} 
-                    max={3}
-                    value={aiCount}
-                    onChange={(e) => setAiCount(parseInt(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                  />
+                <div className="border-t border-white/[0.04] pt-4 flex justify-between items-center text-xs">
+                  <span className="text-slate-400">Correct: {correctAnswers} / Incorrect: {incorrectAnswers}</span>
+                  <span className="text-sm font-black text-white">Total Score: <span className="text-violet-400">{finalScore} Marks</span></span>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <div className="flex flex-col justify-end">
+          {/* Feature 6: Bulk Template Generator */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #6
+              </span>
+              <h3 className="text-xl font-bold text-white">Bulk Excel / CSV Template Generator</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Select and generate standard formats for questions or student list templates.
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex gap-2">
                   <button 
-                    onClick={handleGenerateCustomMcqs}
-                    disabled={aiState === "generating"}
-                    className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
+                    onClick={() => setSelectedTemplate("questions")}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors ${
+                      selectedTemplate === "questions" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
+                    }`}
                   >
-                    {aiState === "generating" ? <RefreshCw className="animate-spin" size={12} /> : <Sparkles size={12} />}
-                    Compile Test
+                    Questions Schema
+                  </button>
+                  <button 
+                    onClick={() => setSelectedTemplate("students")}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors ${
+                      selectedTemplate === "students" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
+                    }`}
+                  >
+                    Students Schema
                   </button>
                 </div>
+                <textarea
+                  readOnly
+                  value={templates[selectedTemplate]}
+                  rows={3}
+                  className="w-full bg-[#050212] border border-white/10 rounded-xl p-3 text-[10px] text-slate-400 font-mono focus:outline-none"
+                />
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Output Display */}
-              {aiState === "generating" && (
-                <div className="flex items-center gap-3 text-xs text-slate-400 border-t border-white/5 pt-6">
-                  <RefreshCw className="animate-spin text-violet-400" size={16} />
-                  Structuring {aiSubject} segment with negative weights ({aiDifficulty} parameters)...
+        {/* 7. TIMELINE OF EXAM SESSION & 8. COHORT MAP STATISTICS */}
+        <div id="session-timeline" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Feature 7: Session Timeline */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #7
+              </span>
+              <h3 className="text-xl font-bold text-white">Interactive Session Timeline</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Drag the slider to review proctoring and compilation stages throughout the exam.
+              </p>
+
+              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-4">
+                <input 
+                  type="range" min={0} max={100} value={timelineVal}
+                  onChange={(e) => setTimelineVal(parseInt(e.target.value))}
+                  className="w-full accent-violet-500"
+                />
+                
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold text-violet-400">{getTimelineState().t}</h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{getTimelineState().d}</p>
                 </div>
-              )}
+              </div>
+            </div>
+          </div>
 
-              {aiState === "complete" && generatedMcqs.length > 0 && (
-                <div className="space-y-6 animate-fade-in border-t border-white/5 pt-6">
-                  {generatedMcqs.map((q, idx) => (
-                    <div key={idx} className="space-y-2 bg-[#0a0815]/50 border border-white/[0.03] p-4 rounded-xl">
-                      <h4 className="text-xs md:text-sm font-bold text-white flex items-start gap-2">
-                        <CornerDownRight size={14} className="text-violet-400 shrink-0 mt-0.5" />
-                        {q.q}
-                      </h4>
-                      <p className="pl-6 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                        Suggested Key answer: {q.ans}
-                      </p>
+          {/* Feature 8: Cohort Map */}
+          <div id="cohort-map" className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #8
+              </span>
+              <h3 className="text-xl font-bold text-white">Interactive Cohort Map</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Select a department division to review its average grades and student sizes.
+              </p>
+
+              <div className="space-y-3.5">
+                <div className="flex gap-2">
+                  {["CSE", "ECE", "MECH"].map((dept) => (
+                    <button
+                      key={dept}
+                      onClick={() => setSelectedDept(dept)}
+                      className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors ${
+                        selectedDept === dept ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
+                      }`}
+                    >
+                      {dept} Division
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bg-[#050212] border border-white/5 rounded-2xl p-4 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Total Candidates</span>
+                    <span className="text-white font-bold">{deptStats[selectedDept].size}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Class Average</span>
+                    <span className="text-violet-400 font-bold">{deptStats[selectedDept].avg}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Integrity Pass Rate</span>
+                    <span className="text-emerald-400 font-bold">{deptStats[selectedDept].passRate}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 9. CONNECTORS GRID & 10. HELPDESK CHAT BOX */}
+        <div id="helpdesk-chat" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Feature 9: Connectors Grid */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #9
+              </span>
+              <h3 className="text-xl font-bold text-white">Platform Integration Connectors</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Hover over an application block to establish standard API sync connections.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                {["Slack Alerts", "Canvas LTI", "Moodle API", "Google Workspaces"].map((app) => (
+                  <div 
+                    key={app}
+                    onMouseEnter={() => setActiveConn(app)}
+                    onMouseLeave={() => setActiveConn(null)}
+                    className={`p-4 rounded-xl border text-center transition-all cursor-pointer ${
+                      activeConn === app ? "bg-violet-600/10 border-violet-500/35 text-white" : "bg-[#050212] border-white/5 text-slate-400"
+                    }`}
+                  >
+                    <span className="text-xs font-bold block">{app}</span>
+                    <span className="text-[8px] uppercase tracking-wider block mt-1 text-slate-500">
+                      {activeConn === app ? "Establish Connection" : "Offline"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 10: Helpdesk Chat Box */}
+          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
+                Feature #10
+              </span>
+              <h3 className="text-xl font-bold text-white">Interactive Helpdesk AI Chat</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Type queries about platform setup or CSV formats to check simulated AI responses.
+              </p>
+
+              <div className="space-y-3">
+                <div className="bg-[#050212] border border-white/5 rounded-xl p-3 h-28 overflow-y-auto space-y-2 text-[10px] font-sans">
+                  {chatLogs.map((msg, idx) => (
+                    <div key={idx} className={msg.sender === "You" ? "text-right" : "text-left"}>
+                      <span className="text-slate-500 block text-[8px] uppercase font-bold">{msg.sender}</span>
+                      <p className="text-white mt-0.5 inline-block bg-white/5 px-2.5 py-1 rounded-lg max-w-[80%]">{msg.text}</p>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ── FEATURE 4: BATCH IMPORT SIMULATOR ── */}
-      <section id="batch-import" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Bulk Tools</div>
-          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Department auto-detection</h2>
-          <p className="text-sm text-slate-400 mt-2">Paste raw student lists to check how the platform groups records into transactions.</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-          {/* CSV Input Panel */}
-          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Paste student CSV / text</span>
-              <textarea
-                value={csvText}
-                onChange={(e) => setCsvText(e.target.value)}
-                rows={5}
-                className="w-full bg-[#050212] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
-              />
-            </div>
-            <button 
-              onClick={handleSimulateBatchImport}
-              disabled={isParsing}
-              className="w-full mt-4 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2"
-            >
-              {isParsing ? <RefreshCw className="animate-spin" size={14} /> : <UploadCloud size={14} />}
-              Parse & Map cohort
-            </button>
-          </div>
-
-          {/* Mapping Output Panel */}
-          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider mb-3">Mapped Pipeline output</span>
-              
-              {batchProgress > 0 && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Mapping progress</span>
-                    <span className="text-violet-400 font-bold">{batchProgress}%</span>
-                  </div>
-                  <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-violet-500 transition-all duration-300" style={{ width: `${batchProgress}%` }} />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2 mt-4 max-h-[140px] overflow-y-auto">
-                {parsedStudents.map((stud, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-[11px] bg-white/5 p-2 rounded-lg border border-white/[0.04]">
-                    <div>
-                      <span className="text-white font-bold block">{stud.name}</span>
-                      <span className="text-slate-500 block">{stud.email}</span>
-                    </div>
-                    <span className="text-emerald-400 font-semibold">{stud.dept}</span>
-                  </div>
-                ))}
+                <form onSubmit={handleSendChat} className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Type 'proctor' or 'csv'..."
+                    className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500"
+                  />
+                  <button type="submit" className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl transition-all">
+                    <Send size={12} />
+                  </button>
+                </form>
               </div>
             </div>
-            
-            <div className="text-[10px] text-slate-500 border-t border-white/5 pt-3 mt-4">
-              Identifies columns to match student credentials.
-            </div>
           </div>
         </div>
+
       </section>
 
       {/* Bento Grid Platform Features */}
