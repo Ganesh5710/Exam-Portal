@@ -29,10 +29,14 @@ import {
   CornerDownRight,
   UploadCloud,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Database,
+  BarChart4,
+  Layout,
+  UserCheck
 } from "lucide-react";
 
-// Ultra-Premium Interactive Bento Card Component (With Perfect Alignment)
+// Ultra-Premium Bento Card Wrapper
 const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -46,9 +50,8 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
 
     const width = rect.width;
     const height = rect.height;
-    // 3D tilt calculation
-    const rotateX = ((y / height) - 0.5) * -12;
-    const rotateY = ((x / width) - 0.5) * 12;
+    const rotateX = ((y / height) - 0.5) * -10;
+    const rotateY = ((x / width) - 0.5) * 10;
     
     setTilt({ x: rotateX, y: rotateY });
     setIsHovered(true);
@@ -73,7 +76,6 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
         cursor: "pointer"
       }}
     >
-      {/* Dynamic Cursor Spotlight Border Glow */}
       <div 
         className="absolute inset-0 pointer-events-none transition-opacity duration-500"
         style={{
@@ -90,18 +92,110 @@ export const Landing = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   
-  // Interactive Simulation Sandbox States
-  const [simState, setSimState] = useState("idle"); 
-  const [promptText, setPromptText] = useState("");
-  const [aiQuestions, setAiQuestions] = useState([]);
+  // ── FEATURE 1: DYNAMIC AI QUESTION GENERATOR CUSTOMIZER ──
+  const [aiSubject, setAiSubject] = useState("Java OOP");
+  const [aiDifficulty, setAiDifficulty] = useState("Hard");
+  const [aiCount, setAiCount] = useState(3);
+  const [aiNegativeMarking, setAiNegativeMarking] = useState(true);
+  const [aiState, setAiState] = useState("idle"); // "idle", "generating", "complete"
+  const [generatedMcqs, setGeneratedMcqs] = useState([]);
 
-  // Split-Screen Simulator States
-  const [splitState, setSplitState] = useState("start"); 
-  const [splitLogs, setSplitLogs] = useState([]);
+  const handleGenerateCustomMcqs = () => {
+    setAiState("generating");
+    setGeneratedMcqs([]);
+    
+    setTimeout(() => {
+      const samples = {
+        "Java OOP": [
+          { q: "Explain the memory storage allocation differences between an abstract class reference variable and its subclass instance memory block.", ans: "Reference is allocated on the Stack, object instance is allocated in Heap memory." },
+          { q: "Under what conditions does the JVM invoke class initializers (<clinit>) for a class with static nested properties?", ans: "When a static member of the nested class is accessed or instance constructed." },
+          { q: "Why is multiple inheritance via interfaces preferred over class extensions in large microservices architecture?", ans: "Decouples type inheritance and avoids the diamond problem dependency conflict." }
+        ],
+        "Python": [
+          { q: "What is the computational complexity difference between lookup in a list vs dictionary inside a list comprehension?", ans: "List lookup is O(N), dictionary lookup is O(1) hash map." },
+          { q: "How do Python metaclasses __new__ and __init__ differ during class object compilation?", ans: "__new__ creates and returns the class object, __init__ configures the attributes." }
+        ],
+        "React & Vite": [
+          { q: "How does Fiber reconciler perform work loops in concurrent rendering mode?", ans: "Breaks rendering work into chunks using requestIdleCallback scheduling." },
+          { q: "What is the structural performance impact of using inline arrow functions inside render loops?", ans: "Forces garbage collection and triggers child re-renders due to new reference keys." }
+        ],
+        "SQL Databases": [
+          { q: "How does a B-Tree index scan differ from a Hash Index lookup for range filters?", ans: "B-Tree supports ranges via sequential nodes; Hash index only supports point equality." },
+          { q: "Explain the ACID isolation anomaly known as Write Skew in transactions.", ans: "Two transactions read same data, execute disjoint updates, violating consistency check." }
+        ]
+      };
+
+      const selectedList = samples[aiSubject] || samples["Java OOP"];
+      const sliced = selectedList.slice(0, aiCount);
+      setGeneratedMcqs(sliced);
+      setAiState("complete");
+    }, 1200);
+  };
+
+  // ── FEATURE 2: INTERACTIVE LIVE PROCTOR CONTROL DECK ──
+  const [proctorStatus, setProctorStatus] = useState("Secured"); // "Secured", "Tab Warning", "Multiple Faces", "Candidate Missing", "Intervened"
+  const [proctorFlags, setProctorFlags] = useState(0);
+  const [proctorLogs, setProctorLogs] = useState([
+    "[10:00:00] Candidate session initialized.",
+    "[10:00:02] Biometric face validation: Match (99% confidence)."
+  ]);
+
+  const triggerProctorSimulation = (type) => {
+    const time = new Date().toLocaleTimeString();
+    if (type === "tab") {
+      setProctorStatus("Tab Warning");
+      setProctorFlags(prev => prev + 1);
+      setProctorLogs(prev => [`[${time}] ALERT: Unfocused window. Departure logged.`, ...prev]);
+    } else if (type === "multi") {
+      setProctorStatus("Multiple Faces");
+      setProctorFlags(prev => prev + 1);
+      setProctorLogs(prev => [`[${time}] CRITICAL: Secondary face detection anomaly.`, ...prev]);
+    } else if (type === "missing") {
+      setProctorStatus("Candidate Missing");
+      setProctorFlags(prev => prev + 1);
+      setProctorLogs(prev => [`[${time}] WARNING: Candidate silhouette departed webcam feed.`, ...prev]);
+    } else if (type === "reset") {
+      setProctorStatus("Secured");
+      setProctorFlags(0);
+      setProctorLogs([`[${time}] Proctor system reset. Session secured.`, ...proctorLogs]);
+    } else if (type === "lock") {
+      setProctorStatus("Intervened");
+      setProctorLogs(prev => [`[${time}] ADMIN COMMAND: Candidate workstation locked down.`, ...prev]);
+    }
+  };
+
+  // ── FEATURE 3: INTERACTIVE ANALYTICS METRICS DASHBOARD ──
+  const [activeTab, setActiveTab] = useState("overview"); // "overview", "departments", "integrations"
   
+  // ── FEATURE 4: BATCH IMPORT SIMULATOR ──
+  const [csvText, setCsvText] = useState("name,email,department\nRahul Sharma,rahul@nitw.ac.in,CSE\nAjay Krishna,ajay@nitw.ac.in,CSE\nPriya Nath,priya@nitw.ac.in,ECE");
+  const [batchProgress, setBatchProgress] = useState(0);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parsedStudents, setParsedStudents] = useState([]);
+
+  const handleSimulateBatchImport = () => {
+    setIsParsing(true);
+    setBatchProgress(10);
+    setParsedStudents([]);
+    
+    const intervals = [30, 60, 90, 100];
+    intervals.forEach((val, idx) => {
+      setTimeout(() => {
+        setBatchProgress(val);
+        if (val === 100) {
+          setIsParsing(false);
+          setParsedStudents([
+            { name: "Rahul Sharma", email: "rahul@nitw.ac.in", dept: "CSE", status: "Imported Successfully" },
+            { name: "Ajay Krishna", email: "ajay@nitw.ac.in", dept: "CSE", status: "Imported Successfully" },
+            { name: "Priya Nath", email: "priya@nitw.ac.in", dept: "ECE", status: "Imported Successfully" }
+          ]);
+        }
+      }, (idx + 1) * 400);
+    });
+  };
+
   // Safe Timer Engine (seconds tracking)
   const [secondsLeft, setSecondsLeft] = useState(5399); 
-
   useEffect(() => {
     const timer = setInterval(() => {
       setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 5399));
@@ -119,7 +213,6 @@ export const Landing = () => {
   
   // Custom Parallax Mouse offsets
   const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
-
   useEffect(() => {
     const handleMouseParallax = (e) => {
       setParallaxOffset({
@@ -131,71 +224,6 @@ export const Landing = () => {
     return () => window.removeEventListener("mousemove", handleMouseParallax);
   }, []);
 
-  // AI Prompt typing effect
-  const triggerAiGenerator = () => {
-    setSimState("typing");
-    setAiQuestions([]);
-    const targetPrompt = "Generate 3 advanced Java OOP MCQs with negative marking...";
-    let currentText = "";
-    let i = 0;
-    
-    const interval = setInterval(() => {
-      currentText += targetPrompt[i];
-      setPromptText(currentText);
-      i++;
-      if (i >= targetPrompt.length) {
-        clearInterval(interval);
-        setSimState("generating");
-        
-        setTimeout(() => {
-          setAiQuestions([
-            {
-              q: "Q1. Which keyword is used to make a class inherit from an interface in Java?",
-              options: ["[A] extends", "[B] implements", "[C] inherits", "[D] imports"],
-              ans: "[B] implements",
-              explanation: "Classes implement interfaces, whereas classes extend other classes."
-            },
-            {
-              q: "Q2. What is encapsulation in Object-Oriented Programming?",
-              options: ["[A] Dynamic binding", "[B] Wrapping data and methods together", "[C] Operator overloading", "[D] Multiple inheritance"],
-              ans: "[B] Wrapping data and methods together",
-              explanation: "Encapsulation keeps variables and methods safe in a class container."
-            }
-          ]);
-          setSimState("complete");
-        }, 1500);
-      }
-    }, 40);
-  };
-
-  // Run Split Screen Proctor Demo Cycles
-  useEffect(() => {
-    if (splitState === "progress") {
-      setSplitLogs(["[10:00:00] Candidate initialized terminal.", "[10:00:02] Face scan verification: OK."]);
-      
-      const timeout1 = setTimeout(() => {
-        setSplitState("tab-out");
-        setSplitLogs(prev => ["[10:00:12] SYSTEM WARNING: Focus departed from workspace.", ...prev]);
-      }, 4500);
-
-      const timeout2 = setTimeout(() => {
-        setSplitState("proctor-alert");
-        setSplitLogs(prev => ["[10:00:15] CRITICAL ALERT: Tab switch detected. Proctor notified.", ...prev]);
-      }, 9000);
-
-      const timeout3 = setTimeout(() => {
-        setSplitState("graded");
-        setSplitLogs(prev => ["[10:00:25] Exam finalized. Auto-graded with penalty.", ...prev]);
-      }, 13500);
-
-      return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-        clearTimeout(timeout3);
-      };
-    }
-  }, [splitState]);
-
   const featureCards = [
     {
       id: "proctor",
@@ -206,7 +234,6 @@ export const Landing = () => {
       badge: "Webcam-Ready",
       visualWidget: (
         <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group-hover:border-violet-500/20 transition-all min-h-[160px]">
-          {/* Target Scanning HUD */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.06)_0%,transparent_70%)]" />
           <div className="w-20 h-20 rounded-full border border-violet-500/25 flex items-center justify-center relative bg-violet-600/5 shadow-inner">
             <div className="absolute inset-1.5 border border-dashed border-violet-500/40 rounded-full animate-spin" style={{ animationDuration: '8s' }} />
@@ -339,7 +366,7 @@ export const Landing = () => {
   return (
     <div className="min-h-screen bg-[#02000A] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
       
-      {/* Global CSS for premium spotlight transitions and interactive lines */}
+      {/* Global CSS for glows and animations */}
       <style>{`
         @keyframes pulse-glow {
           0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
@@ -376,10 +403,10 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* Grid Pattern */}
+      {/* Grid Background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22] pointer-events-none" />
       
-      {/* Background Neon Orbs */}
+      {/* Background Glow */}
       <div className="glow-radial-1 w-[800px] h-[500px] -top-40 left-[50%] -translate-x-[50%] -z-10 animate-pulse" />
 
       {/* Navigation Header */}
@@ -394,10 +421,10 @@ export const Landing = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-          <a href="#interactive-simulator" className="hover:text-white transition-colors">Split Monitor</a>
-          <a href="#ai-prompter" className="hover:text-white transition-colors">AI Prompter</a>
-          <a href="#features" className="hover:text-white transition-colors">Platform Features</a>
-          <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
+          <a href="#proctor-simulation" className="hover:text-white transition-colors">Proctor Deck</a>
+          <a href="#analytics-dashboard" className="hover:text-white transition-colors">Metrics</a>
+          <a href="#custom-ai-prompter" className="hover:text-white transition-colors">AI Sandbox</a>
+          <a href="#batch-import" className="hover:text-white transition-colors">Batch Tool</a>
         </div>
 
         <div className="flex items-center gap-3">
@@ -410,7 +437,7 @@ export const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Header */}
+      {/* Hero Section */}
       <header className="pt-44 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-8 animate-fade-in shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
@@ -425,7 +452,7 @@ export const Landing = () => {
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-        {/* ── PARALLAX FLOATING WIDGETS ── */}
+        {/* Floating elements */}
         <div 
           className="absolute top-1/2 left-[10%] pointer-events-none hidden lg:block border border-white/5 bg-[#0a0815]/80 backdrop-blur-md p-4 rounded-2xl shadow-xl transition-transform duration-100 ease-out"
           style={{ transform: `translate(${parallaxOffset.x * 2}px, ${parallaxOffset.y * 2}px)` }}
@@ -436,229 +463,306 @@ export const Landing = () => {
           </div>
         </div>
 
-        <div 
-          className="absolute top-[60%] right-[10%] pointer-events-none hidden lg:block border border-white/5 bg-[#0a0815]/80 backdrop-blur-md p-4 rounded-2xl shadow-xl transition-transform duration-100 ease-out"
-          style={{ transform: `translate(${parallaxOffset.x * -2}px, ${parallaxOffset.y * -2}px)` }}
-        >
-          <div className="flex items-center gap-2">
-            <Sparkles className="text-violet-400" size={14} />
-            <span className="text-[10px] font-bold text-white uppercase tracking-wider">AI Generation Active</span>
-          </div>
-        </div>
-
         <div className="flex flex-col sm:flex-row gap-4 mb-20 relative z-20">
-          <a href="#interactive-simulator" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
+          <a href="#proctor-simulation" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
             View Live Simulator <ArrowRight size={16} />
           </a>
         </div>
       </header>
 
-      {/* ── SPLIT-SCREEN PROCTOR & STUDENT DEMO ── */}
-      <section id="interactive-simulator" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
+      {/* ── FEATURE 1: INTERACTIVE LIVE PROCTOR CONTROL DECK ── */}
+      <section id="proctor-simulation" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
         <div className="text-center max-w-xl mx-auto mb-16">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Live Integration</div>
-          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Split-Screen Simulator</h2>
-          <p className="text-xs text-slate-500 mt-2">See exactly what the student experiences and how the administrator dashboard responds instantly.</p>
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Workstation Deck</div>
+          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Live Proctor Console</h2>
+          <p className="text-sm text-slate-400 mt-2">Simulate real-time candidate actions to test how our proctor engine automatically captures focus violations.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
           
-          {/* Left: Student Screen */}
-          <div className="neon-border-glow p-0.5 flex flex-col">
-            <div className="flex-1 bg-slate-950 rounded-[22px] p-6 flex flex-col justify-between border border-white/5 min-h-[350px]">
-              <div>
-                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Student Workspace</span>
-                  <div className="flex items-center gap-2 font-mono text-xs text-white">
-                    <Clock size={12} className="text-fuchsia-400" /> {formatTime(secondsLeft)}
-                  </div>
-                </div>
+          {/* Controls Panel */}
+          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 space-y-4">
+            <h4 className="text-base font-bold text-white mb-2 flex items-center gap-2">
+              <Zap className="text-violet-400" size={16} /> Event Control Deck
+            </h4>
+            <p className="text-xs text-slate-400 leading-relaxed mb-4">Click any simulation button to trigger a student anomaly event and see the logs react.</p>
+            
+            <button 
+              onClick={() => triggerProctorSimulation("tab")}
+              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
+            >
+              <span>Simulate Tab Departure</span>
+              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Focus Out</span>
+            </button>
 
-                {splitState === "start" && (
-                  <div className="space-y-6 text-center my-auto py-8">
-                    <p className="text-sm text-slate-300">Click below to start taking the mock Java inheritance exam.</p>
-                    <button 
-                      onClick={() => setSplitState("progress")}
-                      className="px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all"
-                    >
-                      Start Mock Exam
-                    </button>
-                  </div>
-                )}
+            <button 
+              onClick={() => triggerProctorSimulation("multi")}
+              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
+            >
+              <span>Simulate Multi-Face Detection</span>
+              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Camera Check</span>
+            </button>
 
-                {splitState === "progress" && (
-                  <div className="space-y-4">
-                    <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Question 1 of 5</span>
-                    <h4 className="text-sm font-semibold text-white">Which keyword is used to make a class inherit from an interface in Java?</h4>
-                    <div className="grid grid-cols-1 gap-2.5">
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-300">A) extends</div>
-                      <div className="p-3 bg-violet-600/20 border border-violet-500/40 rounded-xl text-xs text-white font-bold">B) implements</div>
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-300">C) inherits</div>
-                    </div>
-                  </div>
-                )}
+            <button 
+              onClick={() => triggerProctorSimulation("missing")}
+              className="w-full py-3 px-4 bg-white/5 border border-white/10 hover:bg-violet-600/10 hover:border-violet-500/20 text-left text-xs font-bold rounded-xl text-slate-200 flex justify-between items-center transition-all"
+            >
+              <span>Simulate Candidate Missing</span>
+              <span className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Webcam Anomaly</span>
+            </button>
 
-                {(splitState === "tab-out" || splitState === "proctor-alert") && (
-                  <div className="space-y-6 text-center py-8">
-                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto animate-pulse">
-                      <AlertTriangle size={24} />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-red-400 uppercase tracking-wider">Warning: Tab Switch Detected</h4>
-                      <p className="text-xs text-slate-400 mt-2 max-w-sm mx-auto">
-                        Please return to the fullscreen testing layout immediately. This departure has been logged to the admin dashboard.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {splitState === "graded" && (
-                  <div className="space-y-4 text-center py-8">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
-                      <CheckCircle2 size={24} />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">Exam Submission Finalized</h4>
-                      <p className="text-xs text-slate-400 mt-2">Scorecard compiled. Proctor log file saved successfully.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {splitState !== "start" && (
-                <div className="text-[10px] text-slate-500 border-t border-white/5 pt-4 mt-6">
-                  Candidate ID: #8402 (Rahul Sharma) — CSE Department
-                </div>
-              )}
+            <div className="border-t border-white/[0.04] pt-4 flex gap-2">
+              <button 
+                onClick={() => triggerProctorSimulation("reset")}
+                className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
+              >
+                Reset Session
+              </button>
+              <button 
+                onClick={() => triggerProctorSimulation("lock")}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
+              >
+                Lock Terminal
+              </button>
             </div>
           </div>
 
-          {/* Right: Administrator Proctor Console */}
-          <div className="neon-border-glow p-0.5 flex flex-col">
-            <div className="flex-1 bg-slate-950 rounded-[22px] p-6 flex flex-col justify-between border border-white/5 min-h-[350px]">
-              <div>
-                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Administrator Dashboard</span>
-                  <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Proctor Feed
-                  </span>
-                </div>
-
-                {splitState === "start" && (
-                  <div className="space-y-3 text-center my-auto py-8">
-                    <p className="text-xs text-slate-500">Awaiting student exam initiation...</p>
-                  </div>
-                )}
-
-                {splitState !== "start" && (
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-900/60 border border-white/5 p-4 rounded-xl">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Integrity Watch</span>
-                        <span className={`text-lg font-bold block mt-1 ${
-                          splitState === "tab-out" || splitState === "proctor-alert" ? "text-red-400" : "text-emerald-400"
-                        }`}>
-                          {splitState === "progress" ? "Secure (100%)" : splitState === "tab-out" ? "Warning (75%)" : splitState === "proctor-alert" ? "Breached (40%)" : "Graded"}
-                        </span>
-                      </div>
-                      <div className="bg-slate-900/60 border border-white/5 p-4 rounded-xl">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Anomaly Flags</span>
-                        <span className={`text-lg font-bold block mt-1 ${
-                          splitState === "tab-out" || splitState === "proctor-alert" ? "text-red-400" : "text-white"
-                        }`}>
-                          {splitState === "tab-out" ? "1 Flag" : splitState === "proctor-alert" ? "2 Flags" : "0 Flags"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-950 border border-white/5 rounded-xl p-4 font-mono text-[10px] text-slate-400 space-y-1.5 max-h-32 overflow-y-auto">
-                      {splitLogs.map((log, index) => (
-                        <div key={index} className="flex gap-2">
-                          <span className="text-slate-600">→</span>
-                          <span>{log}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          {/* Student Workstation Screen */}
+          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between min-h-[300px]">
+            <div>
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Candidate Terminal</span>
+                <span className="flex items-center gap-1.5 text-xs text-slate-300 font-bold">
+                  <Clock size={12} className="text-fuchsia-400" /> {formatTime(secondsLeft)}
+                </span>
               </div>
 
-              {splitState !== "start" && (
-                <div className="flex justify-between items-center text-xs border-t border-white/5 pt-4 mt-6">
-                  <span className="text-slate-500">Live logs refresh automatically</span>
-                  {splitState === "proctor-alert" && (
-                    <button 
-                      onClick={() => {
-                        setSplitState("graded");
-                        setSplitLogs(prev => ["[10:00:20] Admin intervened: Session closed.", ...prev]);
-                      }}
-                      className="px-3 py-1 bg-red-600 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-all"
-                    >
-                      Lock Terminal
-                    </button>
-                  )}
+              {proctorStatus === "Intervened" ? (
+                <div className="text-center py-10 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto animate-pulse">
+                    <Lock size={20} />
+                  </div>
+                  <h4 className="text-sm font-bold text-red-400">WORKSTATION TERMINATED</h4>
+                  <p className="text-[11px] text-slate-400">Locked by proctor administrator command.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">Question 1 of 5</span>
+                  <h4 className="text-xs font-semibold text-white">Which keyword is used to make a class inherit from an interface in Java?</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-[11px] text-slate-300">A) extends</div>
+                    <div className="p-3 bg-violet-600/20 border border-violet-500/40 rounded-xl text-[11px] text-white font-bold">B) implements</div>
+                  </div>
                 </div>
               )}
+            </div>
+
+            <div className="text-[10px] text-slate-500 border-t border-white/5 pt-3 mt-4 flex justify-between items-center">
+              <span>Candidate: Rahul Sharma</span>
+              <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                proctorStatus === "Secured" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"
+              }`}>{proctorStatus}</span>
+            </div>
+          </div>
+
+          {/* Admin Proctor Log Dashboard */}
+          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between min-h-[300px]">
+            <div>
+              <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Security Watch Feed</span>
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold animate-pulse">
+                  <Activity size={10} /> Live Monitoring
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-[#050212] border border-white/5 p-3.5 rounded-xl text-center">
+                  <span className="text-[8px] text-slate-500 font-bold block uppercase tracking-wider">Integrity Watch</span>
+                  <span className={`text-base font-bold block mt-0.5 ${proctorFlags > 1 ? "text-red-400" : "text-emerald-400"}`}>
+                    {proctorFlags === 0 ? "100%" : proctorFlags === 1 ? "80%" : "40%"}
+                  </span>
+                </div>
+                <div className="bg-[#050212] border border-white/5 p-3.5 rounded-xl text-center">
+                  <span className="text-[8px] text-slate-500 font-bold block uppercase tracking-wider">Anomaly Count</span>
+                  <span className="text-base font-bold block mt-0.5 text-white">{proctorFlags} Flags</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-950 border border-white/5 rounded-xl p-3 font-mono text-[9px] text-slate-400 space-y-1.5 max-h-32 overflow-y-auto">
+                {proctorLogs.map((log, index) => (
+                  <div key={index} className="flex gap-2">
+                    <span className="text-slate-600">→</span>
+                    <span className={log.includes("ALERT") || log.includes("CRITICAL") ? "text-red-400" : ""}>{log}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[9px] text-slate-500 border-t border-white/5 pt-3 mt-4">
+              Real-time socket events sync on action event intervals.
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* ── AI QUESTION PROMPTER SIMULATOR ── */}
-      <section id="ai-prompter" className="py-24 px-6 bg-slate-950/20 border-t border-white/[0.04]">
+      {/* ── FEATURE 2: INTERACTIVE ANALYTICS METRICS DASHBOARD ── */}
+      <section id="analytics-dashboard" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
+        <div className="text-center max-w-xl mx-auto mb-16">
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Live Metrics</div>
+          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Interactive Metrics</h2>
+          <p className="text-sm text-slate-400 mt-2">Toggle between different admin panel tabs to review automated scoring pipelines.</p>
+        </div>
+
+        <div className="glass-card-wow rounded-3xl border border-white/5 p-6 md:p-8">
+          <div className="flex gap-2 border-b border-white/5 pb-4 mb-6">
+            {["overview", "departments", "integrations"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  activeTab === tab ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20" : "bg-white/5 text-slate-400 hover:text-white"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
+                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Average Test Duration</span>
+                <span className="text-3xl font-black text-white block mt-2">48m 12s</span>
+                <p className="text-xs text-slate-400 mt-2">Average compilation completion time.</p>
+              </div>
+              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
+                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Active Cohort Count</span>
+                <span className="text-3xl font-black text-violet-400 block mt-2">1,248 Candidates</span>
+                <p className="text-xs text-slate-400 mt-2">Active database record sessions.</p>
+              </div>
+              <div className="bg-[#050212] border border-white/5 p-5 rounded-2xl">
+                <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Average Proctor Rating</span>
+                <span className="text-3xl font-black text-emerald-400 block mt-2">99.8%</span>
+                <p className="text-xs text-slate-400 mt-2">Accurate gaze confirmation score.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "departments" && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                <span className="font-bold text-slate-400">Department</span>
+                <span className="font-bold text-slate-400">Allocated Candidates</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-white font-semibold">Computer Science Engineering (CSE)</span>
+                <span className="text-violet-400 font-bold">542 Students</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-white font-semibold">Electronics & Communications (ECE)</span>
+                <span className="text-violet-400 font-bold">412 Students</span>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "integrations" && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {["Slack Alerts", "Canvas LTI", "Microsoft Teams", "Google Sheets API"].map((tool) => (
+                <div key={tool} className="bg-[#050212] border border-white/5 p-4 rounded-xl text-center">
+                  <span className="text-xs font-bold text-white block">{tool}</span>
+                  <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[9px] font-semibold border border-emerald-500/20">Synced</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── FEATURE 3: DYNAMIC AI QUESTION GENERATOR CUSTOMIZER ── */}
+      <section id="custom-ai-prompter" className="py-24 px-6 bg-slate-950/20 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="max-w-xl mx-auto space-y-3">
-            <div className="text-xs font-bold text-violet-400 uppercase tracking-widest">AI Generation Sandbox</div>
-            <h2 className="text-3xl md:text-5xl font-black text-white">Interactive AI Prompter</h2>
-            <p className="text-xs text-slate-500">Type or prompt our built-in question builder to automatically compile and tags MCQs in batches.</p>
+            <div className="text-xs font-bold text-violet-400 uppercase tracking-widest">AI Customizer</div>
+            <h2 className="text-3xl md:text-5xl font-black text-white">Dynamic AI Sandbox</h2>
+            <p className="text-sm text-slate-400">Select subjects, set negative marking options, and compile personalized MCQ test segments instantly.</p>
           </div>
 
           <div className="neon-border-glow p-0.5">
-            <div className="bg-[#050212] rounded-[22px] p-6 md:p-8 text-left border border-white/5">
-              <div className="flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/5 mb-6">
-                <Sparkles className="text-violet-400 shrink-0" size={18} />
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={promptText} 
-                  placeholder="Click 'Generate' below to prompt..." 
-                  className="bg-transparent border-none focus:outline-none text-xs md:text-sm text-white placeholder-slate-500 w-full"
-                />
-                <button 
-                  onClick={triggerAiGenerator}
-                  disabled={simState === "typing" || simState === "generating"}
-                  className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shrink-0 disabled:opacity-50"
-                >
-                  {simState === "generating" ? "Compiling..." : "Generate"}
-                </button>
+            <div className="bg-[#050212] rounded-[22px] p-6 md:p-8 text-left border border-white/5 space-y-6">
+              
+              {/* Controls Configuration */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Subject</label>
+                  <select 
+                    value={aiSubject}
+                    onChange={(e) => setAiSubject(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  >
+                    <option value="Java OOP" className="bg-[#050212]">Java OOP</option>
+                    <option value="Python" className="bg-[#050212]">Python</option>
+                    <option value="React & Vite" className="bg-[#050212]">React & Vite</option>
+                    <option value="SQL Databases" className="bg-[#050212]">SQL Databases</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Difficulty</label>
+                  <select 
+                    value={aiDifficulty}
+                    onChange={(e) => setAiDifficulty(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  >
+                    <option value="Easy" className="bg-[#050212]">Easy</option>
+                    <option value="Medium" className="bg-[#050212]">Medium</option>
+                    <option value="Hard" className="bg-[#050212]">Hard</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Count</label>
+                  <input 
+                    type="number" 
+                    min={1} 
+                    max={3}
+                    value={aiCount}
+                    onChange={(e) => setAiCount(parseInt(e.target.value))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex flex-col justify-end">
+                  <button 
+                    onClick={handleGenerateCustomMcqs}
+                    disabled={aiState === "generating"}
+                    className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-violet-600/20"
+                  >
+                    {aiState === "generating" ? <RefreshCw className="animate-spin" size={12} /> : <Sparkles size={12} />}
+                    Compile Test
+                  </button>
+                </div>
               </div>
 
-              {simState === "generating" && (
-                <div className="flex items-center gap-3 text-xs text-slate-400 py-6">
+              {/* Output Display */}
+              {aiState === "generating" && (
+                <div className="flex items-center gap-3 text-xs text-slate-400 border-t border-white/5 pt-6">
                   <RefreshCw className="animate-spin text-violet-400" size={16} />
-                  Structuring, mapping, and exporting questions to database...
+                  Structuring {aiSubject} segment with negative weights ({aiDifficulty} parameters)...
                 </div>
               )}
 
-              {simState === "complete" && aiQuestions.length > 0 && (
+              {aiState === "complete" && generatedMcqs.length > 0 && (
                 <div className="space-y-6 animate-fade-in border-t border-white/5 pt-6">
-                  {aiQuestions.map((q, idx) => (
-                    <div key={idx} className="space-y-2">
+                  {generatedMcqs.map((q, idx) => (
+                    <div key={idx} className="space-y-2 bg-[#0a0815]/50 border border-white/[0.03] p-4 rounded-xl">
                       <h4 className="text-xs md:text-sm font-bold text-white flex items-start gap-2">
                         <CornerDownRight size={14} className="text-violet-400 shrink-0 mt-0.5" />
                         {q.q}
                       </h4>
-                      <div className="grid grid-cols-2 gap-2 pl-6">
-                        {q.options.map((opt, oIdx) => (
-                          <div key={oIdx} className="p-2 bg-white/5 border border-white/5 rounded-lg text-[10px] text-slate-400">
-                            {opt}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="pl-6 text-[10px] text-emerald-400 font-semibold">
-                        Correct Answer: {q.ans}
-                      </div>
+                      <p className="pl-6 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+                        Suggested Key answer: {q.ans}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -668,8 +772,75 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* ── FEATURE 4: BATCH IMPORT SIMULATOR ── */}
+      <section id="batch-import" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04]">
+        <div className="text-center max-w-xl mx-auto mb-16">
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Bulk Tools</div>
+          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">Department auto-detection</h2>
+          <p className="text-sm text-slate-400 mt-2">Paste raw student lists to check how the platform groups records into transactions.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          {/* CSV Input Panel */}
+          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Paste student CSV / text</span>
+              <textarea
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+                rows={5}
+                className="w-full bg-[#050212] border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
+              />
+            </div>
+            <button 
+              onClick={handleSimulateBatchImport}
+              disabled={isParsing}
+              className="w-full mt-4 py-3 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2"
+            >
+              {isParsing ? <RefreshCw className="animate-spin" size={14} /> : <UploadCloud size={14} />}
+              Parse & Map cohort
+            </button>
+          </div>
+
+          {/* Mapping Output Panel */}
+          <div className="glass-card-wow p-6 rounded-3xl border border-white/5 flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider mb-3">Mapped Pipeline output</span>
+              
+              {batchProgress > 0 && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Mapping progress</span>
+                    <span className="text-violet-400 font-bold">{batchProgress}%</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-violet-500 transition-all duration-300" style={{ width: `${batchProgress}%` }} />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2 mt-4 max-h-[140px] overflow-y-auto">
+                {parsedStudents.map((stud, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-[11px] bg-white/5 p-2 rounded-lg border border-white/[0.04]">
+                    <div>
+                      <span className="text-white font-bold block">{stud.name}</span>
+                      <span className="text-slate-500 block">{stud.email}</span>
+                    </div>
+                    <span className="text-emerald-400 font-semibold">{stud.dept}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-[10px] text-slate-500 border-t border-white/5 pt-3 mt-4">
+              Identifies columns to match student credentials.
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Bento Grid Platform Features */}
-      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20">
+      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 border-t border-white/[0.04]">
         <div className="text-center max-w-xl mx-auto mb-20">
           <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Suite</div>
           <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
