@@ -41,6 +41,25 @@ import {
   Send
 } from "lucide-react";
 
+const faqs = [
+  {
+    q: "How does the AI Proctoring system work?",
+    a: "Our AI proctor scans candidate gaze via standard webcams and flags tab switches or window resizing. If infractions exceed the set limit, the session automatically submits."
+  },
+  {
+    q: "Can I bulk import questions using spreadsheets?",
+    a: "Yes! You can download Excel/CSV templates, populate up to 2,000 questions, and upload them instantly."
+  },
+  {
+    q: "Does the system support negative marking?",
+    a: "Absolutely. You can customize grading models, configure positive weights for correct answers, and set negative penalties for incorrect choices."
+  },
+  {
+    q: "What happens if a student disconnects during an exam?",
+    a: "Our system features fail-safe auto-save. Responses are cached locally and synced to the cloud. Once the internet is restored, the candidate can resume from where they left off."
+  }
+];
+
 // Ultra-Premium Interactive Bento Card Wrapper
 const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
