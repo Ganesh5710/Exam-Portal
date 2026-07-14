@@ -73,7 +73,7 @@ export const Questions = () => {
   const handleGenerateAI = async (e) => {
     e.preventDefault();
     if (!aiFormData.topic || !aiFormData.subjectId) {
-      toast.error("Topic and Subject are required for AI generation.");
+      toast.error("Topic and Department are required for AI generation.");
       return;
     }
 
@@ -85,7 +85,7 @@ export const Questions = () => {
         difficulty: aiFormData.difficulty,
         type: aiFormData.type,
         count: Number(aiFormData.count),
-        subjectId: aiFormData.subjectId,
+        departmentId: aiFormData.subjectId,
       });
       setAiPreviewQuestions(res.data.data || []);
       toast.success(
@@ -116,7 +116,7 @@ export const Questions = () => {
           negativeMarks: Number(q.negativeMarks) || 0.0,
           difficulty: q.difficulty,
           tags: q.tags || [],
-          subjectId: q.subjectId,
+          departmentId: q.departmentId || q.subjectId,
         };
         await api.post("/questions", body);
       }
@@ -151,8 +151,8 @@ export const Questions = () => {
       "NegativeMarks",
       "Difficulty",
       "Tags",
-      "SubjectName",
-      "SubjectCode",
+      "DepartmentName",
+      "DepartmentCode",
     ];
     const rows = questions.map((q) => {
       const optionsStr = Array.isArray(q.options) ? q.options.join("; ") : "";
@@ -173,8 +173,8 @@ export const Questions = () => {
         q.negativeMarks,
         q.difficulty,
         tagsStr,
-        q.subject?.name || "",
-        q.subject?.code || "",
+        q.department?.name || "",
+        q.department?.code || "",
       ].map((val) => `"${String(val).replace(/"/g, '""')}"`);
     });
 
@@ -213,7 +213,7 @@ export const Questions = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await api.get("/subjects");
+      const res = await api.get("/departments");
       setSubjects(res.data.data || []);
       if (res.data.data?.length > 0 && !formData.subjectId) {
         setFormData((prev) => ({ ...prev, subjectId: res.data.data[0].id }));
@@ -230,7 +230,7 @@ export const Questions = () => {
       if (searchQuery) params.append("search", searchQuery);
       if (filterType) params.append("type", filterType);
       if (filterDifficulty) params.append("difficulty", filterDifficulty);
-      if (filterSubject) params.append("subjectId", filterSubject);
+      if (filterSubject) params.append("departmentId", filterSubject);
 
       const res = await api.get(`/questions?${params.toString()}`);
       setQuestions(res.data.data || []);
@@ -252,7 +252,7 @@ export const Questions = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!formData.content || !formData.subjectId) {
-      toast.error("Content and Subject are required fields.");
+      toast.error("Content and Department are required fields.");
       return;
     }
 
@@ -291,7 +291,7 @@ export const Questions = () => {
         tags: formData.tagsString
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
-        subjectId: formData.subjectId,
+        departmentId: formData.subjectId,
       };
 
       await api.post("/questions", body);
@@ -344,7 +344,7 @@ export const Questions = () => {
         tags: formData.tagsString
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
-        subjectId: formData.subjectId,
+        departmentId: formData.subjectId,
       };
 
       await api.put(`/questions/${selectedQuestion.id}`, body);
@@ -422,7 +422,7 @@ export const Questions = () => {
       score: String(q.score),
       negativeMarks: String(q.negativeMarks),
       difficulty: q.difficulty,
-      subjectId: q.subjectId,
+      subjectId: q.departmentId || q.subjectId,
       tagsString: tagsText,
     });
     setShowEditModal(true);
@@ -610,7 +610,7 @@ export const Questions = () => {
           </select>
         </div>
 
-        {/* Subject Filter */}
+        {/* Department Filter */}
         <div className="relative">
           <BookOpen
             size={16}
@@ -621,7 +621,7 @@ export const Questions = () => {
             onChange={(e) => setFilterSubject(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 appearance-none"
           >
-            <option value="">All Subjects</option>
+            <option value="">All Departments</option>
             {subjects.map((sub) => (
               <option key={sub.id} value={sub.id}>
                 {sub.name} ({sub.code})
@@ -679,7 +679,7 @@ export const Questions = () => {
                     Type
                   </th>
                   <th className="text-left text-xs font-semibold text-slate-400 uppercase px-6 py-4">
-                    Subject
+                    Department
                   </th>
                   <th className="text-left text-xs font-semibold text-slate-400 uppercase px-6 py-4">
                     Difficulty
@@ -721,7 +721,7 @@ export const Questions = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-300">
-                      {q.subject?.name || "Unknown"}
+                      {q.department?.name || "Unknown"}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -864,7 +864,7 @@ export const Questions = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Subject
+                    Department
                   </label>
                   <select
                     value={formData.subjectId}
@@ -874,7 +874,7 @@ export const Questions = () => {
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
                     required
                   >
-                    <option value="">Select Subject</option>
+                    <option value="">Select Department</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
@@ -1129,7 +1129,7 @@ export const Questions = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Subject
+                    Department
                   </label>
                   <select
                     value={formData.subjectId}
@@ -1441,7 +1441,7 @@ export const Questions = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Subject
+                    Department
                   </label>
                   <select
                     value={aiFormData.subjectId}
@@ -1454,7 +1454,7 @@ export const Questions = () => {
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
                     required
                   >
-                    <option value="">Select Subject</option>
+                    <option value="">Select Department</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})

@@ -8,7 +8,7 @@ const getQuestions = async (req, res, next) => {
     const search = req.query.search || '';
     const type = req.query.type || undefined;
     const difficulty = req.query.difficulty || undefined;
-    const subjectId = req.query.subjectId || '';
+    const departmentId = req.query.departmentId || '';
     try {
         const where = {
             content: { contains: search }
@@ -17,12 +17,12 @@ const getQuestions = async (req, res, next) => {
             where.type = type;
         if (difficulty)
             where.difficulty = difficulty;
-        if (subjectId)
-            where.subjectId = subjectId;
+        if (departmentId)
+            where.departmentId = departmentId;
         const questions = await db_1.prisma.question.findMany({
             where,
             include: {
-                subject: {
+                department: {
                     select: { name: true, code: true }
                 }
             },
@@ -36,7 +36,7 @@ const getQuestions = async (req, res, next) => {
 };
 exports.getQuestions = getQuestions;
 const createQuestion = async (req, res, next) => {
-    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId } = req.body;
     try {
         if (type) type = type.toUpperCase();
         if (difficulty) difficulty = difficulty.toUpperCase();
@@ -52,7 +52,7 @@ const createQuestion = async (req, res, next) => {
                 difficulty,
                 tags: tags || [],
                 fileUrl: fileUrl || null,
-                subjectId
+                departmentId
             }
         });
         await db_1.prisma.auditLog.create({
@@ -72,7 +72,7 @@ const createQuestion = async (req, res, next) => {
 exports.createQuestion = createQuestion;
 const updateQuestion = async (req, res, next) => {
     const { id } = req.params;
-    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, subjectId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId } = req.body;
     try {
         if (type) type = type.toUpperCase();
         if (difficulty) difficulty = difficulty.toUpperCase();
@@ -93,7 +93,7 @@ const updateQuestion = async (req, res, next) => {
                 difficulty: difficulty || existing.difficulty,
                 tags: tags || existing.tags,
                 fileUrl: fileUrl !== undefined ? fileUrl : existing.fileUrl,
-                subjectId: subjectId || existing.subjectId
+                departmentId: departmentId || existing.departmentId
             }
         });
         await db_1.prisma.auditLog.create({
@@ -141,11 +141,55 @@ const bulkImportQuestions = async (req, res, next) => {
     }
     try {
         let imported = 0;
+        const deptCache = new Map();
+        const allDepts = await db_1.prisma.department.findMany();
+        allDepts.forEach(d => {
+            deptCache.set(d.code.toUpperCase().trim(), d.id);
+            deptCache.set(d.name.toLowerCase().trim(), d.id);
+        });
+
         for (const record of questions) {
-            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, subjectCode } = record;
-            const sub = await db_1.prisma.subject.findUnique({ where: { code: subjectCode } });
-            if (!sub)
-                continue; // Skip if subject doesn't exist
+            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department } = record;
+            
+            let resolvedDeptId = departmentId;
+            if (!resolvedDeptId && (departmentCode || department)) {
+                const rawDept = departmentCode || department;
+                const deptKey = rawDept.toUpperCase().trim();
+                resolvedDeptId = deptCache.get(deptKey) || deptCache.get(rawDept.toLowerCase().trim());
+                if (!resolvedDeptId) {
+                    try {
+                        const newDept = await db_1.prisma.department.create({
+                            data: {
+                                name: rawDept,
+                                code: deptKey,
+                                description: 'Auto-created during bulk questions import'
+                            }
+                        });
+                        resolvedDeptId = newDept.id;
+                        deptCache.set(deptKey, newDept.id);
+                        deptCache.set(rawDept.toLowerCase().trim(), newDept.id);
+                    } catch (e) {
+                        const existing = await db_1.prisma.department.findFirst({
+                            where: { OR: [{ code: deptKey }, { name: rawDept }] }
+                        });
+                        if (existing) {
+                            resolvedDeptId = existing.id;
+                            deptCache.set(deptKey, existing.id);
+                            deptCache.set(rawDept.toLowerCase().trim(), existing.id);
+                        }
+                    }
+                }
+            }
+
+            if (!resolvedDeptId) {
+                const firstDept = await db_1.prisma.department.findFirst();
+                if (firstDept) {
+                    resolvedDeptId = firstDept.id;
+                } else {
+                    continue; 
+                }
+            }
+
             await db_1.prisma.question.create({
                 data: {
                     type,
@@ -157,7 +201,7 @@ const bulkImportQuestions = async (req, res, next) => {
                     negativeMarks: parseFloat(negativeMarks) || 0.0,
                     difficulty: difficulty || 'MEDIUM',
                     tags: tags || [],
-                    subjectId: sub.id
+                    departmentId: resolvedDeptId
                 }
             });
             imported++;
@@ -381,9 +425,9 @@ function generateQuestionsLocally(topic, type, count) {
     return result;
 }
 const generateAIQuestions = async (req, res, next) => {
-    const { topic, difficulty, type, count, subjectId } = req.body;
-    if (!topic || !subjectId) {
-        return res.status(400).json({ success: false, message: 'Topic and subjectId are required.' });
+    const { topic, difficulty, type, count, departmentId } = req.body;
+    if (!topic || !departmentId) {
+        return res.status(400).json({ success: false, message: 'Topic and departmentId are required.' });
     }
     const geminiApiKey = process.env.GEMINI_API_KEY;
     try {
@@ -426,20 +470,18 @@ Each question must also include:
 Return ONLY a JSON array of question objects. Do not wrap it in markdown code blocks or add any conversational text. Just return the raw JSON array.`;
         const result = await (0, gemini_1.callGeminiWithFallback)(geminiApiKey, { prompt });
         const generatedQuestions = JSON.parse(result.text);
-        // Enrich questions with subjectId
         const enriched = (Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions]).map((q) => ({
             ...q,
-            subjectId
+            departmentId
         }));
         return res.status(200).json({ success: true, data: enriched, model: result.model });
     }
     catch (error) {
         console.warn(`Gemini generation failed: ${error.message}. Falling back to local questions generator.`);
-        // Generate questions locally offline so user doesn't get a failure screen
         const localQuestions = generateQuestionsLocally(topic, type, count || 3);
         const enriched = localQuestions.map((q) => ({
             ...q,
-            subjectId
+            departmentId
         }));
         return res.status(200).json({
             success: true,

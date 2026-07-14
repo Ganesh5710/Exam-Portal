@@ -91,9 +91,9 @@ exports.cancelJob = cancelJob;
 // 4. Batch Import approved questions with Prisma Transactions and Duplicate Resolution
 const approveImport = async (req, res, next) => {
     const { id } = req.params;
-    const { subjectId, questions, duplicateActions } = req.body;
-    if (!subjectId || !Array.isArray(questions)) {
-        return res.status(400).json({ success: false, message: 'subjectId and questions array are required.' });
+    const { departmentId, questions, duplicateActions } = req.body;
+    if (!departmentId || !Array.isArray(questions)) {
+        return res.status(400).json({ success: false, message: 'departmentId and questions array are required.' });
     }
     try {
         const job = await db_1.prisma.importJob.findUnique({ where: { id } });
@@ -102,7 +102,6 @@ const approveImport = async (req, res, next) => {
         }
 
         const deptCache = new Map();
-        const subjectCache = new Map();
 
         const allDepts = await db_1.prisma.department.findMany();
         allDepts.forEach(d => {
@@ -110,20 +109,9 @@ const approveImport = async (req, res, next) => {
             deptCache.set(d.name.toLowerCase().trim(), d.id);
         });
 
-        const allSubjects = await db_1.prisma.subject.findMany();
-        allSubjects.forEach(s => {
-            subjectCache.set(s.code.toUpperCase().trim(), s.id);
-        });
-
-        const resolveSubjectId = async (q) => {
-            if (subjectId !== 'auto-detect') {
-                return subjectId;
-            }
-
-            const rawSubCode = q.subjectCode || 'GEN101';
-            const subCode = rawSubCode.toUpperCase().trim();
-            if (subjectCache.has(subCode)) {
-                return subjectCache.get(subCode);
+        const resolveDepartmentId = async (q) => {
+            if (departmentId !== 'auto-detect') {
+                return departmentId;
             }
 
             const rawDept = q.departmentCode || q.department || 'General';
@@ -163,7 +151,7 @@ const approveImport = async (req, res, next) => {
                         data: {
                             name: 'General',
                             code: 'GENERAL',
-                            description: 'Fallback department for imported courses'
+                            description: 'Fallback department for imported questions'
                         }
                     });
                     resolvedDeptId = fallbackDept.id;
@@ -176,29 +164,7 @@ const approveImport = async (req, res, next) => {
                 }
             }
 
-            const subName = q.subjectName || q.subject || rawSubCode;
-            try {
-                const newSub = await db_1.prisma.subject.create({
-                    data: {
-                        name: subName,
-                        code: subCode,
-                        course: 'Imported',
-                        semester: 1,
-                        departmentId: resolvedDeptId
-                    }
-                });
-                subjectCache.set(subCode, newSub.id);
-                return newSub.id;
-            } catch (e) {
-                const existing = await db_1.prisma.subject.findUnique({
-                    where: { code: subCode }
-                });
-                if (existing) {
-                    subjectCache.set(subCode, existing.id);
-                    return existing.id;
-                }
-                throw e;
-            }
+            return resolvedDeptId;
         };
 
         let processedCount = 0;
@@ -206,15 +172,15 @@ const approveImport = async (req, res, next) => {
         let failedCount = 0;
         for (const q of questions) {
             try {
-                const qSubjectId = await resolveSubjectId(q);
-                if (!qSubjectId) {
+                const qDeptId = await resolveDepartmentId(q);
+                if (!qDeptId) {
                     failedCount++;
                     continue;
                 }
 
                 const existing = await db_1.prisma.question.findFirst({
                     where: {
-                        subjectId: qSubjectId,
+                        departmentId: qDeptId,
                         content: q.content
                     }
                 });
@@ -252,7 +218,7 @@ const approveImport = async (req, res, next) => {
                         negativeMarks: parseFloat(q.negativeMarks) || 0.0,
                         difficulty: q.difficulty || 'MEDIUM',
                         tags: q.tags || [],
-                        subjectId: qSubjectId
+                        departmentId: qDeptId
                     }
                 });
                 processedCount++;

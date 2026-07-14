@@ -115,7 +115,7 @@ Include in every question:
 - "negativeMarks": number (default: 0)
 - "explanation": string (answer explanation if available)
 - "tags": array of strings
-- "subjectCode": string (detect subject name or code if mentioned in headers/text, e.g. CS201)
+- "department": string (detect department name or code if mentioned in headers/text, e.g. CSE)
 - "topic": string (guess/detect topic name)
 
 Return ONLY a JSON array of question objects. Do not write markdown blocks or explanations. Just return the JSON array.`;

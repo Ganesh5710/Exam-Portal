@@ -40,7 +40,7 @@ export const QuestionImport = () => {
   // 1. Fetch Subjects & existing Questions for duplicate check
   const fetchSubjects = async () => {
     try {
-      const res = await api.get("/subjects");
+      const res = await api.get("/departments");
       const list = res.data.data || [];
       setSubjects(list);
       if (list.length > 0) {
@@ -220,7 +220,7 @@ export const QuestionImport = () => {
     setSubmitting(true);
     try {
       const res = await api.post(`/import/approve/${jobId}`, {
-        subjectId: selectedSubjectId,
+        departmentId: selectedSubjectId,
         questions: finalQuestions,
         duplicateActions,
       });
@@ -262,7 +262,7 @@ export const QuestionImport = () => {
         >
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-300">
-              Target Subject Module
+              Target Department Module
             </label>
             <select
               value={selectedSubjectId}
@@ -270,7 +270,7 @@ export const QuestionImport = () => {
               className="w-full bg-slate-950 border border-slate-850 p-3 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-white"
               required
             >
-              <option value="auto-detect">Auto-Detect Subject & Department (from file)</option>
+              <option value="auto-detect">Auto-Detect Department (from file)</option>
               {subjects.map((sub) => (
                 <option key={sub.id} value={sub.id}>
                   {sub.name} ({sub.code})

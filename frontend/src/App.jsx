@@ -14,7 +14,6 @@ import Dashboard from "./pages/admin/Dashboard";
 import LiveMonitor from "./pages/admin/LiveMonitor";
 import Students from "./pages/admin/Students";
 import Departments from "./pages/admin/Departments";
-import Subjects from "./pages/admin/Subjects";
 import Questions from "./pages/admin/Questions";
 import QuestionImport from "./pages/admin/QuestionImport";
 import ExamsPortal from "./pages/admin/ExamsPortal";

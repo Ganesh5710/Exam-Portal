@@ -65,7 +65,7 @@ export const ExamsPortal = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await api.get("/subjects");
+      const res = await api.get("/departments");
       setSubjects(res.data.data || []);
       if (res.data.data?.length > 0 && !formData.subjectId) {
         setFormData((prev) => ({ ...prev, subjectId: res.data.data[0].id }));
@@ -87,7 +87,7 @@ export const ExamsPortal = () => {
   const fetchQuestionsForSubject = async (subjId) => {
     if (!subjId) return;
     try {
-      const res = await api.get(`/questions?subjectId=${subjId}`);
+      const res = await api.get(`/questions?departmentId=${subjId}`);
       setQuestions(res.data.data || []);
     } catch {
       setQuestions([]);
@@ -145,7 +145,7 @@ export const ExamsPortal = () => {
         fullscreenRequired: formData.fullscreenRequired,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
-        subjectId: formData.subjectId,
+        departmentId: formData.subjectId,
         questionIds: formData.selectedQuestions,
       };
 
@@ -179,7 +179,7 @@ export const ExamsPortal = () => {
         fullscreenRequired: formData.fullscreenRequired,
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
-        subjectId: formData.subjectId,
+        departmentId: formData.subjectId,
         questionIds: formData.selectedQuestions,
       };
 
@@ -281,7 +281,7 @@ export const ExamsPortal = () => {
       fullscreenRequired: exam.fullscreenRequired,
       startTime: parseLocalTime(exam.startTime),
       endTime: parseLocalTime(exam.endTime),
-      subjectId: exam.subjectId,
+      subjectId: exam.departmentId || exam.subjectId,
       selectedQuestions: [], // Note: will reload questions below
     });
 
@@ -516,7 +516,7 @@ export const ExamsPortal = () => {
                       </span>
                     </div>
                     <span className="text-xs text-slate-500">
-                      {exam.subject?.code || "GEN"}
+                      {exam.department?.code || "GEN"}
                     </span>
                   </div>
                   <h3 className="font-bold text-white text-base leading-snug truncate">
@@ -710,7 +710,7 @@ export const ExamsPortal = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
-                    Subject Course
+                    Department
                   </label>
                   <select
                     value={formData.subjectId}
@@ -720,7 +720,7 @@ export const ExamsPortal = () => {
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
                     required
                   >
-                    <option value="">Select Subject</option>
+                    <option value="">Select Department</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
@@ -972,7 +972,7 @@ export const ExamsPortal = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
-                    Subject Course
+                    Department
                   </label>
                   <select
                     value={formData.subjectId}

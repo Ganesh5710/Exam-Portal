@@ -18,7 +18,7 @@ const questionCreateSchema = zod_1.z.object({
         difficulty: zod_1.z.preprocess(val => typeof val === 'string' ? val.toUpperCase() : val, zod_1.z.enum(['EASY', 'MEDIUM', 'HARD'])),
         tags: zod_1.z.array(zod_1.z.string()).nullable().optional(),
         fileUrl: zod_1.z.string().nullable().optional(),
-        subjectId: zod_1.z.string().uuid('Subject must be assigned')
+        departmentId: zod_1.z.string().uuid('Department must be assigned')
     })
 });
 router.use(auth_1.protect);

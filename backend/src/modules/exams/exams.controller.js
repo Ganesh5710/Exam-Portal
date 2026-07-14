@@ -9,7 +9,7 @@ const getExams = async (req, res, next) => {
         if (role === 'ADMIN') {
             const exams = await db_1.prisma.exam.findMany({
                 include: {
-                    subject: { select: { name: true, code: true } },
+                    department: { select: { name: true, code: true } },
                     _count: { select: { examQuestions: true, assignments: true } }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -28,7 +28,7 @@ const getExams = async (req, res, next) => {
                 include: {
                     exam: {
                         include: {
-                            subject: { select: { name: true, code: true } }
+                            department: { select: { name: true, code: true } }
                         }
                     }
                 },
@@ -75,8 +75,7 @@ const getExams = async (req, res, next) => {
     }
 };
 exports.getExams = getExams;
-const createExam = async (req, res, next) => {
-    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, subjectId, questionIds } = req.body;
+    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, departmentId, questionIds } = req.body;
     try {
         // Create exam
         const exam = await db_1.prisma.exam.create({
@@ -92,7 +91,7 @@ const createExam = async (req, res, next) => {
                 fullscreenRequired: !!fullscreenRequired,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
-                subjectId,
+                departmentId,
                 status: 'DRAFT'
             }
         });
@@ -124,7 +123,7 @@ const createExam = async (req, res, next) => {
 exports.createExam = createExam;
 const updateExam = async (req, res, next) => {
     const { id } = req.params;
-    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, status, subjectId, questionIds } = req.body;
+    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, status, departmentId, questionIds } = req.body;
     try {
         const existing = await db_1.prisma.exam.findUnique({ where: { id } });
         if (!existing) {
@@ -145,7 +144,7 @@ const updateExam = async (req, res, next) => {
                 startTime: startTime ? new Date(startTime) : existing.startTime,
                 endTime: endTime ? new Date(endTime) : existing.endTime,
                 status: status || existing.status,
-                subjectId: subjectId || existing.subjectId
+                departmentId: departmentId || existing.departmentId
             }
         });
         // Re-map questions if questionIds list was provided

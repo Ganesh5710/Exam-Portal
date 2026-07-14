@@ -1,8 +1,9 @@
 // ─── Database Configuration ────────────────────────────────────────────────
 // Uses PostgreSQL (Supabase hosted). Set DATABASE_URL in backend/.env
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── Prisma Client Generator ───────────────────────────────────────────────
@@ -77,7 +78,6 @@ enum CheatType {
 enum ReportType {
   STUDENT
   DEPARTMENT
-  SUBJECT
   EXAM
   ATTENDANCE
   VIOLATION
@@ -120,21 +120,8 @@ model Department {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   users       User[]
-  subjects    Subject[]
-}
-
-model Subject {
-  id           String     @id @default(uuid())
-  name         String
-  code         String     @unique
-  course       String
-  semester     Int
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  questions    Question[]
-  exams        Exam[]
+  questions   Question[]
+  exams       Exam[]
 }
 
 model Question {
@@ -149,8 +136,8 @@ model Question {
   difficulty     Difficulty     @default(MEDIUM)
   tags           Json?
   fileUrl        String?        // Media attachments (image, audio, video)
-  subjectId      String
-  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  departmentId   String
+  department     Department     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   examQuestions  ExamQuestion[]
@@ -171,8 +158,8 @@ model Exam {
   startTime            DateTime
   endTime              DateTime
   status               ExamStatus        @default(DRAFT)
-  subjectId            String
-  subject              Subject           @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  departmentId         String
+  department           Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   examQuestions        ExamQuestion[]

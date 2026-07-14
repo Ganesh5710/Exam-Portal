@@ -13,7 +13,7 @@ const examCreateSchema = zod_1.z.object({
         passingMarks: zod_1.z.number().positive(),
         startTime: zod_1.z.string(),
         endTime: zod_1.z.string(),
-        subjectId: zod_1.z.string().uuid('Subject must be assigned'),
+        departmentId: zod_1.z.string().uuid('Department must be assigned'),
         questionIds: zod_1.z.array(zod_1.z.string()).optional()
     })
 });
