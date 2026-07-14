@@ -535,6 +535,8 @@ const parseStructuredFile = (filePath, ext) => {
         }
 
         const subjectCode = getKey(['subjectcode', 'subject', 'course'])?.toString() || '';
+        const subjectName = getKey(['subjectname', 'subject_name', 'coursename'])?.toString() || '';
+        const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
         const topic = getKey(['topic', 'subjecttopic'])?.toString() || 'General';
 
         return {
@@ -548,6 +550,8 @@ const parseStructuredFile = (filePath, ext) => {
             explanation,
             tags,
             subjectCode,
+            subjectName,
+            departmentCode,
             topic
         };
     }).filter(Boolean);

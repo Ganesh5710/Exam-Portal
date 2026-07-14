@@ -41,12 +41,15 @@ export const QuestionImport = () => {
   const fetchSubjects = async () => {
     try {
       const res = await api.get("/subjects");
-      setSubjects(res.data.data || []);
-      if (res.data.data?.length > 0) {
-        setSelectedSubjectId(res.data.data[0].id);
+      const list = res.data.data || [];
+      setSubjects(list);
+      if (list.length > 0) {
+        setSelectedSubjectId(list[0].id);
+      } else {
+        setSelectedSubjectId("auto-detect");
       }
     } catch {
-      toast.error("Failed to load subjects.");
+      setSelectedSubjectId("auto-detect");
     }
   };
 
@@ -267,7 +270,7 @@ export const QuestionImport = () => {
               className="w-full bg-slate-950 border border-slate-850 p-3 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-white"
               required
             >
-              <option value="">Select Target Subject</option>
+              <option value="auto-detect">Auto-Detect Subject & Department (from file)</option>
               {subjects.map((sub) => (
                 <option key={sub.id} value={sub.id}>
                   {sub.name} ({sub.code})

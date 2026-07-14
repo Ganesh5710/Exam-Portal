@@ -92,7 +92,6 @@ exports.cancelJob = cancelJob;
 const approveImport = async (req, res, next) => {
     const { id } = req.params;
     const { subjectId, questions, duplicateActions } = req.body;
-    // duplicateActions mapping: { [questionContent]: 'SKIP' | 'REPLACE' | 'UPDATE' | 'KEEP_BOTH' }
     if (!subjectId || !Array.isArray(questions)) {
         return res.status(400).json({ success: false, message: 'subjectId and questions array are required.' });
     }
@@ -101,15 +100,121 @@ const approveImport = async (req, res, next) => {
         if (!job) {
             return res.status(404).json({ success: false, message: 'Import job not found.' });
         }
+
+        const deptCache = new Map();
+        const subjectCache = new Map();
+
+        const allDepts = await db_1.prisma.department.findMany();
+        allDepts.forEach(d => {
+            deptCache.set(d.code.toUpperCase().trim(), d.id);
+            deptCache.set(d.name.toLowerCase().trim(), d.id);
+        });
+
+        const allSubjects = await db_1.prisma.subject.findMany();
+        allSubjects.forEach(s => {
+            subjectCache.set(s.code.toUpperCase().trim(), s.id);
+        });
+
+        const resolveSubjectId = async (q) => {
+            if (subjectId !== 'auto-detect') {
+                return subjectId;
+            }
+
+            const rawSubCode = q.subjectCode || 'GEN101';
+            const subCode = rawSubCode.toUpperCase().trim();
+            if (subjectCache.has(subCode)) {
+                return subjectCache.get(subCode);
+            }
+
+            const rawDept = q.departmentCode || q.department || 'General';
+            const deptCode = rawDept.toUpperCase().trim();
+            let resolvedDeptId = deptCache.get(deptCode) || deptCache.get(rawDept.toLowerCase().trim());
+
+            if (!resolvedDeptId) {
+                try {
+                    const newDept = await db_1.prisma.department.create({
+                        data: {
+                            name: rawDept,
+                            code: deptCode,
+                            description: 'Auto-created during question import'
+                        }
+                    });
+                    resolvedDeptId = newDept.id;
+                    deptCache.set(deptCode, newDept.id);
+                    deptCache.set(rawDept.toLowerCase().trim(), newDept.id);
+                } catch (e) {
+                    const existing = await db_1.prisma.department.findFirst({
+                        where: { OR: [{ code: deptCode }, { name: rawDept }] }
+                    });
+                    if (existing) {
+                        resolvedDeptId = existing.id;
+                        deptCache.set(deptCode, existing.id);
+                        deptCache.set(rawDept.toLowerCase().trim(), existing.id);
+                    } else {
+                        const firstDept = await db_1.prisma.department.findFirst();
+                        resolvedDeptId = firstDept?.id;
+                    }
+                }
+            }
+
+            if (!resolvedDeptId) {
+                try {
+                    const fallbackDept = await db_1.prisma.department.create({
+                        data: {
+                            name: 'General',
+                            code: 'GENERAL',
+                            description: 'Fallback department for imported courses'
+                        }
+                    });
+                    resolvedDeptId = fallbackDept.id;
+                    deptCache.set('GENERAL', fallbackDept.id);
+                } catch (e) {
+                    const existing = await db_1.prisma.department.findUnique({ where: { code: 'GENERAL' } });
+                    if (existing) {
+                        resolvedDeptId = existing.id;
+                    }
+                }
+            }
+
+            const subName = q.subjectName || q.subject || rawSubCode;
+            try {
+                const newSub = await db_1.prisma.subject.create({
+                    data: {
+                        name: subName,
+                        code: subCode,
+                        course: 'Imported',
+                        semester: 1,
+                        departmentId: resolvedDeptId
+                    }
+                });
+                subjectCache.set(subCode, newSub.id);
+                return newSub.id;
+            } catch (e) {
+                const existing = await db_1.prisma.subject.findUnique({
+                    where: { code: subCode }
+                });
+                if (existing) {
+                    subjectCache.set(subCode, existing.id);
+                    return existing.id;
+                }
+                throw e;
+            }
+        };
+
         let processedCount = 0;
         let duplicatesCount = 0;
         let failedCount = 0;
         for (const q of questions) {
             try {
-                // Check for duplicate in the same subject code context
+                const qSubjectId = await resolveSubjectId(q);
+                if (!qSubjectId) {
+                    failedCount++;
+                    continue;
+                }
+
                 const existing = await db_1.prisma.question.findFirst({
                     where: {
-                        subjectId,
+                        subjectId: qSubjectId,
                         content: q.content
                     }
                 });
@@ -136,7 +241,6 @@ const approveImport = async (req, res, next) => {
                         continue;
                     }
                 }
-                // Insert new question
                 await db_1.prisma.question.create({
                     data: {
                         type: q.type,
@@ -148,7 +252,7 @@ const approveImport = async (req, res, next) => {
                         negativeMarks: parseFloat(q.negativeMarks) || 0.0,
                         difficulty: q.difficulty || 'MEDIUM',
                         tags: q.tags || [],
-                        subjectId
+                        subjectId: qSubjectId
                     }
                 });
                 processedCount++;
