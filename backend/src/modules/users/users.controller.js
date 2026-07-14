@@ -211,7 +211,50 @@ const bulkImportStudents = async (req, res, next) => {
         const existingEmails = new Set(existingUsers.map(u => u.email));
         // 2. Fetch all departments to map codes
         const departments = await db_1.prisma.department.findMany();
-        const deptMap = new Map(departments.map(d => [d.code.toUpperCase(), d.id]));
+        const deptMap = new Map(departments.map(d => [d.code.toUpperCase().trim(), d.id]));
+        const deptNameMap = new Map(departments.map(d => [d.name.toLowerCase().trim(), d.id]));
+
+        // Auto-create missing departments if referenced in CSV
+        const missingDepts = new Set();
+        for (const record of students) {
+            const { departmentCode } = record;
+            if (departmentCode && departmentCode.trim()) {
+                const codeUpper = departmentCode.toUpperCase().trim();
+                const nameLower = departmentCode.toLowerCase().trim();
+                if (!deptMap.has(codeUpper) && !deptNameMap.has(nameLower)) {
+                    missingDepts.add(departmentCode.trim());
+                }
+            }
+        }
+
+        for (const deptName of missingDepts) {
+            const codeUpper = deptName.toUpperCase();
+            try {
+                const createdDept = await db_1.prisma.department.create({
+                    data: {
+                        name: deptName,
+                        code: codeUpper,
+                        description: `Automatically created during student import`
+                    }
+                });
+                deptMap.set(codeUpper, createdDept.id);
+                deptNameMap.set(deptName.toLowerCase(), createdDept.id);
+            } catch (err) {
+                const existing = await db_1.prisma.department.findFirst({
+                    where: {
+                        OR: [
+                            { code: codeUpper },
+                            { name: deptName }
+                        ]
+                    }
+                });
+                if (existing) {
+                    deptMap.set(codeUpper, existing.id);
+                    deptNameMap.set(deptName.toLowerCase(), existing.id);
+                }
+            }
+        }
+
         // 3. Pre-compute default password hash to avoid hashing it N times
         const defaultHash = await bcryptjs_1.default.hash('user@123', 10);
         const hashCache = new Map();
@@ -228,7 +271,12 @@ const bulkImportStudents = async (req, res, next) => {
                 skipped++;
                 continue;
             }
-            const deptId = departmentCode ? (deptMap.get(departmentCode.toUpperCase()) || null) : null;
+            let deptId = null;
+            if (departmentCode && departmentCode.trim()) {
+                const codeUpper = departmentCode.toUpperCase().trim();
+                const nameLower = departmentCode.toLowerCase().trim();
+                deptId = deptMap.get(codeUpper) || deptNameMap.get(nameLower) || null;
+            }
             const pwd = password || 'user@123';
             let passwordHash = hashCache.get(pwd);
             if (!passwordHash) {
