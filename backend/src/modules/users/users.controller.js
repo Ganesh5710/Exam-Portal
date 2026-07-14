@@ -14,6 +14,7 @@ const getStudents = async (req, res, next) => {
     const search = req.query.search || '';
     const departmentId = req.query.departmentId || '';
     const skip = (page - 1) * limit;
+    const all = req.query.all === 'true';
     try {
         const where = {
             role: 'STUDENT',
@@ -26,25 +27,28 @@ const getStudents = async (req, res, next) => {
         if (departmentId) {
             where.departmentId = departmentId;
         }
-        const [students, total] = await db_1.prisma.$transaction([
-            db_1.prisma.user.findMany({
-                where,
-                select: {
-                    id: true,
-                    email: true,
-                    firstName: true,
-                    lastName: true,
-                    status: true,
-                    departmentId: true,
-                    department: {
-                        select: { name: true, code: true }
-                    },
-                    createdAt: true
+        const findOptions = {
+            where,
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                status: true,
+                departmentId: true,
+                department: {
+                    select: { name: true, code: true }
                 },
-                orderBy: { createdAt: 'desc' },
-                skip,
-                take: limit
-            }),
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        };
+        if (!all) {
+            findOptions.skip = skip;
+            findOptions.take = limit;
+        }
+        const [students, total] = await db_1.prisma.$transaction([
+            db_1.prisma.user.findMany(findOptions),
             db_1.prisma.user.count({ where })
         ]);
         return res.status(200).json({
@@ -52,10 +56,10 @@ const getStudents = async (req, res, next) => {
             data: {
                 students,
                 pagination: {
-                    page,
-                    limit,
+                    page: all ? 1 : page,
+                    limit: all ? total : limit,
                     total,
-                    pages: Math.ceil(total / limit)
+                    pages: all ? 1 : Math.ceil(total / limit)
                 }
             }
         });
