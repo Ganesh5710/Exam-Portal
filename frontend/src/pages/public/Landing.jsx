@@ -91,39 +91,49 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-[32px] border border-white/[0.04] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 flex flex-col h-full ${className}`}
+      className={`relative rounded-[32px] transition-all duration-300 flex flex-col h-full ${className}`}
       style={{
-        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.03 : 1}, ${isHovered ? 1.03 : 1}, 1)`,
-        boxShadow: isHovered 
-          ? `0 35px 70px -15px rgba(0,0,0,0.9), 0 0 60px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`
-          : '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.04 : 1}, ${isHovered ? 1.04 : 1}, 1)`,
         cursor: "pointer",
-        transformStyle: "preserve-3d"
+        transformStyle: "preserve-3d",
+        transition: "transform 0.15s ease-out"
       }}
     >
-      {/* Dynamic Glow Spotlight */}
+      {/* Background layer with rounded clipping and glassmorphism */}
       <div 
-        className="absolute inset-0 pointer-events-none transition-opacity duration-500 z-10"
+        className="absolute inset-0 rounded-[32px] border border-white/[0.06] bg-[#070514]/80 backdrop-blur-2xl overflow-hidden pointer-events-none"
         style={{
-          background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
-          opacity: isHovered ? 1 : 0
+          boxShadow: isHovered 
+            ? `0 35px 70px -15px rgba(0,0,0,0.9), 0 0 50px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`
+            : '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
+          transition: "box-shadow 0.3s ease",
+          transform: "translateZ(0px)"
         }}
-      />
-      {/* Holographic Sheen reflection */}
-      <div 
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-10"
-        style={{
-          background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.08), transparent 60%)`,
-          opacity: isHovered ? 1 : 0
-        }}
-      />
+      >
+        {/* Dynamic Glow Spotlight */}
+        <div 
+          className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+          style={{
+            background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
+            opacity: isHovered ? 1 : 0
+          }}
+        />
+        {/* Holographic Sheen reflection */}
+        <div 
+          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.1), transparent 60%)`,
+            opacity: isHovered ? 1 : 0
+          }}
+        />
+      </div>
       
-      {/* Content container lifted in 3D space */}
+      {/* Content container lifted in 3D space above the background */}
       <div 
-        className="flex flex-col h-full"
+        className="flex flex-col h-full relative z-20 pointer-events-auto"
         style={{ 
-          transform: isHovered ? "translateZ(55px)" : "translateZ(0px)", 
-          transition: "transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+          transform: isHovered ? "translateZ(60px)" : "translateZ(0px)", 
+          transition: "transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
           transformStyle: "preserve-3d"
         }}
       >
@@ -648,6 +658,31 @@ export const Landing = () => {
           0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
           50% { opacity: 0.45; transform: scale(1.1); filter: blur(120px); }
         }
+        @keyframes drift-blob-1 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(120px, -80px) scale(1.1); }
+          66% { transform: translate(-60px, 100px) scale(0.95); }
+        }
+        @keyframes drift-blob-2 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(-100px, 120px) scale(1.15); }
+        }
+        @keyframes drift-blob-3 {
+          0%, 100% { transform: translate(0px, 0px) scale(1); }
+          40% { transform: translate(80px, 150px) scale(0.9); }
+        }
+        .blob-violet {
+          animation: drift-blob-1 18s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(124, 92, 252, 0.22) 0%, transparent 70%);
+        }
+        .blob-fuchsia {
+          animation: drift-blob-2 22s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, transparent 70%);
+        }
+        .blob-cyan {
+          animation: drift-blob-3 20s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+        }
         .glow-radial-1 {
           position: absolute;
           background: radial-gradient(circle, rgba(124, 92, 252, 0.3) 0%, transparent 70%);
@@ -683,7 +718,11 @@ export const Landing = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22] pointer-events-none" />
       
       {/* Background Neon Orbs */}
-      <div className="glow-radial-1 w-[800px] h-[500px] -top-40 left-[50%] -translate-x-[50%] -z-10 animate-pulse" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute w-[800px] h-[600px] rounded-full blur-[130px] blob-violet top-[-100px] left-[15%]" />
+        <div className="absolute w-[700px] h-[500px] rounded-full blur-[140px] blob-fuchsia top-[20%] right-[10%]" />
+        <div className="absolute w-[900px] h-[600px] rounded-full blur-[150px] blob-cyan bottom-[10%] left-[20%]" />
+      </div>
 
       {/* Navigation Header */}
       <nav className="fixed top-0 left-0 right-0 h-20 border-b border-white/[0.04] bg-[#02000A]/70 backdrop-blur-xl z-50 flex items-center justify-between px-6 md:px-12">
