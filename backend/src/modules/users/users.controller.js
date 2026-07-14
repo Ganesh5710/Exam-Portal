@@ -70,7 +70,7 @@ const createStudent = async (req, res, next) => {
         if (existing) {
             return res.status(400).json({ success: false, message: 'Email already registered.' });
         }
-        const passwordHash = await bcryptjs_1.default.hash(password || 'Student123!', 10);
+        const passwordHash = await bcryptjs_1.default.hash(password || 'user@123', 10);
         const student = await db_1.prisma.user.create({
             data: {
                 email,
@@ -217,7 +217,7 @@ const bulkImportStudents = async (req, res, next) => {
                 if (dept)
                     deptId = dept.id;
             }
-            const passwordHash = await bcryptjs_1.default.hash(password || 'Student123!', 10);
+            const passwordHash = await bcryptjs_1.default.hash(password || 'user@123', 10);
             await db_1.prisma.user.create({
                 data: {
                     email,

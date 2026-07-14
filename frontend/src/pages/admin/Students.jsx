@@ -58,6 +58,8 @@ export const Students = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -217,6 +219,84 @@ export const Students = () => {
     }
   };
 
+  const handleImportCSV = async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById("csvFile");
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      toast.error("Please select a CSV file to upload.");
+      return;
+    }
+
+    setImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target.result;
+      
+      const parseCSV = (csvText) => {
+        const lines = csvText.split(/\r?\n/);
+        if (lines.length === 0) return [];
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+        const result = [];
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(',');
+          const values = matches.map(v => v.trim().replace(/^["']|["']$/g, ''));
+          const obj = {};
+          headers.forEach((header, idx) => {
+            obj[header] = values[idx] || "";
+          });
+          result.push(obj);
+        }
+        return result;
+      };
+
+      try {
+        const parsed = parseCSV(text);
+        const studentRecords = parsed.map(row => {
+          const email = row.email || row['email address'] || row['email_address'];
+          const firstName = row.firstname || row.first_name || row['first name'] || row.name?.split(' ')[0] || 'Student';
+          const lastName = row.lastname || row.last_name || row['last name'] || row.name?.split(' ').slice(1).join(' ') || '';
+          const departmentCode = row.departmentcode || row.department_code || row.department || row.dept || '';
+          const password = row.password || 'user@123';
+          return { email, firstName, lastName, departmentCode, password };
+        }).filter(r => r.email && r.email.includes('@'));
+
+        if (studentRecords.length === 0) {
+          toast.error("No valid student email records found in the CSV.");
+          setImporting(false);
+          return;
+        }
+
+        const res = await api.post("/users/import", { students: studentRecords });
+        toast.success(res.data.message || `Successfully imported ${studentRecords.length} students.`);
+        setShowImportModal(false);
+        fetchStudents();
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to parse or import CSV data.");
+      } finally {
+        setImporting(false);
+      }
+    };
+    reader.onerror = () => {
+      toast.error("Error reading file.");
+      setImporting(false);
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadTemplate = () => {
+    const csvContent = "data:text/csv;charset=utf-8,email,firstName,lastName,departmentCode,password\r\nstudent1@gmail.com,Ganesh,Bathula,CSE,user@123\r\nstudent2@gmail.com,John,Doe,CSE,user@123\r\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "student_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // ─── Helpers ─────────────────────────────────────────────────────────
 
   const resetCreateForm = () => {
@@ -310,16 +390,24 @@ export const Students = () => {
             Manage student accounts, enrollment, and access control.
           </p>
         </div>
-        <button
-          onClick={() => {
-            resetCreateForm();
-            setShowCreateModal(true);
-          }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-lg shadow-violet-600/20"
-        >
-          <UserPlus size={18} />
-          Add Student
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold rounded-lg text-sm transition-all"
+          >
+            Import CSV
+          </button>
+          <button
+            onClick={() => {
+              resetCreateForm();
+              setShowCreateModal(true);
+            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-lg text-sm transition-all duration-200 shadow-lg shadow-violet-600/20"
+          >
+            <UserPlus size={18} />
+            Add Student
+          </button>
+        </div>
       </div>
 
       {/* Filters Bar */}
@@ -1153,6 +1241,72 @@ export const Students = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════ IMPORT MODAL ═══════════════ */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !importing && setShowImportModal(false)}
+          />
+          <div className="relative w-full max-w-md mx-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-lg font-bold text-white">Import Students (CSV)</h3>
+              <button
+                onClick={() => !importing && setShowImportModal(false)}
+                className="text-slate-400 hover:text-white"
+                disabled={importing}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleImportCSV} className="space-y-4">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-400 uppercase">
+                  Select CSV File
+                </label>
+                <input
+                  type="file"
+                  id="csvFile"
+                  accept=".csv"
+                  className="w-full bg-slate-955 border border-slate-800 rounded-lg p-2.5 text-xs text-white file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-violet-600/10 file:text-violet-400 hover:file:bg-violet-600/20"
+                  required
+                />
+              </div>
+
+              <div className="text-xs text-slate-400 space-y-1.5 bg-slate-950 p-3 rounded-lg border border-slate-850">
+                <p className="font-semibold text-slate-300">CSV Column Guidelines:</p>
+                <ul className="list-disc list-inside space-y-1 pl-1">
+                  <li><strong>email</strong> (required)</li>
+                  <li><strong>firstName</strong> (optional, defaults to 'Student')</li>
+                  <li><strong>lastName</strong> (optional)</li>
+                  <li><strong>departmentCode</strong> (optional, e.g. CSE)</li>
+                  <li><strong>password</strong> (optional, defaults to 'user@123')</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={downloadTemplate}
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium text-xs text-center"
+                >
+                  Download Template
+                </button>
+                <button
+                  type="submit"
+                  disabled={importing}
+                  className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-semibold text-xs flex justify-center items-center gap-2"
+                >
+                  {importing && <Loader2 size={14} className="animate-spin" />}
+                  Upload & Import
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
