@@ -26,11 +26,14 @@ import {
   Sparkles,
   RefreshCw,
   Eye,
-  CornerDownRight
+  CornerDownRight,
+  UploadCloud,
+  Layers,
+  ChevronRight
 } from "lucide-react";
 
-// 3D Tilt Card Component (Standardized React Mouse Tracking)
-const TiltCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.15)", onClick }) => {
+// Ultra-Premium Interactive Bento Card Component
+const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -43,8 +46,9 @@ const TiltCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.15)",
 
     const width = rect.width;
     const height = rect.height;
-    const rotateX = ((y / height) - 0.5) * -15;
-    const rotateY = ((x / width) - 0.5) * 15;
+    // 3D tilt calculation
+    const rotateX = ((y / height) - 0.5) * -12;
+    const rotateY = ((x / width) - 0.5) * 12;
     
     setTilt({ x: rotateX, y: rotateY });
     setIsHovered(true);
@@ -60,17 +64,20 @@ const TiltCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.15)",
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-[28px] border border-white/[0.04] bg-[#090714]/65 backdrop-blur-xl shadow-2xl transition-all duration-200 ${className}`}
+      className={`relative overflow-hidden rounded-[32px] border border-white/[0.03] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 ${className}`}
       style={{
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(1.02, 1.02, 1.02)`,
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.015 : 1}, ${isHovered ? 1.015 : 1}, 1)`,
+        boxShadow: isHovered 
+          ? `0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)`
+          : '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
         cursor: "pointer"
       }}
     >
-      {/* Dynamic Cursor Spotlight Background */}
+      {/* Dynamic Cursor Spotlight Border Glow */}
       <div 
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background: `radial-gradient(circle 120px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
+          background: `radial-gradient(circle 200px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
           opacity: isHovered ? 1 : 0
         }}
       />
@@ -84,17 +91,16 @@ export const Landing = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   
   // Interactive Simulation Sandbox States
-  const [simState, setSimState] = useState("idle"); // "idle", "typing", "generating", "complete"
+  const [simState, setSimState] = useState("idle"); 
   const [promptText, setPromptText] = useState("");
   const [aiQuestions, setAiQuestions] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
 
   // Split-Screen Simulator States
-  const [splitState, setSplitState] = useState("start"); // "start", "progress", "tab-out", "proctor-alert", "graded"
+  const [splitState, setSplitState] = useState("start"); 
   const [splitLogs, setSplitLogs] = useState([]);
   
   // Safe Timer Engine (seconds tracking)
-  const [secondsLeft, setSecondsLeft] = useState(5399); // 1h 29m 59s
+  const [secondsLeft, setSecondsLeft] = useState(5399); 
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -129,7 +135,6 @@ export const Landing = () => {
   const triggerAiGenerator = () => {
     setSimState("typing");
     setAiQuestions([]);
-    setIsTyping(true);
     const targetPrompt = "Generate 3 advanced Java OOP MCQs with negative marking...";
     let currentText = "";
     let i = 0;
@@ -140,10 +145,8 @@ export const Landing = () => {
       i++;
       if (i >= targetPrompt.length) {
         clearInterval(interval);
-        setIsTyping(false);
         setSimState("generating");
         
-        // Simulate Generation Delay
         setTimeout(() => {
           setAiQuestions([
             {
@@ -162,7 +165,7 @@ export const Landing = () => {
           setSimState("complete");
         }, 1500);
       }
-    }, 50);
+    }, 40);
   };
 
   // Run Split Screen Proctor Demo Cycles
@@ -199,139 +202,115 @@ export const Landing = () => {
       title: "AI Proctoring Signals",
       description: "Get automatic integrity flags with confidence scoring for every student test session. Know if they attempt to change tabs or lose focus.",
       icon: Shield,
-      color: "from-violet-500 to-fuchsia-500",
-      glowColor: "rgba(139, 92, 246, 0.4)",
+      glowColor: "rgba(139, 92, 246, 0.45)",
       badge: "Webcam-Ready",
-      detail: {
-        title: "Deep Gaze Proctoring Engine",
-        subtitle: "Real-time webcam gaze tracking & browser window validation.",
-        visual: (
-          <div className="w-full bg-slate-950/80 rounded-xl p-5 border border-white/5 relative overflow-hidden flex flex-col items-center">
-            <div className="w-32 h-32 rounded-full border border-violet-500/30 bg-violet-600/10 flex items-center justify-center relative overflow-hidden mb-4">
-              <span className="w-24 h-24 rounded-full border border-dashed border-violet-500/50 animate-spin" style={{ animationDuration: '8s' }} />
-              <Activity className="absolute text-violet-400 animate-pulse" size={32} />
-            </div>
-            <div className="text-center">
-              <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest block mb-1">Gaze Status</span>
-              <span className="text-xs font-semibold text-white">Active scanning — Gaze Locked on Screen</span>
-            </div>
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group-hover:border-violet-500/20 transition-all min-h-[160px]">
+          {/* Target Scanning Lines */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.06)_0%,transparent_70%)]" />
+          <div className="w-20 h-20 rounded-full border-2 border-dashed border-violet-500/30 flex items-center justify-center animate-spin relative" style={{ animationDuration: '12s' }}>
+            <Activity className="text-violet-400 absolute animate-pulse" size={24} />
           </div>
-        )
-      }
+          <div className="mt-4 text-center">
+            <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest block">AI Camera Feed</span>
+            <span className="text-[11px] text-slate-300 font-medium block mt-0.5">Scanning Face / Gaze Locked</span>
+          </div>
+        </div>
+      )
     },
     {
       id: "leaderboard",
       title: "Instant Leaderboards",
       description: "Publish rank updates and performance indicators the moment submissions are completed. No delay, no manual spreadsheet tallying.",
       icon: BarChart3,
-      color: "from-cyan-400 to-violet-500",
-      glowColor: "rgba(6, 182, 212, 0.4)",
+      glowColor: "rgba(6, 182, 212, 0.45)",
       badge: "Auto-Compiled",
-      detail: {
-        title: "Automated Merging Leaderboards",
-        subtitle: "Live rank consolidation on student exam submission.",
-        visual: (
-          <div className="w-full bg-slate-950/80 rounded-xl p-4 border border-white/5 space-y-2">
-            <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold border-b border-white/5 pb-2 uppercase tracking-wider">
-              <span>Rank</span>
-              <span>Candidate</span>
-              <span>Final score</span>
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col justify-between group-hover:border-cyan-500/20 transition-all min-h-[160px]">
+          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/[0.04] pb-2 flex justify-between">
+            <span>Student</span>
+            <span>Grade</span>
+          </div>
+          <div className="space-y-2 mt-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-white font-semibold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Ajay K.</span>
+              <span className="text-emerald-400 font-bold">98%</span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-cyan-400">1</span>
-              <span className="text-white">Ajay Krishna</span>
-              <span className="font-semibold text-emerald-400">98%</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-400">2</span>
-              <span className="text-white">Nikhil Gupta</span>
-              <span className="font-semibold text-emerald-400">94%</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-500">3</span>
-              <span className="text-white">Bharath Krishna</span>
-              <span className="font-semibold text-emerald-400">89%</span>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-white font-semibold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Priya N.</span>
+              <span className="text-emerald-400 font-bold">94%</span>
             </div>
           </div>
-        )
-      }
+        </div>
+      )
     },
     {
       id: "timed",
       title: "Secure Timed Sessions",
       description: "Lock down browser focus and set hard thresholds. Exams automatically submit the exact millisecond the session countdown hits zero.",
       icon: Lock,
-      color: "from-fuchsia-500 to-violet-600",
-      glowColor: "rgba(217, 70, 239, 0.4)",
+      glowColor: "rgba(236, 72, 153, 0.45)",
       badge: "Auto-Submit",
-      detail: {
-        title: "Millisecond Precise Timing Lock",
-        subtitle: "Fail-safe countdown submission engine.",
-        visual: (
-          <div className="w-full bg-slate-950/80 rounded-xl p-5 border border-white/5 text-center flex flex-col items-center justify-center">
-            <Clock className="text-fuchsia-400 mb-3 animate-pulse" size={32} />
-            <div className="text-3xl font-black text-white tracking-widest font-mono">00:59:59</div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-2">Remaining Exam Time</span>
-          </div>
-        )
-      }
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center group-hover:border-fuchsia-500/20 transition-all min-h-[160px] relative">
+          <Clock className="text-fuchsia-400 mb-2 animate-pulse" size={24} />
+          <span className="text-2xl font-black text-white tracking-widest font-mono">00:59:59</span>
+          <span className="text-[9px] text-slate-500 uppercase tracking-widest block mt-1">Countdown Lock</span>
+        </div>
+      )
     },
     {
       id: "batch",
       title: "Batch Optimized AI MCQ Parser",
       description: "Instead of processing records one-by-one which causes gateway timeouts, Skillbrix utilizes chunked parallel inserts to safely commit up to 2,000 questions in 500-question batch intervals.",
       icon: Cpu,
-      color: "from-violet-500 to-cyan-400",
-      glowColor: "rgba(124, 92, 252, 0.4)",
-      badge: "Chunked DB Inserts",
-      detail: {
-        title: "Chunked Transaction Processing",
-        subtitle: "Eliminates server timeout risks on large question bank imports.",
-        visual: (
-          <div className="w-full bg-slate-950/80 rounded-xl p-4 border border-white/5 space-y-3">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Batch 1 (500 records)</span>
-              <span className="text-emerald-400 font-bold">Success</span>
+      glowColor: "rgba(124, 92, 252, 0.45)",
+      badge: "Chunked DB Writes",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex items-center gap-6 group-hover:border-violet-500/20 transition-all min-h-[160px]">
+          <div className="flex-1 space-y-2.5">
+            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-violet-500 w-[100%]" />
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Batch 2 (500 records)</span>
-              <span className="text-emerald-400 font-bold">Success</span>
+            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-violet-500 w-[100%]" />
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Batch 3 (500 records)</span>
-              <span className="text-emerald-400 font-bold">Success</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Batch 4 (500 records)</span>
-              <span className="text-emerald-400 font-bold">Success</span>
+            <div className="h-1.5 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+              <div className="h-full bg-violet-500 w-[60%] animate-pulse" />
             </div>
           </div>
-        )
-      }
+          <div className="text-right">
+            <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Chunk Pipeline</span>
+            <span className="text-sm font-black text-white block mt-1">1,500/2,000</span>
+          </div>
+        </div>
+      )
     },
     {
       id: "students",
       title: "Clean Student Controls",
       description: "Show students on a clean single page without annoying previous/next pagination buttons. Block/unblock credentials instantly.",
       icon: Users,
-      color: "from-emerald-400 to-violet-500",
-      glowColor: "rgba(52, 211, 153, 0.4)",
+      glowColor: "rgba(52, 211, 153, 0.45)",
       badge: "Clean Layout",
-      detail: {
-        title: "All-in-One Student Controller",
-        subtitle: "Manage entire student cohorts on a single fluid layout.",
-        visual: (
-          <div className="w-full bg-slate-950/80 rounded-xl p-4 border border-white/5 flex items-center justify-between">
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[160px]">
+          <div className="flex items-center justify-between text-xs">
             <div>
-              <span className="text-xs font-bold text-white block">Ajay Krishna</span>
-              <span className="text-[10px] text-slate-500 block">student1503@example.com</span>
+              <span className="font-semibold text-white block">Rahul Sharma</span>
+              <span className="text-[9px] text-slate-500 block">rahul@example.com</span>
             </div>
-            <button className="px-3 py-1 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 text-[10px] font-bold rounded-lg uppercase tracking-wider transition-colors">
-              Block student
-            </button>
+            <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400 uppercase">Active</span>
           </div>
-        )
-      }
+          <div className="flex items-center justify-between text-xs border-t border-white/[0.04] pt-3 mt-3">
+            <div>
+              <span className="font-semibold text-white block">Ajay Krishna</span>
+              <span className="text-[9px] text-slate-500 block">ajay@example.com</span>
+            </div>
+            <span className="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-bold text-red-400 uppercase">Blocked</span>
+          </div>
+        </div>
+      )
     }
   ];
 
@@ -357,65 +336,23 @@ export const Landing = () => {
   return (
     <div className="min-h-screen bg-[#02000A] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
       
-      {/* Dynamic styles for WOW elements, premium glow animations, and hover lighting */}
+      {/* Global CSS for premium spotlight transitions and interactive lines */}
       <style>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(1.5deg); }
-        }
-        @keyframes float-medium {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-25px) rotate(-2deg); }
-        }
-        @keyframes float-fast {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-12px) rotate(1deg); }
-        }
         @keyframes pulse-glow {
           0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
           50% { opacity: 0.45; transform: scale(1.1); filter: blur(120px); }
         }
-        
-        .animate-float-1 { animation: float-slow 8s ease-in-out infinite; }
-        .animate-float-2 { animation: float-medium 7s ease-in-out infinite 1.5s; }
-        .animate-float-3 { animation: float-fast 6s ease-in-out infinite 0.7s; }
-        
         .glow-radial-1 {
           position: absolute;
           background: radial-gradient(circle, rgba(124, 92, 252, 0.3) 0%, transparent 70%);
           animation: pulse-glow 9s ease-in-out infinite;
         }
-        .glow-radial-2 {
-          position: absolute;
-          background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
-          animation: pulse-glow 7s ease-in-out infinite 2.5s;
-        }
-
-        .neon-border-glow {
-          position: relative;
-          border-radius: 24px;
-          background: linear-gradient(185deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-        }
-        .neon-border-glow::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          border-radius: 24px;
-          padding: 1px;
-          background: linear-gradient(135deg, rgba(124, 92, 252, 0.4) 0%, rgba(256, 256, 256, 0.03) 40%, rgba(236, 72, 153, 0.25) 100%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          pointer-events: none;
-        }
-
         .glass-card-wow {
           background: rgba(10, 8, 20, 0.7);
           backdrop-filter: blur(24px);
           border: 1px solid rgba(255, 255, 255, 0.05);
           box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
         }
-
         .shimmer-btn {
           position: relative;
           overflow: hidden;
@@ -728,7 +665,7 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Bento Grid Platform Features (WITH TILT AND SHADOW EFFECT ON CLICK) */}
+      {/* Bento Grid Platform Features */}
       <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20">
         <div className="text-center max-w-xl mx-auto mb-20">
           <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Suite</div>
@@ -738,28 +675,39 @@ export const Landing = () => {
           <p className="text-xs text-slate-400 mt-2">Click on any card to zoom in and check its visual interface.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featureCards.map((card, idx) => {
             const Icon = card.icon;
             const isWide = card.id === "batch";
             return (
-              <TiltCard 
+              <PremiumBentoCard 
                 key={card.id}
                 onClick={() => setSelectedCard(card)}
                 glowColor={card.glowColor}
                 className={isWide ? "md:col-span-2" : ""}
               >
-                <div className="p-8 h-full flex flex-col justify-between">
-                  <div>
-                    <Icon className="text-violet-400 mb-6" size={32} />
-                    <h3 className="text-xl font-bold text-white mb-2">{card.title}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed mb-6">{card.description}</p>
+                <div className="p-8 h-full flex flex-col justify-between gap-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-violet-400">
+                        <Icon size={22} />
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        {card.badge}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">{card.title}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed">{card.description}</p>
+                    </div>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-semibold text-slate-300 uppercase tracking-widest w-fit">
-                    {card.badge}
+
+                  {/* Embedded Visual Widget */}
+                  <div className="mt-2">
+                    {card.visualWidget}
                   </div>
                 </div>
-              </TiltCard>
+              </PremiumBentoCard>
             );
           })}
         </div>
@@ -794,14 +742,14 @@ export const Landing = () => {
                 {React.createElement(selectedCard.icon, { size: 20 })}
               </div>
               <div>
-                <h3 className="text-lg font-black text-white">{selectedCard.detail.title}</h3>
-                <p className="text-xs text-slate-400">{selectedCard.detail.subtitle}</p>
+                <h3 className="text-lg font-black text-white">{selectedCard.title}</h3>
+                <p className="text-xs text-slate-400">Deep Integration Mockup</p>
               </div>
             </div>
 
             {/* Live Visual */}
             <div className="mb-6">
-              {selectedCard.detail.visual}
+              {selectedCard.visualWidget}
             </div>
 
             <p className="text-xs md:text-sm text-slate-400 leading-relaxed mb-6 font-normal">
