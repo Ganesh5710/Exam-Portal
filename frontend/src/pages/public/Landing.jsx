@@ -74,8 +74,8 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
 
     const width = rect.width;
     const height = rect.height;
-    const rotateX = ((y / height) - 0.5) * -10;
-    const rotateY = ((x / width) - 0.5) * 10;
+    const rotateX = ((y / height) - 0.5) * -22;
+    const rotateY = ((x / width) - 0.5) * 22;
     
     setTilt({ x: rotateX, y: rotateY });
     setIsHovered(true);
@@ -91,23 +91,44 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-[32px] border border-white/[0.03] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 flex flex-col h-full ${className}`}
+      className={`relative overflow-hidden rounded-[32px] border border-white/[0.04] bg-[#070514]/80 backdrop-blur-2xl transition-all duration-300 flex flex-col h-full ${className}`}
       style={{
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.015 : 1}, ${isHovered ? 1.015 : 1}, 1)`,
+        transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.03 : 1}, ${isHovered ? 1.03 : 1}, 1)`,
         boxShadow: isHovered 
-          ? `0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)`
+          ? `0 35px 70px -15px rgba(0,0,0,0.9), 0 0 60px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`
           : '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
-        cursor: "pointer"
+        cursor: "pointer",
+        transformStyle: "preserve-3d"
       }}
     >
+      {/* Dynamic Glow Spotlight */}
       <div 
-        className="absolute inset-0 pointer-events-none transition-opacity duration-500"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-500 z-10"
         style={{
-          background: `radial-gradient(circle 200px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
+          background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
           opacity: isHovered ? 1 : 0
         }}
       />
-      {children}
+      {/* Holographic Sheen reflection */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-10"
+        style={{
+          background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.08), transparent 60%)`,
+          opacity: isHovered ? 1 : 0
+        }}
+      />
+      
+      {/* Content container lifted in 3D space */}
+      <div 
+        className="flex flex-col h-full"
+        style={{ 
+          transform: isHovered ? "translateZ(55px)" : "translateZ(0px)", 
+          transition: "transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+          transformStyle: "preserve-3d"
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };
@@ -841,7 +862,7 @@ export const Landing = () => {
           <p className="text-xs text-slate-400 mt-2">Click on any card to zoom in and check its visual interface.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ transformStyle: "preserve-3d" }}>
           {featureCards.map((card, idx) => {
             const Icon = card.icon;
             const isWide = card.id === "batch";
@@ -852,24 +873,24 @@ export const Landing = () => {
                 glowColor={card.glowColor}
                 className={isWide ? "md:col-span-2" : ""}
               >
-                <div className="p-8 h-full flex flex-col justify-between gap-6">
-                  <div className="space-y-4">
+                <div className="p-8 h-full flex flex-col justify-between gap-6" style={{ transformStyle: "preserve-3d" }}>
+                  <div className="space-y-4" style={{ transform: "translateZ(30px)" }}>
                     <div className="flex justify-between items-start">
-                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-violet-400">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-violet-400" style={{ transform: "translateZ(15px)" }}>
                         <Icon size={22} />
                       </div>
-                      <span className="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-bold text-slate-400 uppercase tracking-widest" style={{ transform: "translateZ(10px)" }}>
                         {card.badge}
                       </span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-2">{card.title}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed">{card.description}</p>
+                      <h3 className="text-xl font-bold text-white mb-2" style={{ transform: "translateZ(20px)" }}>{card.title}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed" style={{ transform: "translateZ(10px)" }}>{card.description}</p>
                     </div>
                   </div>
 
                   {/* Embedded Visual Widget */}
-                  <div className="mt-auto">
+                  <div className="mt-auto" style={{ transform: "translateZ(40px)", transformStyle: "preserve-3d" }}>
                     {card.visualWidget}
                   </div>
                 </div>
