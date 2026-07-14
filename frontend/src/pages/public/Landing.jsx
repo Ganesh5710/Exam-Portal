@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Shield, 
@@ -29,75 +29,49 @@ import {
   CornerDownRight
 } from "lucide-react";
 
-// Custom Hook for Mouse Position (Spotlight Effect)
-const useMousePosition = (ref) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      setPosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
-    };
-
-    const node = ref.current;
-    if (node) {
-      node.addEventListener("mousemove", handleMouseMove);
-    }
-    return () => {
-      if (node) {
-        node.removeEventListener("mousemove", handleMouseMove);
-      }
-    };
-  }, [ref]);
-
-  return position;
-};
-
-// 3D Tilt Card Component
+// 3D Tilt Card Component (Standardized React Mouse Tracking)
 const TiltCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.15)", onClick }) => {
-  const cardRef = useRef(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const mousePos = useMousePosition(cardRef);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e) => {
-    if (!cardRef.current) return;
-    const card = cardRef.current;
-    const width = card.clientWidth;
-    const height = card.clientHeight;
-    
-    // Calculate rotation angles (max 10 degrees)
-    const rotateX = ((mousePos.y / height) - 0.5) * -15;
-    const rotateY = ((mousePos.x / width) - 0.5) * 15;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setMousePos({ x, y });
+
+    const width = rect.width;
+    const height = rect.height;
+    const rotateX = ((y / height) - 0.5) * -15;
+    const rotateY = ((x / width) - 0.5) * 15;
     
     setTilt({ x: rotateX, y: rotateY });
+    setIsHovered(true);
   };
 
   const handleMouseLeave = () => {
     setTilt({ x: 0, y: 0 });
+    setIsHovered(false);
   };
 
   return (
     <div
-      ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`relative overflow-hidden transition-all duration-300 rounded-[28px] border border-white/[0.04] bg-[#090714]/65 backdrop-blur-xl shadow-2xl ${className}`}
+      className={`relative overflow-hidden rounded-[28px] border border-white/[0.04] bg-[#090714]/65 backdrop-blur-xl shadow-2xl transition-all duration-200 ${className}`}
       style={{
         transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(1.02, 1.02, 1.02)`,
-        transition: "transform 0.1s ease-out, border-color 0.3s ease",
         cursor: "pointer"
       }}
     >
       {/* Dynamic Cursor Spotlight Background */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: `radial-gradient(circle 120px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`
+          background: `radial-gradient(circle 120px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
+          opacity: isHovered ? 1 : 0
         }}
       />
       {children}
@@ -118,7 +92,24 @@ export const Landing = () => {
   // Split-Screen Simulator States
   const [splitState, setSplitState] = useState("start"); // "start", "progress", "tab-out", "proctor-alert", "graded"
   const [splitLogs, setSplitLogs] = useState([]);
-  const [splitTimer, setSplitTimer] = useState("00:59:59");
+  
+  // Safe Timer Engine (seconds tracking)
+  const [secondsLeft, setSecondsLeft] = useState(5399); // 1h 29m 59s
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 5399));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (totalSeconds) => {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  };
   
   // Custom Parallax Mouse offsets
   const [parallaxOffset, setParallaxOffset] = useState({ x: 0, y: 0 });
@@ -176,44 +167,28 @@ export const Landing = () => {
 
   // Run Split Screen Proctor Demo Cycles
   useEffect(() => {
-    let timerInterval;
     if (splitState === "progress") {
       setSplitLogs(["[10:00:00] Candidate initialized terminal.", "[10:00:02] Face scan verification: OK."]);
       
       const timeout1 = setTimeout(() => {
         setSplitState("tab-out");
         setSplitLogs(prev => ["[10:00:12] SYSTEM WARNING: Focus departed from workspace.", ...prev]);
-      }, 4000);
+      }, 4500);
 
       const timeout2 = setTimeout(() => {
         setSplitState("proctor-alert");
         setSplitLogs(prev => ["[10:00:15] CRITICAL ALERT: Tab switch detected. Proctor notified.", ...prev]);
-      }, 8000);
+      }, 9000);
 
       const timeout3 = setTimeout(() => {
         setSplitState("graded");
         setSplitLogs(prev => ["[10:00:25] Exam finalized. Auto-graded with penalty.", ...prev]);
-      }, 12000);
-
-      // Ticking Timer
-      timerInterval = setInterval(() => {
-        setSplitTimer(prev => {
-          const parts = prev.split(":");
-          let s = parseInt(parts[2]) - 1;
-          let m = parseInt(parts[1]);
-          let h = parseInt(parts[0]);
-          if (s < 0) { s = 59; m--; }
-          if (m < 0) { m = 59; h--; }
-          const f = (val) => String(val).padStart(2, "0");
-          return `${f(h)}:${f(m)}:${f(s)}`;
-        });
-      }, 1000);
+      }, 13500);
 
       return () => {
         clearTimeout(timeout1);
         clearTimeout(timeout2);
         clearTimeout(timeout3);
-        clearInterval(timerInterval);
       };
     }
   }, [splitState]);
@@ -360,9 +335,107 @@ export const Landing = () => {
     }
   ];
 
+  const faqs = [
+    {
+      q: "Can I import 2,000+ questions at once?",
+      a: "Yes! Skillbrix supports bulk imports of up to 5,000 questions in Excel, CSV, JSON, or TXT format. Our parser is optimized to process large question banks in quick parallel batches."
+    },
+    {
+      q: "How does the real-time student monitoring work?",
+      a: "The admin panel connects to active student terminals via real-time WebSockets, showing instantly if a student is actively taking the test, has finished, or exited the tab."
+    },
+    {
+      q: "Is negative marking supported?",
+      a: "Absolutely. You can set positive weights and negative mark margins (e.g., -0.25 or -1.0) globally or on a per-question level to mirror competitive exam structures."
+    },
+    {
+      q: "Are departments auto-detected during uploads?",
+      a: "Yes. When importing student records or question lists, the platform scans target columns to automatically identify existing departments or create new ones on the fly."
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-[#02000A] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
       
+      {/* Dynamic styles for WOW elements, premium glow animations, and hover lighting */}
+      <style>{`
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(1.5deg); }
+        }
+        @keyframes float-medium {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-25px) rotate(-2deg); }
+        }
+        @keyframes float-fast {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(1deg); }
+        }
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
+          50% { opacity: 0.45; transform: scale(1.1); filter: blur(120px); }
+        }
+        
+        .animate-float-1 { animation: float-slow 8s ease-in-out infinite; }
+        .animate-float-2 { animation: float-medium 7s ease-in-out infinite 1.5s; }
+        .animate-float-3 { animation: float-fast 6s ease-in-out infinite 0.7s; }
+        
+        .glow-radial-1 {
+          position: absolute;
+          background: radial-gradient(circle, rgba(124, 92, 252, 0.3) 0%, transparent 70%);
+          animation: pulse-glow 9s ease-in-out infinite;
+        }
+        .glow-radial-2 {
+          position: absolute;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+          animation: pulse-glow 7s ease-in-out infinite 2.5s;
+        }
+
+        .neon-border-glow {
+          position: relative;
+          border-radius: 24px;
+          background: linear-gradient(185deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+        }
+        .neon-border-glow::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: 24px;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(124, 92, 252, 0.4) 0%, rgba(256, 256, 256, 0.03) 40%, rgba(236, 72, 153, 0.25) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+
+        .glass-card-wow {
+          background: rgba(10, 8, 20, 0.7);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .shimmer-btn {
+          position: relative;
+          overflow: hidden;
+        }
+        .shimmer-btn::after {
+          content: '';
+          position: absolute;
+          top: -50%; left: -60%;
+          width: 30%; height: 200%;
+          background: rgba(255, 255, 255, 0.15);
+          transform: rotate(35deg);
+          transition: all 0.6s ease;
+          opacity: 0;
+        }
+        .shimmer-btn:hover::after {
+          left: 130%;
+          opacity: 1;
+        }
+      `}</style>
+
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22] pointer-events-none" />
       
@@ -457,7 +530,7 @@ export const Landing = () => {
                 <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Student Workspace</span>
                   <div className="flex items-center gap-2 font-mono text-xs text-white">
-                    <Clock size={12} className="text-fuchsia-400" /> {splitTimer}
+                    <Clock size={12} className="text-fuchsia-400" /> {formatTime(secondsLeft)}
                   </div>
                 </div>
 
