@@ -17,25 +17,67 @@ import {
   BarChart4,
   Check,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Play,
+  Award,
+  CheckCircle
 } from "lucide-react";
 
 export const Landing = () => {
-  const [activeTab, setActiveTab] = useState("import");
-  const [proctoringScore, setProctoringScore] = useState(98);
   const [activeFaq, setActiveFaq] = useState(null);
+  
+  // Interactive Simulator States
+  const [simStep, setSimStep] = useState("start"); // "start", "uploading", "ready", "running", "cheated", "completed"
+  const [uploadedCount, setUploadedCount] = useState(0);
+  const [activeStudentStatus, setActiveStudentStatus] = useState("Idle");
+  const [studentScore, setStudentScore] = useState(100);
+  const [proctorLogs, setProctorLogs] = useState([]);
 
-  // Auto-pulse the proctoring score to simulate live AI tracking
+  // Simulate file upload progress
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProctoringScore((prev) => {
-        const change = Math.random() > 0.5 ? 1 : -1;
-        const next = prev + change;
-        return next > 100 ? 100 : next < 90 ? 90 : next;
-      });
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+    if (simStep === "uploading") {
+      let current = 0;
+      const interval = setInterval(() => {
+        current += 250;
+        setUploadedCount(current);
+        if (current >= 2000) {
+          clearInterval(interval);
+          setSimStep("ready");
+        }
+      }, 300);
+      return () => clearInterval(interval);
+    }
+  }, [simStep]);
+
+  // Simulate live proctor exam states
+  useEffect(() => {
+    if (simStep === "running") {
+      setActiveStudentStatus("Active (100% Focus)");
+      setProctorLogs(["[09:00:00] Exam Session Started.", "[09:00:15] Student terminal initialized."]);
+      
+      const timer1 = setTimeout(() => {
+        setActiveStudentStatus("Tab Switch Detected!");
+        setStudentScore(75);
+        setProctorLogs(prev => ["[09:01:05] WARNING: Student exited full-screen terminal.", ...prev]);
+        setSimStep("cheated");
+      }, 4000);
+
+      return () => clearTimeout(timer1);
+    }
+  }, [simStep]);
+
+  const startSimulation = () => {
+    setSimStep("uploading");
+    setUploadedCount(0);
+  };
+
+  const resetSimulation = () => {
+    setSimStep("start");
+    setUploadedCount(0);
+    setActiveStudentStatus("Idle");
+    setStudentScore(100);
+    setProctorLogs([]);
+  };
 
   const faqs = [
     {
@@ -57,58 +99,100 @@ export const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#030014] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
+    <div className="min-h-screen bg-[#02000A] text-slate-100 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans">
       
-      {/* Inject custom styling for advanced floating cards and premium glass borders */}
+      {/* Dynamic styles for WOW elements, premium glow animations, and hover lighting */}
       <style>{`
         @keyframes float-slow {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(1deg); }
+          50% { transform: translateY(-20px) rotate(1.5deg); }
         }
         @keyframes float-medium {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(-1.5deg); }
+          50% { transform: translateY(-25px) rotate(-2deg); }
         }
         @keyframes float-fast {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(1deg); }
+          50% { transform: translateY(-12px) rotate(1deg); }
         }
         @keyframes pulse-glow {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.05); }
+          0%, 100% { opacity: 0.25; transform: scale(1); filter: blur(100px); }
+          50% { opacity: 0.45; transform: scale(1.1); filter: blur(120px); }
         }
-        .animate-float-1 { animation: float-slow 7s ease-in-out infinite; }
-        .animate-float-2 { animation: float-medium 6s ease-in-out infinite 1s; }
-        .animate-float-3 { animation: float-fast 5s ease-in-out infinite 0.5s; }
+        @keyframes grid-glow {
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.35; }
+        }
         
-        .premium-glass {
-          background: rgba(13, 11, 28, 0.45);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-        }
-        .glow-orb-purple {
+        .animate-float-1 { animation: float-slow 8s ease-in-out infinite; }
+        .animate-float-2 { animation: float-medium 7s ease-in-out infinite 1.5s; }
+        .animate-float-3 { animation: float-fast 6s ease-in-out infinite 0.7s; }
+        
+        .glow-radial-1 {
           position: absolute;
-          background: radial-gradient(circle, rgba(124, 92, 252, 0.2) 0%, transparent 70%);
-          filter: blur(80px);
-          animation: pulse-glow 8s ease-in-out infinite;
+          background: radial-gradient(circle, rgba(124, 92, 252, 0.3) 0%, transparent 70%);
+          animation: pulse-glow 9s ease-in-out infinite;
         }
-        .glow-orb-pink {
+        .glow-radial-2 {
           position: absolute;
-          background: radial-gradient(circle, rgba(244, 63, 94, 0.15) 0%, transparent 70%);
-          filter: blur(60px);
-          animation: pulse-glow 6s ease-in-out infinite 2s;
+          background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+          animation: pulse-glow 7s ease-in-out infinite 2.5s;
+        }
+
+        .neon-border-glow {
+          position: relative;
+          border-radius: 24px;
+          background: linear-gradient(185deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+        }
+        .neon-border-glow::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: 24px;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(124, 92, 252, 0.4) 0%, rgba(256, 256, 256, 0.03) 40%, rgba(236, 72, 153, 0.25) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+
+        .glass-card-wow {
+          background: rgba(10, 8, 20, 0.7);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .shimmer-btn {
+          position: relative;
+          overflow: hidden;
+        }
+        .shimmer-btn::after {
+          content: '';
+          position: absolute;
+          top: -50%; left: -60%;
+          width: 30%; height: 200%;
+          background: rgba(255, 255, 255, 0.15);
+          transform: rotate(35deg);
+          transition: all 0.6s ease;
+          opacity: 0;
+        }
+        .shimmer-btn:hover::after {
+          left: 130%;
+          opacity: 1;
         }
       `}</style>
 
-      {/* Grid Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1a3a_1px,transparent_1px),linear-gradient(to_bottom,#1f1a3a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.25] pointer-events-none" />
+      {/* Futuristic Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22] pointer-events-none" />
       
-      {/* Glowing background highlights */}
-      <div className="absolute top-[-100px] left-[50%] -translate-x-[50%] w-[1000px] h-[400px] bg-gradient-to-r from-violet-600/20 via-fuchsia-600/20 to-cyan-500/20 rounded-full blur-[140px] pointer-events-none" />
+      {/* Background Orbs */}
+      <div className="glow-radial-1 w-[800px] h-[500px] -top-40 left-[50%] -translate-x-[50%] -z-10" />
+      <div className="glow-radial-2 w-[600px] h-[600px] top-[40%] right-[-200px] -z-10" />
 
       {/* Navigation Header */}
-      <nav className="fixed top-0 left-0 right-0 h-20 border-b border-white/[0.04] bg-[#030014]/65 backdrop-blur-xl z-50 flex items-center justify-between px-6 md:px-12">
+      <nav className="fixed top-0 left-0 right-0 h-20 border-b border-white/[0.04] bg-[#02000A]/70 backdrop-blur-xl z-50 flex items-center justify-between px-6 md:px-12">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-base shadow-lg shadow-violet-500/25 group-hover:scale-105 transition-transform">
             SB
@@ -119,37 +203,31 @@ export const Landing = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#demo" className="hover:text-white transition-colors">Interactive Demo</a>
+          <a href="#interactive-arena" className="hover:text-white transition-colors">Interactive Arena</a>
+          <a href="#features" className="hover:text-white transition-colors">Platform Features</a>
           <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
           <a href="#faqs" className="hover:text-white transition-colors">FAQs</a>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link 
-            to="/login" 
-            className="px-4.5 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
-          >
+          <Link to="/login" className="px-4.5 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
             Login
           </Link>
-          <Link 
-            to="/login" 
-            className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-          >
+          <Link to="/login" className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
             Launch Portal →
           </Link>
         </div>
       </nav>
 
-      {/* Hero Section with Floating WOW Cards */}
-      <header className="pt-40 pb-28 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-violet-500/20 bg-violet-500/5 text-xs font-semibold text-violet-300 uppercase tracking-widest mb-8 animate-fade-in shadow-inner">
+      {/* Hero Header Area */}
+      <header className="pt-44 pb-28 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/20 bg-violet-500/5 text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-8 animate-fade-in shadow-inner">
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
-          The Next Generation Assessment Platform
+          The Advanced Assessment Architecture
         </div>
 
-        <h1 className="text-4xl md:text-8xl font-black tracking-tight leading-[1.05] text-white max-w-5xl mb-8">
-          The <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">Advanced Standard</span><br className="hidden md:block" /> for Online Examinations
+        <h1 className="text-5xl md:text-8.5xl font-black tracking-tight leading-[1.02] text-white max-w-6xl mb-8">
+          The <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">Futuristic Standard</span><br className="hidden md:block" /> for Online Examinations
         </h1>
 
         <p className="text-base md:text-xl text-slate-400 max-w-3xl mb-12 leading-relaxed font-normal">
@@ -157,235 +235,304 @@ export const Landing = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-24 relative z-20">
-          <Link 
-            to="/login" 
-            className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            Try Free Demo <ArrowRight size={18} />
-          </Link>
-          <a 
-            href="#demo" 
-            className="px-8 py-4.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-violet-500/30 text-slate-300 hover:text-white font-bold rounded-xl transition-all duration-200"
-          >
-            ✦ Watch Workflow
+          <a href="#interactive-arena" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
+            Play Live Simulator <Play size={16} fill="currentColor" />
           </a>
+          <Link to="/login" className="px-8 py-4.5 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-violet-500/30 text-slate-300 hover:text-white font-bold rounded-xl transition-all duration-200">
+            ✦ Launch Application
+          </Link>
         </div>
 
-        {/* 3D Floating Wow Elements Grid */}
-        <div className="w-full max-w-5xl relative mb-28">
-          <div className="glow-orb-purple w-96 h-96 -top-20 -left-20 -z-10" />
-          <div className="glow-orb-pink w-96 h-96 -bottom-20 -right-20 -z-10" />
+        {/* ── INTERACTIVE PLAYGROUND ARENA (WOW CENTERPIECE) ── */}
+        <div id="interactive-arena" className="w-full max-w-5xl relative mb-28">
           
-          {/* Main Visual Centerpiece Card */}
-          <div className="w-full rounded-2xl border border-white/[0.06] bg-slate-950/40 p-1.5 backdrop-blur-2xl shadow-[0_50px_100px_-15px_rgba(0,0,0,0.8)]">
-            <div className="flex items-center justify-between px-5 py-4 bg-slate-900/30 rounded-t-xl border-b border-white/[0.04]">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#ef4444]" />
-                <span className="w-3 h-3 rounded-full bg-[#eab308]" />
-                <span className="w-3 h-3 rounded-full bg-[#22c55e]" />
-              </div>
-              <div className="text-[11px] text-slate-500 font-mono tracking-wider">skillbrix.solutions/admin/dashboard</div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
-                <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">Live Connection</span>
-              </div>
-            </div>
-            <div className="bg-[#050212]/95 rounded-b-xl p-8 text-left grid grid-cols-1 md:grid-cols-4 gap-8 min-h-[350px]">
-              <div className="flex flex-col gap-1.5 md:border-r border-white/[0.04] md:pr-6">
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Live Portal Modules</div>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider bg-violet-600/10 text-violet-400 border border-violet-500/20">
-                  <Cpu size={16} /> Admin Workspace
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-500">
-                  <Users size={16} /> Student Terminal
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-500">
-                  <BarChart4 size={16} /> Advanced Metrics
-                </div>
-              </div>
-              <div className="md:col-span-3 space-y-6">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">Live System Overview</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-slate-900/50 border border-white/5 p-5 rounded-2xl relative overflow-hidden">
-                    <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Active Registrations</span>
-                    <span className="text-3xl font-extrabold text-white block mt-2">2,000+</span>
-                  </div>
-                  <div className="bg-slate-900/50 border border-white/5 p-5 rounded-2xl relative overflow-hidden">
-                    <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Avg Score</span>
-                    <span className="text-3xl font-extrabold text-violet-400 block mt-2">84.2%</span>
-                  </div>
-                  <div className="bg-slate-900/50 border border-white/5 p-5 rounded-2xl relative overflow-hidden">
-                    <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Active Proctors</span>
-                    <span className="text-3xl font-extrabold text-emerald-400 block mt-2">Online</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Floating Card 1: AI Proctor Alert */}
-          <div className="absolute top-[-40px] right-[-60px] w-64 premium-glass p-5 rounded-2xl animate-float-1 pointer-events-none hidden md:block text-left z-20">
+          {/* Floating Card 1: Live Proctor Indicator */}
+          <div className="absolute top-[-30px] right-[-50px] w-64 glass-card-wow p-5 rounded-2xl animate-float-1 pointer-events-none hidden md:block text-left z-20">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] bg-red-500/10 border border-red-500/20 text-red-400 font-bold px-2 py-0.5 rounded uppercase">Suspicious Activity</span>
-              <AlertTriangle size={14} className="text-red-400 animate-pulse" />
-            </div>
-            <p className="text-xs text-white font-bold">Multiple Tab Changes Detected</p>
-            <p className="text-[10px] text-slate-400 mt-1">Student ID: #10842 (Rahul Sharma)</p>
-          </div>
-
-          {/* Floating Card 2: Question Import Status */}
-          <div className="absolute bottom-[-50px] left-[-70px] w-72 premium-glass p-5 rounded-2xl animate-float-2 pointer-events-none hidden md:block text-left z-20">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Check size={14} />
-              </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Question Bank Importer</span>
-            </div>
-            <p className="text-xs text-white font-bold">Successfully imported 2,000 Questions</p>
-            <p className="text-[10px] text-emerald-400 mt-1">Processed in 4 parallel batch operations</p>
-          </div>
-
-          {/* Floating Card 3: Active Proctor Log */}
-          <div className="absolute bottom-[-30px] right-[-80px] w-64 premium-glass p-5 rounded-2xl animate-float-3 pointer-events-none hidden md:block text-left z-20">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Integrity Watchdog</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Proctor Log</span>
+              <Activity size={14} className="text-violet-400 animate-pulse" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-3xl font-black text-white">{proctoringScore}%</div>
+              <div className="text-3xl font-black text-white">{studentScore}%</div>
               <div>
-                <span className="text-xs text-emerald-400 font-bold block">Secure State</span>
-                <span className="text-[9px] text-slate-500 block">AI Confidence Score</span>
+                <span className="text-xs text-violet-400 font-bold block">Integrity State</span>
+                <span className="text-[9px] text-slate-500 block">AI Confidence Ratio</span>
               </div>
             </div>
           </div>
+
+          {/* Floating Card 2: Student Terminal Alert */}
+          <div className="absolute bottom-[-40px] left-[-70px] w-72 glass-card-wow p-5 rounded-2xl animate-float-2 pointer-events-none hidden md:block text-left z-20">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400">
+                <AlertTriangle size={14} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Flag</span>
+            </div>
+            <p className="text-xs text-white font-bold">Focus lost during exam session</p>
+            <p className="text-[10px] text-red-400 mt-1">Status: Tab changed or window minimized</p>
+          </div>
+
+          {/* Floating Card 3: Batch Process */}
+          <div className="absolute bottom-[-30px] right-[-60px] w-64 glass-card-wow p-5 rounded-2xl animate-float-3 pointer-events-none hidden md:block text-left z-20">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Bulk Operation</span>
+              <Zap size={14} className="text-emerald-400" />
+            </div>
+            <p className="text-xs text-white font-bold">Import operation complete</p>
+            <p className="text-[10px] text-emerald-400 mt-1">Processed in 4 batch intervals</p>
+          </div>
+
+          {/* Main Simulator Panel */}
+          <div className="neon-border-glow p-1">
+            <div className="w-full rounded-[22px] bg-slate-950/60 p-1.5 backdrop-blur-3xl shadow-2xl">
+              {/* Simulator Header */}
+              <div className="flex items-center justify-between px-5 py-4 bg-slate-900/30 rounded-t-[18px] border-b border-white/[0.04]">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#ef4444]" />
+                  <span className="w-3 h-3 rounded-full bg-[#eab308]" />
+                  <span className="w-3 h-3 rounded-full bg-[#22c55e]" />
+                </div>
+                <div className="text-[11px] text-slate-500 font-mono tracking-wider">skillbrix.solutions/interactive-arena</div>
+                <div className="flex items-center gap-2 bg-violet-600/10 border border-violet-500/20 rounded-full px-2.5 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  <span className="text-[9px] text-violet-400 font-bold uppercase tracking-wider">Playable Simulator</span>
+                </div>
+              </div>
+
+              {/* Simulator Body */}
+              <div className="bg-[#050212]/95 rounded-b-[18px] p-6 md:p-8 text-left grid grid-cols-1 md:grid-cols-4 gap-8 min-h-[400px]">
+                
+                {/* Control Sidebar */}
+                <div className="flex flex-col gap-2 md:border-r border-white/[0.04] md:pr-6">
+                  <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Simulate Actions</div>
+                  
+                  <button 
+                    onClick={startSimulation}
+                    disabled={simStep !== "start"}
+                    className={`px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-left border transition-all ${
+                      simStep === "start" 
+                        ? "bg-violet-600/20 text-violet-400 border-violet-500/30 hover:bg-violet-600/30" 
+                        : "text-slate-600 border-transparent bg-transparent cursor-not-allowed"
+                    }`}
+                  >
+                    1. Import 2000 Questions
+                  </button>
+
+                  <button 
+                    onClick={() => setSimStep("running")}
+                    disabled={simStep !== "ready"}
+                    className={`px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-left border transition-all ${
+                      simStep === "ready" 
+                        ? "bg-violet-600/20 text-violet-400 border-violet-500/30 hover:bg-violet-600/30" 
+                        : "text-slate-600 border-transparent bg-transparent cursor-not-allowed"
+                    }`}
+                  >
+                    2. Launch Exam
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      setSimStep("completed");
+                      setActiveStudentStatus("Submitted Successfully");
+                    }}
+                    disabled={simStep !== "cheated"}
+                    className={`px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-left border transition-all ${
+                      simStep === "cheated" 
+                        ? "bg-violet-600/20 text-violet-400 border-violet-500/30 hover:bg-violet-600/30" 
+                        : "text-slate-600 border-transparent bg-transparent cursor-not-allowed"
+                    }`}
+                  >
+                    3. Auto-Submit & Score
+                  </button>
+
+                  <button 
+                    onClick={resetSimulation}
+                    className="mt-auto px-4 py-2.5 rounded-lg border border-white/5 hover:border-red-500/30 text-slate-400 hover:text-red-400 font-bold text-[10px] uppercase tracking-wider text-center transition-all"
+                  >
+                    Reset Sandbox
+                  </button>
+                </div>
+
+                {/* Simulator Workspace Screen */}
+                <div className="md:col-span-3 flex flex-col justify-between">
+                  {simStep === "start" && (
+                    <div className="space-y-4 my-auto text-center py-8">
+                      <Zap className="mx-auto text-violet-400 animate-bounce mb-3" size={32} />
+                      <h4 className="text-base font-bold text-white uppercase tracking-wider">Assessment Sandbox Arena</h4>
+                      <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                        Click the buttons on the left sidebar to trace the exact database and AI monitoring steps for a batch of 2,000 students and questions.
+                      </p>
+                    </div>
+                  )}
+
+                  {simStep === "uploading" && (
+                    <div className="space-y-6 my-auto py-8">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Parsing questions document...</span>
+                        <span className="text-xs text-violet-400 font-bold">{Math.round((uploadedCount / 2000) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-300" style={{ width: `${(uploadedCount / 2000) * 100}%` }} />
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-mono">Running bulk database transactions: Added {uploadedCount} records...</p>
+                    </div>
+                  )}
+
+                  {simStep === "ready" && (
+                    <div className="space-y-4 my-auto py-4">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
+                        <CheckCircle size={24} />
+                      </div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">Database Batch Write Completed</h4>
+                      <p className="text-xs text-slate-400 leading-relaxed max-w-lg">
+                        Import success! Added **2,000 questions** in **4 database chunks** (500 records each). Safe from server timeouts.
+                      </p>
+                    </div>
+                  )}
+
+                  {simStep === "running" && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center bg-violet-600/10 border border-violet-500/20 p-4 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <Activity className="text-violet-400 animate-pulse" size={18} />
+                          <div>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider block">Live Proctoring Watchdog</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Tracking candidate tab switches...</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400 uppercase">Secure State</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 italic">Wait a few seconds for the candidate simulation to switch windows...</p>
+                    </div>
+                  )}
+
+                  {simStep === "cheated" && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <AlertTriangle className="text-red-400 animate-bounce" size={18} />
+                          <div>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider block">Flagged: Integrity Breach</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Focus lost. Confidence score dropped.</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-red-400 uppercase">Focus Lost</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 italic">Proceed to Step 3 to auto-submit and finalize the candidate's grading logs.</p>
+                    </div>
+                  )}
+
+                  {simStep === "completed" && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <Award className="text-emerald-400" size={18} />
+                          <div>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider block">Auto-Graded Submission</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">Audit log saved. Scorecard generated.</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400 uppercase">Complete</span>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Exam finalized. Results and proctoring departure records successfully logged to the database.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Simulator Logs Box */}
+                  {proctorLogs.length > 0 && (
+                    <div className="bg-slate-950 border border-white/5 rounded-xl p-4 mt-4 font-mono text-[10px] text-slate-500 max-h-24 overflow-y-auto space-y-1">
+                      {proctorLogs.map((log, i) => (
+                        <div key={i}>{log}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </div>
       </header>
 
-      {/* Trust & Scale Section */}
-      <section className="border-y border-white/[0.04] bg-slate-950/40 py-16 px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div className="space-y-1">
-            <div className="text-5xl font-black text-white bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">3.2M+</div>
-            <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Tests Conducted</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-5xl font-black text-white bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">95.4%</div>
-            <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Completion Rate</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-5xl font-black text-white bg-gradient-to-r from-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">5,000+</div>
-            <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Institutions Served</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-5xl font-black text-white bg-gradient-to-r from-emerald-400 to-violet-400 bg-clip-text text-transparent">99.99%</div>
-            <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Realtime Uptime</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Workflow Demo Tabs */}
-      <section id="demo" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Interactive Tour</div>
-          <h2 className="text-3xl md:text-5xl font-black text-white">How Skillbrix Works</h2>
+      {/* Advanced Bento Grid Platform Features */}
+      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <div className="text-center max-w-xl mx-auto mb-20">
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Suite</div>
+          <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
+            Designed for scale, reliability, and security
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 rounded-2xl border border-white/[0.04] bg-slate-900/25 relative group hover:border-violet-500/20 transition-all duration-300">
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm mb-6">
-              01
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1: AI Proctoring Signals */}
+          <div className="p-8 bg-slate-900/30 border border-white/[0.04] rounded-2xl relative overflow-hidden group hover:border-violet-500/30 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-violet-600/5 rounded-full blur-2xl pointer-events-none" />
+            <Shield className="text-violet-400 mb-6" size={28} />
+            <h3 className="text-lg font-bold text-white mb-2">AI Proctoring Signals</h3>
+            <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              Get automatic integrity flags with confidence scoring for every student test session. Know if they attempt to change tabs or lose focus.
+            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-violet-500/10 border border-violet-500/20 text-[10px] font-semibold text-violet-300 uppercase">
+              Webcam-ready
             </div>
-            <h3 className="text-lg font-bold text-white mb-3">Upload Question Bank</h3>
+          </div>
+
+          {/* Card 2: Instant Leaderboards */}
+          <div className="p-8 bg-slate-900/30 border border-white/[0.04] rounded-2xl relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-cyan-600/5 rounded-full blur-2xl pointer-events-none" />
+            <BarChart4 className="text-cyan-400 mb-6" size={28} />
+            <h3 className="text-lg font-bold text-white mb-2">Instant Leaderboards</h3>
+            <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              Publish rank updates and performance indicators the moment submissions are completed. No delay, no manual spreadsheet tallying.
+            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-semibold text-cyan-300 uppercase">
+              Auto-Compiled
+            </div>
+          </div>
+
+          {/* Card 3: Timed Security Sessions */}
+          <div className="p-8 bg-slate-900/30 border border-white/[0.04] rounded-2xl relative overflow-hidden group hover:border-fuchsia-500/30 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-fuchsia-600/5 rounded-full blur-2xl pointer-events-none" />
+            <Lock className="text-fuchsia-400 mb-6" size={28} />
+            <h3 className="text-lg font-bold text-white mb-2">Secure Timed Sessions</h3>
+            <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              Lock down browser focus and set hard thresholds. Exams automatically submit the exact millisecond the session countdown hits zero.
+            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-fuchsia-500/10 border border-fuchsia-500/20 text-[10px] font-semibold text-fuchsia-300 uppercase">
+              Auto-Submit
+            </div>
+          </div>
+
+          {/* Card 4: 2000+ Bulk Import Option (Wide) */}
+          <div className="md:col-span-2 p-8 bg-slate-900/30 border border-white/[0.04] rounded-2xl relative overflow-hidden group hover:border-violet-500/30 transition-all duration-300 flex flex-col justify-between">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 rounded-full blur-3xl pointer-events-none" />
+            <div>
+              <Cpu className="text-violet-400 mb-6" size={28} />
+              <h3 className="text-xl font-bold text-white mb-2">Batch Optimized AI MCQ Parser</h3>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-xl mb-6">
+                Instead of processing records one-by-one which causes gateway timeouts, Skillbrix utilizes chunked parallel inserts to safely commit up to 2,000 questions in 500-question batch intervals.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/5 text-[11px] font-bold text-violet-300 uppercase">Chunked DB Inserts</span>
+              <span className="px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-[11px] font-bold text-cyan-300 uppercase">Auto-resolve Departments</span>
+            </div>
+          </div>
+
+          {/* Card 5: Complete Student Lifecycle Management */}
+          <div className="p-8 bg-slate-900/30 border border-white/[0.04] rounded-2xl relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
+            <Users className="text-emerald-400 mb-6" size={28} />
+            <h3 className="text-lg font-bold text-white mb-2">Clean Student Controls</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Upload thousands of MCQs at once using Excel, CSV or AI importer. Our system auto-resolves departments and validates formats instantly.
+              Show students on a clean single page without annoying previous/next pagination buttons. Block/unblock credentials instantly.
             </p>
           </div>
 
-          <div className="p-8 rounded-2xl border border-white/[0.04] bg-slate-900/25 relative group hover:border-violet-500/20 transition-all duration-300">
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm mb-6">
-              02
-            </div>
-            <h3 className="text-lg font-bold text-white mb-3">Configure & Launch Exams</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Assign exams to departments, set duration limits, configure custom grading, negative marks, and publish to students workspace.
-            </p>
-          </div>
-
-          <div className="p-8 rounded-2xl border border-white/[0.04] bg-slate-900/25 relative group hover:border-violet-500/20 transition-all duration-300">
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center font-bold text-violet-400 text-sm mb-6">
-              03
-            </div>
-            <h3 className="text-lg font-bold text-white mb-3">Instant Result Analysis</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              View live candidate progress monitoring. Instantly check overall score distributions, pass/fail ratios, and detailed student submissions.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Advanced Features Bento Grid */}
-      <section id="features" className="py-20 bg-slate-900/15 border-t border-white/5 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="max-w-xl mb-16">
-            <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Suite</div>
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
-              Everything needed to <span className="bg-gradient-to-r from-fuchsia-400 to-violet-400 bg-clip-text text-transparent">run better tests</span>
-            </h2>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Experience enterprise-grade security and rich analytics tools. Purpose-built for reliable examination cycles.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Bento item 1 */}
-            <div className="md:col-span-2 p-8 bg-slate-900/30 border border-white/5 rounded-2xl relative overflow-hidden group hover:border-violet-500/20 transition-all duration-300">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
-              <Cpu className="text-violet-400 mb-6" size={32} />
-              <h3 className="text-xl font-bold text-white mb-2">AI-Powered Question Processing</h3>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-lg mb-6">
-                Direct AI questions parsing extracts structured MCQs with automated tagging, difficulty mapping, and duplicate detection from any document upload.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/5 text-xs text-violet-300 font-semibold">2,000+ MCQs Upload</span>
-                <span className="px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-xs text-cyan-300 font-semibold">Department Match</span>
-                <span className="px-3 py-1 rounded-full border border-fuchsia-500/20 bg-fuchsia-500/5 text-xs text-fuchsia-300 font-semibold">Duplicate Check</span>
-              </div>
-            </div>
-
-            {/* Bento item 2 */}
-            <div className="p-8 bg-slate-900/30 border border-white/5 rounded-2xl relative overflow-hidden group hover:border-cyan-500/20 transition-all duration-300">
-              <Activity className="text-cyan-400 mb-6" size={32} />
-              <h3 className="text-xl font-bold text-white mb-2">Live Monitor Feed</h3>
-              <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                Watch student exam status in real-time. Catch departures and block/unblock students instantly with a single button.
-              </p>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full w-[80%] animate-pulse" />
-              </div>
-            </div>
-
-            {/* Bento item 3 */}
-            <div className="p-8 bg-slate-900/30 border border-white/5 rounded-2xl relative overflow-hidden group hover:border-fuchsia-500/20 transition-all duration-300">
-              <Building2 className="text-fuchsia-400 mb-6" size={32} />
-              <h3 className="text-xl font-bold text-white mb-2">Flexible Departments</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Seamlessly group students, exam scopes, and question pools by department, with auto-creation during student bulk uploads.
-              </p>
-            </div>
-
-            {/* Bento item 4 */}
-            <div className="md:col-span-2 p-8 bg-slate-900/30 border border-white/5 rounded-2xl relative overflow-hidden group hover:border-emerald-500/20 transition-all duration-300">
-              <Scale className="text-emerald-400 mb-6" size={32} />
-              <h3 className="text-xl font-bold text-white mb-2">Custom Grading & Negative Marks</h3>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-lg">
-                Assign positive marks and negative margins to replicate national entrance exams (GATE/JEE style). Customize question weighting per exam template.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -405,7 +552,7 @@ export const Landing = () => {
                 <Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" />
               </div>
               <p className="text-sm text-slate-400 leading-relaxed mb-6 font-medium italic">
-                "We migrated to Skillbrix and went from days of manually processing exam papers to instant results distribution. Tremendous time-saver."
+                "We switched to Skillbrix and went from days of manually processing exam papers to instant results distribution. Tremendous time-saver."
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center text-xs">RK</div>
@@ -501,7 +648,7 @@ export const Landing = () => {
           <div className="flex justify-center gap-4">
             <Link 
               to="/login" 
-              className="px-8 py-4 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+              className="px-8 py-4 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn"
             >
               Get Started Free
             </Link>
