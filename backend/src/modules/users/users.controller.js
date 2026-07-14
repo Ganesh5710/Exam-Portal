@@ -245,13 +245,15 @@ const bulkImportStudents = async (req, res, next) => {
                 status: 'ACTIVE'
             });
         }
-        // 4. Batch insert all new records in a single query
+        // 4. Batch insert records in chunks of 500 to avoid PostgreSQL bind parameter limits
         let imported = 0;
-        if (newStudentsData.length > 0) {
+        const chunkSize = 500;
+        for (let i = 0; i < newStudentsData.length; i += chunkSize) {
+            const chunk = newStudentsData.slice(i, i + chunkSize);
             const result = await db_1.prisma.user.createMany({
-                data: newStudentsData
+                data: chunk
             });
-            imported = result.count;
+            imported += result.count;
         }
         await db_1.prisma.auditLog.create({
             data: {
