@@ -299,65 +299,341 @@ export const Landing = () => {
   const featureCards = [
     {
       id: "proctor",
-      title: "AI Proctoring Signals",
-      description: "Get automatic integrity flags with confidence scoring for every student test session. Know if they attempt to change tabs or lose focus.",
+      title: "AI Proctoring & Telemetry Feed",
+      description: "Continuous face validation, gaze detection, and tab-focus telemetry streamed via websocket loops to flag deviations in real-time.",
       icon: Shield,
       glowColor: "rgba(139, 92, 246, 0.45)",
-      badge: "Webcam-Ready",
+      badge: "Telemetry-Ready",
+      className: "md:col-span-2",
       visualWidget: (
-        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group-hover:border-violet-500/20 transition-all min-h-[160px]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.06)_0%,transparent_70%)]" />
-          <div className="w-20 h-20 rounded-full border border-violet-500/25 flex items-center justify-center relative bg-violet-600/5 shadow-inner">
-            <div className="absolute inset-1.5 border border-dashed border-violet-500/40 rounded-full animate-spin" style={{ animationDuration: '8s' }} />
-            <div className="absolute w-12 h-12 rounded-full border border-violet-500/30 flex items-center justify-center bg-[#070514]/95 shadow-md z-10">
-              <Activity className="text-violet-400 animate-pulse" size={20} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl group-hover:border-violet-500/20 transition-all min-h-[170px] relative overflow-hidden text-left">
+          <div className="flex flex-col items-center justify-center p-3 border border-white/[0.03] bg-white/[0.01] rounded-xl relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.05)_0%,transparent_70%)]" />
+            <div className="w-14 h-14 rounded-full border border-violet-500/25 flex items-center justify-center relative bg-violet-600/5">
+              <div className="absolute inset-1 border border-dashed border-violet-500/30 rounded-full animate-spin" style={{ animationDuration: '10s' }} />
+              <Activity className="text-violet-400 animate-pulse relative z-10" size={16} />
             </div>
+            <div className="mt-2 text-center">
+              <span className="text-[8px] font-bold text-violet-400 uppercase tracking-widest block">AI Camera Feed</span>
+              <span className="text-[10px] text-slate-300 font-medium block mt-0.5">{calibState === "success" ? "Gaze: 1.2° Centered" : "Scanning Gaze..."}</span>
+            </div>
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleStartCalibration(); }}
+              className="mt-2 px-3 py-1 bg-violet-600/80 hover:bg-violet-600 text-white font-bold rounded-lg text-[9px] uppercase tracking-wider transition-colors z-20"
+            >
+              {calibState === "calibrating" ? "Calibrating..." : "Calibrate"}
+            </button>
           </div>
-          <div className="mt-4 text-center z-10">
-            <span className="text-[9px] font-bold text-violet-400 uppercase tracking-widest block">AI Camera Feed</span>
-            <span className="text-[11px] text-slate-300 font-medium block mt-0.5">Scanning Face / Gaze Locked</span>
+          <div className="flex flex-col justify-between p-3 border border-white/[0.03] bg-slate-950/60 rounded-xl font-mono text-[9px] text-slate-400 h-full overflow-hidden">
+            <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/[0.04] pb-1.5 mb-1.5 flex justify-between">
+              <span>Telemetry Logs</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </div>
+            <div className="space-y-1 overflow-y-auto max-h-[90px] pr-1">
+              {socketLogs.slice(0, 4).map((log, idx) => (
+                <div key={idx} className="truncate text-slate-300">
+                  <span className="text-violet-500">›</span> {log.replace(/^\[.*\]\s/, '')}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )
     },
     {
-      id: "leaderboard",
-      title: "Instant Leaderboards",
-      description: "Publish rank updates and performance indicators the moment submissions are completed. No delay, no manual spreadsheet tallying.",
+      id: "scoring",
+      title: "Score & Penalty Simulator",
+      description: "Tweak weights and penalty parameters dynamically to preview student grades automatically.",
+      icon: SlidersHorizontal,
+      glowColor: "rgba(236, 72, 153, 0.45)",
+      badge: "Weights-Core",
+      className: "md:col-span-1",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-fuchsia-500/20 transition-all min-h-[170px] text-left">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>Correct Answer (+{correctWeight})</span>
+              </div>
+              <input 
+                type="range" min={1} max={4} value={correctWeight}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setCorrectWeight(parseInt(e.target.value))}
+                className="w-full accent-fuchsia-500 h-1 rounded-lg bg-white/5"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>Negative Penalty (-{penaltyWeight})</span>
+              </div>
+              <input 
+                type="range" min={0} max={2} value={penaltyWeight}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setPenaltyWeight(parseInt(e.target.value))}
+                className="w-full accent-fuchsia-500 h-1 rounded-lg bg-white/5"
+              />
+            </div>
+          </div>
+          <div className="border-t border-white/[0.04] pt-2 flex justify-between items-center text-[10px]">
+            <span className="text-slate-500">Correct: {correctAnswers} | Wrong: {incorrectAnswers}</span>
+            <span className="text-fuchsia-400 font-extrabold">{finalScore} Marks</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: "sandbox",
+      title: "Code Sandbox Compiler",
+      description: "Write and execute JavaScript or Python scripts inside an isolated runner node.",
+      icon: Terminal,
+      glowColor: "rgba(34, 197, 94, 0.45)",
+      badge: "Isolated Node",
+      className: "md:col-span-1",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center bg-slate-950 px-2 py-0.5 rounded border border-white/5">
+              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">compiler.node</span>
+              <select 
+                value={sandboxLang} 
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setSandboxLang(e.target.value)}
+                className="bg-transparent border-none text-[8px] text-emerald-400 font-bold focus:outline-none"
+              >
+                <option value="python" className="bg-[#050212]">Python</option>
+                <option value="javascript" className="bg-[#050212]">JS</option>
+              </select>
+            </div>
+            <textarea
+              value={sandboxCode}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setSandboxCode(e.target.value)}
+              rows={2}
+              className="w-full bg-[#030014] border border-white/10 rounded p-2 text-[9px] text-slate-300 font-mono focus:outline-none resize-none"
+            />
+          </div>
+          <div className="space-y-1 mt-1">
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleRunSandbox(); }}
+              disabled={isCompilingSandbox}
+              className="w-full py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[8px] uppercase tracking-widest transition-colors disabled:opacity-50"
+            >
+              {isCompilingSandbox ? "Executing..." : "Run Sandbox"}
+            </button>
+            {sandboxOutput && (
+              <pre className="bg-slate-950/80 p-1.5 rounded border border-white/5 font-mono text-[8px] text-emerald-400 truncate text-center">
+                {sandboxOutput.split('\n')[1] || "All Test cases passed."}
+              </pre>
+            )}
+          </div>
+        </div>
+      )
+    },
+    {
+      id: "stats",
+      title: "Interactive Cohort Performance",
+      description: "Drill down by department to retrieve student pass rates, exam list metrics, and averages.",
       icon: BarChart3,
       glowColor: "rgba(6, 182, 212, 0.45)",
-      badge: "Auto-Compiled",
+      badge: "Analytics-Core",
+      className: "md:col-span-2",
       visualWidget: (
-        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col justify-between group-hover:border-cyan-500/20 transition-all min-h-[160px]">
-          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/[0.04] pb-2 flex justify-between">
-            <span>Student</span>
-            <span>Grade</span>
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-cyan-500/20 transition-all min-h-[170px] text-left">
+          <div className="flex gap-2 mb-2 border-b border-white/[0.04] pb-2">
+            {["CSE", "ECE", "MECH"].map((dept) => (
+              <button
+                key={dept}
+                onClick={(e) => { e.stopPropagation(); setSelectedDept(dept); }}
+                className={`flex-1 py-1 rounded text-[9px] font-bold uppercase transition-colors ${
+                  selectedDept === dept ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400" : "bg-white/5 text-slate-400"
+                }`}
+              >
+                {dept} Division
+              </button>
+            ))}
           </div>
-          <div className="space-y-2 mt-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-white font-semibold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Ajay K.</span>
-              <span className="text-emerald-400 font-bold">98%</span>
+          <div className="grid grid-cols-3 gap-2 text-center py-2">
+            <div className="border-r border-white/[0.04]">
+              <span className="text-[8px] text-slate-500 block uppercase font-bold">Candidates</span>
+              <span className="text-white font-bold text-xs mt-1 block">{deptStats[selectedDept].size}</span>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-white font-semibold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Priya N.</span>
-              <span className="text-emerald-400 font-bold">94%</span>
+            <div className="border-r border-white/[0.04]">
+              <span className="text-[8px] text-slate-500 block uppercase font-bold">Class Avg</span>
+              <span className="text-cyan-400 font-bold text-xs mt-1 block">{deptStats[selectedDept].avg}</span>
+            </div>
+            <div>
+              <span className="text-[8px] text-slate-500 block uppercase font-bold">Integrity Pass</span>
+              <span className="text-emerald-400 font-bold text-xs mt-1 block">{deptStats[selectedDept].passRate}</span>
             </div>
           </div>
+        </div>
+      )
+    },
+    {
+      id: "connectors",
+      title: "API Sync Integration",
+      description: "Hover over components to synchronize Moodle API, Canvas LTI, Slack alerts, or GSuite feeds.",
+      icon: Layers,
+      glowColor: "rgba(249, 115, 22, 0.45)",
+      badge: "LTI-Compatible",
+      className: "md:col-span-1",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-orange-500/20 transition-all min-h-[170px] text-left">
+          <div className="grid grid-cols-2 gap-2 my-auto">
+            {["Slack", "Canvas LTI", "Moodle", "GSuite Sync"].map((app) => (
+              <div 
+                key={app}
+                onClick={(e) => e.stopPropagation()}
+                onMouseEnter={() => setActiveConn(app)}
+                onMouseLeave={() => setActiveConn(null)}
+                className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
+                  activeConn === app ? "bg-orange-600/10 border-orange-500/30 text-white" : "bg-slate-950 border-white/5 text-slate-400"
+                }`}
+              >
+                <span className="text-[9px] font-bold block truncate">{app}</span>
+                <span className="text-[7px] uppercase tracking-wider block mt-0.5 text-slate-500 truncate">
+                  {activeConn === app ? "Connected" : "Offline"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    {
+      id: "ingest",
+      title: "Bulk CSV Ingest Schema",
+      description: "Auto-maps departments and parses spreadsheets with smart cell corrections instantly.",
+      icon: UploadCloud,
+      glowColor: "rgba(16, 185, 129, 0.45)",
+      badge: "Excel-Core",
+      className: "md:col-span-2",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left">
+          <div className="flex gap-2 mb-2">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSelectedTemplate("questions"); }}
+              className={`flex-1 py-1 rounded text-[8px] font-bold uppercase transition-colors ${
+                selectedTemplate === "questions" ? "bg-emerald-600 text-white" : "bg-white/5 text-slate-400"
+              }`}
+            >
+              Questions Schema
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setSelectedTemplate("students"); }}
+              className={`flex-1 py-1 rounded text-[8px] font-bold uppercase transition-colors ${
+                selectedTemplate === "students" ? "bg-emerald-600 text-white" : "bg-white/5 text-slate-400"
+              }`}
+            >
+              Students Schema
+            </button>
+          </div>
+          <textarea
+            readOnly
+            onClick={(e) => e.stopPropagation()}
+            value={templates[selectedTemplate]}
+            rows={3}
+            className="w-full bg-[#030014] border border-white/10 rounded-xl p-2.5 text-[8px] text-slate-400 font-mono focus:outline-none resize-none"
+          />
+        </div>
+      )
+    },
+    {
+      id: "latency",
+      title: "Node Heartbeat Monitor",
+      description: "Track direct connection metrics of Postgres database nodes, Redis caches, and web socket servers.",
+      icon: Activity,
+      glowColor: "rgba(59, 130, 246, 0.45)",
+      badge: "System-Online",
+      className: "md:col-span-1",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-blue-500/20 transition-all min-h-[170px] text-left">
+          <div className="space-y-2 my-auto">
+            <div className="flex justify-between items-center text-[9px]">
+              <span className="text-slate-400 font-semibold">PostgreSQL</span>
+              <span className="text-emerald-400 font-bold">{pingTimes.postgres}</span>
+            </div>
+            <div className="flex justify-between items-center text-[9px]">
+              <span className="text-slate-400 font-semibold">Redis Cache</span>
+              <span className="text-emerald-400 font-bold">{pingTimes.redis}</span>
+            </div>
+            <div className="flex justify-between items-center text-[9px]">
+              <span className="text-slate-400 font-semibold">Socket.IO Heartbeat</span>
+              <span className="text-emerald-400 font-bold">{pingTimes.socket}</span>
+            </div>
+          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); triggerHealthRefresh(); }}
+            className="w-full py-1.5 bg-slate-900 border border-white/10 hover:bg-slate-800 text-white font-bold rounded-lg text-[8px] uppercase tracking-widest transition-colors"
+          >
+            {healthStatus === "REFRESHING" ? "Querying..." : "Ping Nodes"}
+          </button>
+        </div>
+      )
+    },
+    {
+      id: "helpdesk",
+      title: "AI Helpdesk Chatbot",
+      description: "Ask natural language questions about test setups, CSV imports, or AI webcam parameters.",
+      icon: MessageSquare,
+      glowColor: "rgba(168, 85, 247, 0.45)",
+      badge: "AI-Companion",
+      className: "md:col-span-1",
+      visualWidget: (
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-purple-500/20 transition-all min-h-[170px] text-left">
+          <div className="bg-[#030014] border border-white/5 rounded-lg p-2 h-20 overflow-y-auto space-y-1.5 text-[8px]">
+            {chatLogs.map((msg, idx) => (
+              <div key={idx} className={msg.sender === "You" ? "text-right" : "text-left"}>
+                <span className="text-slate-500 block text-[6.5px] uppercase font-bold">{msg.sender}</span>
+                <p className="text-white mt-0.5 inline-block bg-white/5 px-2 py-0.5 rounded-lg max-w-[85%]">{msg.text}</p>
+              </div>
+            ))}
+          </div>
+          <form onSubmit={(e) => { e.stopPropagation(); handleSendChat(e); }} className="flex gap-1.5 mt-2">
+            <input 
+              type="text" 
+              value={chatInput}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask AI..."
+              className="flex-1 bg-slate-950 border border-white/10 rounded-lg px-2 py-1 text-[9px] text-white focus:outline-none"
+            />
+            <button type="submit" className="p-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-all">
+              <Send size={10} />
+            </button>
+          </form>
         </div>
       )
     },
     {
       id: "timed",
-      title: "Secure Timed Sessions",
-      description: "Lock down browser focus and set hard thresholds. Exams automatically submit the exact millisecond the session countdown hits zero.",
-      icon: Lock,
-      glowColor: "rgba(236, 72, 153, 0.45)",
-      badge: "Auto-Submit",
+      title: "Timed Session Hard Lock",
+      description: "Auto-save active test inputs and enforce strict session countdown submissions.",
+      icon: Clock,
+      glowColor: "rgba(239, 68, 68, 0.45)",
+      badge: "Fail-Safe",
+      className: "md:col-span-2",
       visualWidget: (
-        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-5 rounded-2xl flex flex-col items-center justify-center group-hover:border-fuchsia-500/20 transition-all min-h-[160px] relative">
-          <Clock className="text-fuchsia-400 mb-2 animate-pulse" size={24} />
-          <span className="text-2xl font-black text-white tracking-widest font-mono">00:59:59</span>
-          <span className="text-[9px] text-slate-500 uppercase tracking-widest block mt-1">Countdown Lock</span>
+        <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-red-500/20 transition-all min-h-[170px] text-left">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1.5 text-red-400 animate-pulse">
+              <Clock size={12} />
+              <span className="text-[10px] font-bold font-mono">{formatTime(secondsLeft)}</span>
+            </div>
+            <span className="text-[8px] text-slate-500 uppercase tracking-widest">Active Limit</span>
+          </div>
+          <div className="space-y-2 mt-2">
+            <input 
+              type="range" min={0} max={100} value={timelineVal}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setTimelineVal(parseInt(e.target.value))}
+              className="w-full accent-red-500 h-1 rounded-lg bg-white/5"
+            />
+            <div className="space-y-0.5">
+              <h4 className="text-[9px] font-bold text-red-400 uppercase tracking-wider">{getTimelineState().t}</h4>
+              <p className="text-[8px] text-slate-400 leading-normal line-clamp-1">{getTimelineState().d}</p>
+            </div>
+          </div>
         </div>
       )
     }
@@ -472,406 +748,25 @@ export const Landing = () => {
         </div>
       </header>
 
-      {/* ── INTERACTIVE AREA: 10 PREMIUM ASSESSMENT TOOLS PANEL ── */}
-      <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/[0.04] space-y-16">
-        
-        {/* 1. AI PROCTORING CALIBRATION WIZARD & 2. REAL-TIME LOGS STREAM */}
-        <div id="proctor-calibration" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Feature 1: AI Calibration Panel */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #1
-              </span>
-              <h3 className="text-xl font-bold text-white">AI Proctoring Calibration Wizard</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Pre-test system parameters to measure eye-gaze lock and head position index before starting the exam.
-              </p>
-              
-              <div className="bg-[#050212] p-5 rounded-2xl border border-white/5 space-y-4">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Gaze Angle</span>
-                    <span className="text-white font-bold block mt-1">{calibMetrics.gaze}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Head Yaw</span>
-                    <span className="text-white font-bold block mt-1">{calibMetrics.headPose}</span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] text-slate-500 block uppercase font-bold">Ambient Light</span>
-                    <span className="text-white font-bold block mt-1">{calibMetrics.light}</span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={handleStartCalibration}
-                  disabled={calibState === "calibrating"}
-                  className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all disabled:opacity-50"
-                >
-                  {calibState === "calibrating" ? "Calibrating Sensors..." : "Run Calibration Check"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 2: WebSocket Logs Stream */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #2
-              </span>
-              <h3 className="text-xl font-bold text-white">Real-Time WebSocket Log Stream</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Active connections compile and stream client telemetry details directly into the database.
-              </p>
-              
-              <div className="bg-slate-950 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-slate-400 space-y-1.5 h-36 overflow-y-auto">
-                {socketLogs.map((log, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <span className="text-slate-600">→</span>
-                    <span className="text-slate-300">{log}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. MINI EXAM TERMINAL SANDBOX & 4. SYSTEM HEALTH CHECK */}
-        <div id="code-sandbox" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Feature 3: Code Sandbox */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #3
-              </span>
-              <h3 className="text-xl font-bold text-white">Interactive Code Editor Sandbox</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Test code compiles against dynamic test parameters inside the sandbox environment.
-              </p>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center bg-slate-950 px-3 py-1.5 border border-white/5 rounded-t-xl">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Editor pane</span>
-                  <select 
-                    value={sandboxLang} 
-                    onChange={(e) => setSandboxLang(e.target.value)}
-                    className="bg-transparent border-none text-[10px] text-violet-400 font-bold focus:outline-none"
-                  >
-                    <option value="python" className="bg-[#050212]">Python 3.10</option>
-                    <option value="javascript" className="bg-[#050212]">JavaScript (Node)</option>
-                  </select>
-                </div>
-                
-                <textarea
-                  value={sandboxCode}
-                  onChange={(e) => setSandboxCode(e.target.value)}
-                  rows={4}
-                  className="w-full bg-[#050212] border border-white/10 rounded-b-xl p-3 text-[11px] text-slate-300 font-mono focus:outline-none"
-                />
-
-                <button 
-                  onClick={handleRunSandbox}
-                  disabled={isCompilingSandbox}
-                  className="w-full py-2 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-all"
-                >
-                  {isCompilingSandbox ? "Executing..." : "Execute Test Case"}
-                </button>
-
-                {sandboxOutput && (
-                  <pre className="bg-slate-950 p-3 rounded-xl border border-white/5 font-mono text-[9px] text-emerald-400">
-                    {sandboxOutput}
-                  </pre>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 4: System Integrity Health Check */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #4
-              </span>
-              <h3 className="text-xl font-bold text-white">System Integrity Health Checker</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Confirm backend database, caching, and network latency response rates globally.
-              </p>
-
-              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-3.5">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-semibold">PostgreSQL Ping</span>
-                  <span className="text-emerald-400 font-bold">{pingTimes.postgres}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-semibold">Redis Cache Speed</span>
-                  <span className="text-emerald-400 font-bold">{pingTimes.redis}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-semibold">Socket.IO Heartbeat</span>
-                  <span className="text-emerald-400 font-bold">{pingTimes.socket}</span>
-                </div>
-
-                <button 
-                  onClick={triggerHealthRefresh}
-                  className="w-full py-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest transition-colors"
-                >
-                  {healthStatus === "REFRESHING" ? "Querying Nodes..." : "Refresh Status"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. DYNAMIC SCORING SIMULATOR & 6. BULK TEMPLATE GENERATOR */}
-        <div id="scoring-simulator" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Feature 5: Score Simulator */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #5
-              </span>
-              <h3 className="text-xl font-bold text-white">Dynamic Score & Penalty Simulator</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Adjust marking weights and penalty indices to calculate simulated final exam scores.
-              </p>
-
-              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span>Correct Answer Value (+{correctWeight})</span>
-                    <input 
-                      type="range" min={1} max={4} value={correctWeight}
-                      onChange={(e) => setCorrectWeight(parseInt(e.target.value))}
-                      className="accent-violet-500"
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span>Incorrect Answer Penalty (-{penaltyWeight})</span>
-                    <input 
-                      type="range" min={0} max={2} value={penaltyWeight}
-                      onChange={(e) => setPenaltyWeight(parseInt(e.target.value))}
-                      className="accent-violet-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t border-white/[0.04] pt-4 flex justify-between items-center text-xs">
-                  <span className="text-slate-400">Correct: {correctAnswers} / Incorrect: {incorrectAnswers}</span>
-                  <span className="text-sm font-black text-white">Total Score: <span className="text-violet-400">{finalScore} Marks</span></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 6: Bulk Template Generator */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #6
-              </span>
-              <h3 className="text-xl font-bold text-white">Bulk Excel / CSV Template Generator</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Select and generate standard formats for questions or student list templates.
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => setSelectedTemplate("questions")}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors ${
-                      selectedTemplate === "questions" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
-                    }`}
-                  >
-                    Questions Schema
-                  </button>
-                  <button 
-                    onClick={() => setSelectedTemplate("students")}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-colors ${
-                      selectedTemplate === "students" ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
-                    }`}
-                  >
-                    Students Schema
-                  </button>
-                </div>
-                <textarea
-                  readOnly
-                  value={templates[selectedTemplate]}
-                  rows={3}
-                  className="w-full bg-[#050212] border border-white/10 rounded-xl p-3 text-[10px] text-slate-400 font-mono focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 7. TIMELINE OF EXAM SESSION & 8. COHORT MAP STATISTICS */}
-        <div id="session-timeline" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Feature 7: Session Timeline */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #7
-              </span>
-              <h3 className="text-xl font-bold text-white">Interactive Session Timeline</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Drag the slider to review proctoring and compilation stages throughout the exam.
-              </p>
-
-              <div className="bg-[#050212] border border-white/5 rounded-2xl p-5 space-y-4">
-                <input 
-                  type="range" min={0} max={100} value={timelineVal}
-                  onChange={(e) => setTimelineVal(parseInt(e.target.value))}
-                  className="w-full accent-violet-500"
-                />
-                
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-violet-400">{getTimelineState().t}</h4>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">{getTimelineState().d}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 8: Cohort Map */}
-          <div id="cohort-map" className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #8
-              </span>
-              <h3 className="text-xl font-bold text-white">Interactive Cohort Map</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Select a department division to review its average grades and student sizes.
-              </p>
-
-              <div className="space-y-3.5">
-                <div className="flex gap-2">
-                  {["CSE", "ECE", "MECH"].map((dept) => (
-                    <button
-                      key={dept}
-                      onClick={() => setSelectedDept(dept)}
-                      className={`flex-1 py-1 rounded-lg text-[10px] font-bold uppercase transition-colors ${
-                        selectedDept === dept ? "bg-violet-600 text-white" : "bg-white/5 text-slate-400"
-                      }`}
-                    >
-                      {dept} Division
-                    </button>
-                  ))}
-                </div>
-
-                <div className="bg-[#050212] border border-white/5 rounded-2xl p-4 space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Total Candidates</span>
-                    <span className="text-white font-bold">{deptStats[selectedDept].size}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Class Average</span>
-                    <span className="text-violet-400 font-bold">{deptStats[selectedDept].avg}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Integrity Pass Rate</span>
-                    <span className="text-emerald-400 font-bold">{deptStats[selectedDept].passRate}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 9. CONNECTORS GRID & 10. HELPDESK CHAT BOX */}
-        <div id="helpdesk-chat" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Feature 9: Connectors Grid */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #9
-              </span>
-              <h3 className="text-xl font-bold text-white">Platform Integration Connectors</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Hover over an application block to establish standard API sync connections.
-              </p>
-
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                {["Slack Alerts", "Canvas LTI", "Moodle API", "Google Workspaces"].map((app) => (
-                  <div 
-                    key={app}
-                    onMouseEnter={() => setActiveConn(app)}
-                    onMouseLeave={() => setActiveConn(null)}
-                    className={`p-4 rounded-xl border text-center transition-all cursor-pointer ${
-                      activeConn === app ? "bg-violet-600/10 border-violet-500/35 text-white" : "bg-[#050212] border-white/5 text-slate-400"
-                    }`}
-                  >
-                    <span className="text-xs font-bold block">{app}</span>
-                    <span className="text-[8px] uppercase tracking-wider block mt-1 text-slate-500">
-                      {activeConn === app ? "Establish Connection" : "Offline"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 10: Helpdesk Chat Box */}
-          <div className="glass-card-wow p-8 rounded-3xl border border-white/5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="px-2.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[9px] font-bold text-violet-400 uppercase tracking-widest w-fit block">
-                Feature #10
-              </span>
-              <h3 className="text-xl font-bold text-white">Interactive Helpdesk AI Chat</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Type queries about platform setup or CSV formats to check simulated AI responses.
-              </p>
-
-              <div className="space-y-3">
-                <div className="bg-[#050212] border border-white/5 rounded-xl p-3 h-28 overflow-y-auto space-y-2 text-[10px] font-sans">
-                  {chatLogs.map((msg, idx) => (
-                    <div key={idx} className={msg.sender === "You" ? "text-right" : "text-left"}>
-                      <span className="text-slate-500 block text-[8px] uppercase font-bold">{msg.sender}</span>
-                      <p className="text-white mt-0.5 inline-block bg-white/5 px-2.5 py-1 rounded-lg max-w-[80%]">{msg.text}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <form onSubmit={handleSendChat} className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Type 'proctor' or 'csv'..."
-                    className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500"
-                  />
-                  <button type="submit" className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl transition-all">
-                    <Send size={12} />
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </section>
-
       {/* Bento Grid Platform Features */}
       <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 border-t border-white/[0.04]">
-        <div className="text-center max-w-xl mx-auto mb-20">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Suite</div>
+        <div className="text-center max-w-2xl mx-auto mb-20">
+          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Core</div>
           <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
-            Designed for scale, reliability, and security
+            Designed for scale, reliability, and absolute security
           </h2>
-          <p className="text-xs text-slate-400 mt-2">Click on any card to zoom in and check its visual interface.</p>
+          <p className="text-xs text-slate-400 mt-3">Click on any card to zoom in and check its visual interface details.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ transformStyle: "preserve-3d" }}>
           {featureCards.map((card, idx) => {
             const Icon = card.icon;
-            const isWide = card.id === "batch";
             return (
               <PremiumBentoCard 
                 key={card.id}
                 onClick={() => setSelectedCard(card)}
                 glowColor={card.glowColor}
-                className={isWide ? "md:col-span-2" : ""}
+                className={card.className || ""}
               >
                 <div className="p-8 h-full flex flex-col justify-between gap-6" style={{ transformStyle: "preserve-3d" }}>
                   <div className="space-y-4" style={{ transform: "translateZ(30px)" }}>
@@ -885,7 +780,7 @@ export const Landing = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-white mb-2" style={{ transform: "translateZ(20px)" }}>{card.title}</h3>
-                      <p className="text-sm text-slate-400 leading-relaxed" style={{ transform: "translateZ(10px)" }}>{card.description}</p>
+                      <p className="text-sm text-slate-400 leading-relaxed font-normal" style={{ transform: "translateZ(10px)" }}>{card.description}</p>
                     </div>
                   </div>
 
