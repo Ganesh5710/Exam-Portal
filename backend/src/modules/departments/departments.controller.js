@@ -7,7 +7,7 @@ const getDepartments = async (req, res, next) => {
         const departments = await db_1.prisma.department.findMany({
             include: {
                 _count: {
-                    select: { users: { where: { role: 'STUDENT' } }, subjects: true }
+                    select: { users: { where: { role: 'STUDENT' } }, exams: true, questions: true }
                 }
             },
             orderBy: { name: 'asc' }

@@ -267,12 +267,12 @@ export const Departments = () => {
                   </span>
                   <span>students</span>
                 </div>
-                <div className="flex items-center gap-1.5" title="Subjects">
+                <div className="flex items-center gap-1.5" title="Exams">
                   <BookOpen size={13} className="text-emerald-400" />
                   <span className="font-semibold text-slate-300">
-                    {dept._count.subjects}
+                    {dept._count.exams}
                   </span>
-                  <span>subjects</span>
+                  <span>exams</span>
                 </div>
                 <div
                   className="flex items-center gap-1.5 ml-auto"
