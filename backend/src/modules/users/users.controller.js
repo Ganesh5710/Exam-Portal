@@ -3,9 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bulkDeleteStudents = exports.bulkImportStudents = exports.toggleBlockStudent = exports.deleteStudent = exports.updateStudent = exports.createStudent = exports.getStudents = void 0;
+exports.importStudentsFile = exports.bulkDeleteStudents = exports.bulkImportStudents = exports.toggleBlockStudent = exports.deleteStudent = exports.updateStudent = exports.createStudent = exports.getStudents = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const db_1 = require("../../database/db");
+const XLSX = require("xlsx");
+const path = require("path");
 const getStudents = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -334,3 +336,172 @@ const bulkDeleteStudents = async (req, res, next) => {
     }
 };
 exports.bulkDeleteStudents = bulkDeleteStudents;
+
+const importStudentsFile = async (req, res, next) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Please upload a file.' });
+    }
+    try {
+        let students = [];
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        if (ext === '.json') {
+            try {
+                const parsed = JSON.parse(req.file.buffer.toString('utf-8'));
+                students = Array.isArray(parsed) ? parsed : (parsed.students || []);
+            } catch (err) {
+                return res.status(400).json({ success: false, message: 'Invalid JSON file format.' });
+            }
+        } else {
+            try {
+                const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                students = XLSX.utils.sheet_to_json(sheet);
+            } catch (err) {
+                return res.status(400).json({ success: false, message: 'Invalid file format. Please upload Excel or CSV.' });
+            }
+        }
+
+        if (!Array.isArray(students) || students.length === 0) {
+            return res.status(400).json({ success: false, message: 'No student records found in the uploaded file.' });
+        }
+
+        const normalizedStudents = students.map(row => {
+            const getKey = (names) => {
+                const found = Object.keys(row).find(k => names.includes(k.toLowerCase().trim().replace(/[\s_-]/g, '')));
+                return found ? row[found] : null;
+            };
+
+            const email = getKey(['email', 'emailaddress']);
+            const firstName = getKey(['firstname', 'firstname', 'name', 'studentname'])?.toString() || 'Student';
+            const lastName = getKey(['lastname', 'lastname'])?.toString() || '';
+            const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
+            const password = getKey(['password'])?.toString() || 'user@123';
+
+            return { email, firstName, lastName, departmentCode, password };
+        }).filter(r => r.email && r.email.toString().includes('@'));
+
+        if (normalizedStudents.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid student email addresses found in the file.' });
+        }
+
+        const emails = normalizedStudents.map(s => s.email.toString().trim()).filter(Boolean);
+        const existingUsers = await db_1.prisma.user.findMany({
+            where: { email: { in: emails } },
+            select: { email: true }
+        });
+        const existingEmails = new Set(existingUsers.map(u => u.email));
+
+        const departments = await db_1.prisma.department.findMany();
+        const deptMap = new Map(departments.map(d => [d.code.toUpperCase().trim(), d.id]));
+        const deptNameMap = new Map(departments.map(d => [d.name.toLowerCase().trim(), d.id]));
+
+        const missingDepts = new Set();
+        for (const record of normalizedStudents) {
+            const { departmentCode } = record;
+            if (departmentCode && departmentCode.trim()) {
+                const codeUpper = departmentCode.toUpperCase().trim();
+                const nameLower = departmentCode.toLowerCase().trim();
+                if (!deptMap.has(codeUpper) && !deptNameMap.has(nameLower)) {
+                    missingDepts.add(departmentCode.trim());
+                }
+            }
+        }
+
+        for (const deptName of missingDepts) {
+            const codeUpper = deptName.toUpperCase();
+            try {
+                const createdDept = await db_1.prisma.department.create({
+                    data: {
+                        name: deptName,
+                        code: codeUpper,
+                        description: `Automatically created during student import`
+                    }
+                });
+                deptMap.set(codeUpper, createdDept.id);
+                deptNameMap.set(deptName.toLowerCase(), createdDept.id);
+            } catch (err) {
+                const existing = await db_1.prisma.department.findFirst({
+                    where: {
+                        OR: [
+                            { code: codeUpper },
+                            { name: deptName }
+                        ]
+                    }
+                });
+                if (existing) {
+                    deptMap.set(codeUpper, existing.id);
+                    deptNameMap.set(deptName.toLowerCase(), existing.id);
+                }
+            }
+        }
+
+        const defaultHash = await bcryptjs_1.default.hash('user@123', 10);
+        const hashCache = new Map();
+        hashCache.set('user@123', defaultHash);
+        const newStudentsData = [];
+        let skipped = 0;
+
+        for (const record of normalizedStudents) {
+            const { email, firstName, lastName, departmentCode, password } = record;
+            if (!email) {
+                skipped++;
+                continue;
+            }
+            const emailStr = email.toString().trim();
+            if (existingEmails.has(emailStr)) {
+                skipped++;
+                continue;
+            }
+            let deptId = null;
+            if (departmentCode && departmentCode.trim()) {
+                const codeUpper = departmentCode.toUpperCase().trim();
+                const nameLower = departmentCode.toLowerCase().trim();
+                deptId = deptMap.get(codeUpper) || deptNameMap.get(nameLower) || null;
+            }
+            const pwd = password ? password.toString().trim() : 'user@123';
+            let passwordHash = hashCache.get(pwd);
+            if (!passwordHash) {
+                passwordHash = await bcryptjs_1.default.hash(pwd, 10);
+                hashCache.set(pwd, passwordHash);
+            }
+            newStudentsData.push({
+                email: emailStr,
+                passwordHash,
+                firstName: firstName.toString().trim(),
+                lastName: lastName.toString().trim(),
+                departmentId: deptId,
+                role: 'STUDENT',
+                status: 'ACTIVE'
+            });
+        }
+
+        let imported = 0;
+        const chunkSize = 500;
+        for (let i = 0; i < newStudentsData.length; i += chunkSize) {
+            const chunk = newStudentsData.slice(i, i + chunkSize);
+            const result = await db_1.prisma.user.createMany({
+                data: chunk
+            });
+            imported += result.count;
+        }
+
+        await db_1.prisma.auditLog.create({
+            data: {
+                userId: req.user?.id,
+                action: 'BULK_IMPORT_STUDENTS_FILE',
+                target: `Imported: ${imported}, Skipped: ${skipped}`,
+                ipAddress: req.ip
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: `Bulk import complete. Imported: ${imported}, Skipped: ${skipped}`
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.importStudentsFile = importStudentsFile;

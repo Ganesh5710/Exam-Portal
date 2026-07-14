@@ -5,6 +5,8 @@ const users_controller_1 = require("./users.controller");
 const auth_1 = require("../../middleware/auth");
 const validate_1 = require("../../middleware/validate");
 const zod_1 = require("zod");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 const router = (0, express_1.Router)();
 const studentCreateSchema = zod_1.z.object({
     body: zod_1.z.object({
@@ -32,4 +34,5 @@ router.delete('/bulk', users_controller_1.bulkDeleteStudents);
 router.delete('/:id', users_controller_1.deleteStudent);
 router.patch('/:id/block', users_controller_1.toggleBlockStudent);
 router.post('/import', users_controller_1.bulkImportStudents);
+router.post('/import-file', upload.single('file'), users_controller_1.importStudentsFile);
 exports.default = router;
