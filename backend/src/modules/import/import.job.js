@@ -35,6 +35,7 @@ const mammoth_1 = __importDefault(require("mammoth"));
 const xlsx = __importStar(require("xlsx"));
 const fs_1 = __importDefault(require("fs"));
 const db_1 = require("../../database/db");
+const path_1 = __importDefault(require("path"));
 const logger_1 = require("../../config/logger");
 const gemini_1 = require("../../config/gemini");
 // 1. Text extraction helpers
@@ -438,10 +439,177 @@ function parseQuestionsLocally(text) {
     }
     return questions;
 }
+
+const parseStructuredFile = (filePath, ext) => {
+    let rows = [];
+    if (ext === '.json') {
+        try {
+            const fileData = fs_1.default.readFileSync(filePath, 'utf8');
+            const parsed = JSON.parse(fileData);
+            rows = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+        } catch (e) {
+            return null;
+        }
+    } else {
+        try {
+            const workbook = xlsx.readFile(filePath);
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            rows = xlsx.utils.sheet_to_json(sheet);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+
+    const firstRow = rows[0];
+    const hasQuestionCol = Object.keys(firstRow).some(k => {
+        const key = k.toLowerCase().replace(/[\s_-]/g, '');
+        return key.includes('question') || key.includes('content') || key.includes('text');
+    });
+
+    if (!hasQuestionCol) return null;
+
+    const parsedQuestions = rows.map(row => {
+        const getKey = (names) => {
+            const found = Object.keys(row).find(k => names.includes(k.toLowerCase().trim().replace(/[\s_-]/g, '')));
+            return found ? row[found] : null;
+        };
+
+        const content = getKey(['question', 'content', 'questiontext', 'text'])?.toString();
+        if (!content) return null;
+
+        const typeVal = getKey(['type', 'questiontype'])?.toString()?.toUpperCase() || 'MCQ';
+        const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
+
+        let options = [];
+        const optionsField = getKey(['options', 'choices']);
+        if (optionsField) {
+            options = optionsField.toString().split(/[;|]/).map(o => o.trim());
+        } else {
+            for (let idx = 1; idx <= 10; idx++) {
+                const optVal = getKey([`option${idx}`, `choice${idx}`, `opt${idx}`]);
+                if (optVal !== null && optVal !== undefined) {
+                    options.push(optVal.toString().trim());
+                }
+            }
+            if (options.length === 0) {
+                ['a', 'b', 'c', 'd'].forEach(letter => {
+                    const optVal = getKey([letter]);
+                    if (optVal !== null && optVal !== undefined) {
+                        options.push(optVal.toString().trim());
+                    }
+                });
+            }
+        }
+
+        let answers = [];
+        const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct']);
+        if (answerField !== null && answerField !== undefined) {
+            const ansStr = answerField.toString().trim();
+            if (type === 'MCQ' && /^[A-J]$/i.test(ansStr) && options.length > 0) {
+                const idx = ansStr.toUpperCase().charCodeAt(0) - 65;
+                if (options[idx]) {
+                    answers = [options[idx]];
+                } else {
+                    answers = [ansStr];
+                }
+            } else if (type === 'MCQ' || type === 'TRUE_FALSE') {
+                answers = [ansStr];
+            } else {
+                answers = ansStr.split(/[;|]/).map(a => a.trim());
+            }
+        }
+
+        const difficultyVal = getKey(['difficulty'])?.toString()?.toUpperCase() || 'MEDIUM';
+        const difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(difficultyVal) ? difficultyVal : 'MEDIUM';
+        const score = parseFloat(getKey(['score', 'marks', 'points'])) || 5.0;
+        const negativeMarks = parseFloat(getKey(['negativemarks', 'negative', 'penalty'])) || 0.0;
+        const explanation = getKey(['explanation', 'explanationtext'])?.toString() || '';
+        
+        let tags = [];
+        const tagsField = getKey(['tags', 'tag']);
+        if (tagsField) {
+            tags = tagsField.toString().split(/[;,|]/).map(t => t.trim());
+        }
+
+        const subjectCode = getKey(['subjectcode', 'subject', 'course'])?.toString() || '';
+        const topic = getKey(['topic', 'subjecttopic'])?.toString() || 'General';
+
+        return {
+            type,
+            content,
+            options,
+            answers,
+            difficulty,
+            score,
+            negativeMarks,
+            explanation,
+            tags,
+            subjectCode,
+            topic
+        };
+    }).filter(Boolean);
+
+    return parsedQuestions;
+};
+
 // 3. Main processing function for jobs
 const processImportJob = async (jobId, filePath, mimeType) => {
     try {
         logger_1.logger.info(`Starting Import Job ${jobId} | File: ${filePath}`);
+        
+        const ext = path_1.default.extname(filePath).toLowerCase();
+        if (ext === '.xlsx' || ext === '.xls' || ext === '.csv' || ext === '.json') {
+            const structuredQuestions = parseStructuredFile(filePath, ext);
+            if (structuredQuestions && structuredQuestions.length > 0) {
+                logger_1.logger.info(`Detected structured question sheet. Local parsing completed for ${structuredQuestions.length} questions.`);
+                
+                const validatedQuestions = structuredQuestions.map((q) => {
+                    const cleanQ = { ...q };
+                    cleanQ.type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(q.type)
+                        ? q.type
+                        : 'MCQ';
+                    cleanQ.score = parseFloat(q.score) || 5.0;
+                    cleanQ.negativeMarks = parseFloat(q.negativeMarks) || 0.0;
+                    cleanQ.difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(q.difficulty) ? q.difficulty : 'MEDIUM';
+                    cleanQ.tags = Array.isArray(q.tags) ? q.tags : [];
+                    cleanQ.validationWarnings = [];
+                    if (cleanQ.type === 'MCQ' && (!Array.isArray(cleanQ.options) || cleanQ.options.length < 2)) {
+                        cleanQ.validationWarnings.push('MCQ has less than 2 options.');
+                    }
+                    if (cleanQ.type === 'MCQ' && (!cleanQ.answers || (Array.isArray(cleanQ.answers) && cleanQ.answers.length === 0))) {
+                        cleanQ.validationWarnings.push('MCQ has no correct answer key.');
+                    }
+                    if (cleanQ.type === 'FILL_BLANK' && !cleanQ.content.includes('___')) {
+                        cleanQ.validationWarnings.push('Fill-in-the-blank question missing blanks ("___").');
+                    }
+                    if (cleanQ.type === 'TRUE_FALSE' && !['True', 'False'].includes(String(cleanQ.answers))) {
+                        cleanQ.validationWarnings.push('True/False question has invalid answer value.');
+                    }
+                    return cleanQ;
+                });
+
+                await db_1.prisma.importJob.update({
+                    where: { id: jobId },
+                    data: {
+                        status: 'PREVIEW_READY',
+                        progress: 100,
+                        totalItems: validatedQuestions.length,
+                        resultData: JSON.stringify(validatedQuestions)
+                    }
+                });
+
+                try {
+                    if (fs_1.default.existsSync(filePath)) {
+                        fs_1.default.unlinkSync(filePath);
+                    }
+                } catch (e) {}
+                return;
+            }
+        }
+
         // Update progress to 15% (Reading File)
         await db_1.prisma.importJob.update({
             where: { id: jobId },
