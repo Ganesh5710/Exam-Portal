@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seedDefaultSettings = exports.updateSettings = exports.getSettings = void 0;
+exports.seedDefaultSettings = exports.clearAllData = exports.updateSettings = exports.getSettings = void 0;
+const bcryptjs_1 = require("bcryptjs");
 const db_1 = require("../../database/db");
 const getSettings = async (req, res, next) => {
     try {
@@ -47,6 +48,46 @@ const updateSettings = async (req, res, next) => {
     }
 };
 exports.updateSettings = updateSettings;
+const clearAllData = async (req, res, next) => {
+    try {
+        // Delete all dependent records in correct order
+        await db_1.prisma.examQuestion.deleteMany({});
+        await db_1.prisma.examAssignment.deleteMany({});
+        await db_1.prisma.answer.deleteMany({});
+        await db_1.prisma.submission.deleteMany({});
+        await db_1.prisma.question.deleteMany({});
+        await db_1.prisma.exam.deleteMany({});
+        await db_1.prisma.refreshToken.deleteMany({});
+        await db_1.prisma.passwordResetToken.deleteMany({});
+        await db_1.prisma.emailVerificationToken.deleteMany({});
+        await db_1.prisma.auditLog.deleteMany({});
+        // Delete all non-admin users
+        await db_1.prisma.user.deleteMany({
+            where: {
+                role: { not: 'ADMIN' }
+            }
+        });
+        // Delete all departments
+        await db_1.prisma.department.deleteMany({});
+        // Reset admin password
+        const adminEmail = req.user?.email;
+        if (adminEmail) {
+            const hash = await bcryptjs_1.hash('Admin@123', 10);
+            await db_1.prisma.user.updateMany({
+                where: { role: 'ADMIN' },
+                data: { passwordHash: hash, loginAttempts: 0, lockUntil: null }
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'All data cleared successfully. Only admin account is preserved.'
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.clearAllData = clearAllData;
 // Seed helper to trigger on server startup
 const seedDefaultSettings = async () => {
     const defaults = [

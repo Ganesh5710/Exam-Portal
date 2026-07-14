@@ -8,6 +8,8 @@ import {
   Settings as SettingsIcon,
   Mail,
   CheckCircle2,
+  Trash2,
+  AlertOctagon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -101,6 +103,19 @@ export const Settings = () => {
 
   const handleDownloadBackup = (fileName) => {
     window.open(`/api/v1/backups/${fileName}`, "_blank");
+  };
+
+  const handleClearData = async () => {
+    const confirmed = window.confirm(
+      "⚠️ DANGER: This will permanently delete ALL students, departments, questions, exams and submissions from the production database.\n\nOnly the admin account will be preserved.\n\nType OK to confirm."
+    );
+    if (!confirmed) return;
+    try {
+      await api.post("/settings/clear-data");
+      toast.success("✅ All data cleared. Database is fresh and clean!");
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to clear data.");
+    }
   };
 
   if (loadingSettings) {
@@ -366,6 +381,29 @@ export const Settings = () => {
               <Database size={16} /> Create Database Backup
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* ── Danger Zone ──────────────────────────────── */}
+      <div className="mt-4 p-6 rounded-xl border border-red-500/30 bg-red-500/5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <AlertOctagon className="text-red-400" size={20} />
+          <h3 className="font-bold text-lg text-red-400">Danger Zone</h3>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-white">Clear All Data</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Permanently deletes all students, departments, questions, exams and submissions from the live database. Admin account is preserved.
+            </p>
+          </div>
+          <button
+            onClick={handleClearData}
+            className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-red-500/20"
+          >
+            <Trash2 size={15} />
+            Clear All Data
+          </button>
         </div>
       </div>
     </div>

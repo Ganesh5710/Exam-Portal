@@ -7,4 +7,5 @@ const router = (0, express_1.Router)();
 router.use(auth_1.protect);
 router.get('/', settings_controller_1.getSettings);
 router.put('/', (0, auth_1.restrictTo)('ADMIN'), settings_controller_1.updateSettings);
+router.post('/clear-data', (0, auth_1.restrictTo)('ADMIN'), settings_controller_1.clearAllData);
 exports.default = router;
