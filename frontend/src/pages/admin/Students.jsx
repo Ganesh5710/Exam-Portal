@@ -105,8 +105,7 @@ export const Students = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.append("page", String(pagination.page));
-      params.append("limit", String(pagination.limit));
+      params.append("all", "true");
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (filterDepartment) params.append("departmentId", filterDepartment);
 
@@ -640,47 +639,15 @@ export const Students = () => {
               </table>
             </div>
 
-            {/* Pagination */}
+            {/* Total count display */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/50">
               <p className="text-sm text-slate-500">
-                Showing{" "}
+                Total{" "}
                 <span className="font-medium text-slate-300">
-                  {(pagination.page - 1) * pagination.limit + 1}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-slate-300">
-                  {Math.min(
-                    pagination.page * pagination.limit,
-                    pagination.total,
-                  )}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-slate-300">
-                  {pagination.total}
+                  {students.length}
                 </span>{" "}
                 students
               </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => goToPage(pagination.page - 1)}
-                  disabled={pagination.page <= 1}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-sm font-medium text-slate-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft size={16} />
-                  Previous
-                </button>
-                <span className="px-3 py-2 text-sm text-slate-400">
-                  Page {pagination.page} of {pagination.pages || 1}
-                </span>
-                <button
-                  onClick={() => goToPage(pagination.page + 1)}
-                  disabled={pagination.page >= pagination.pages}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-sm font-medium text-slate-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
             </div>
           </>
         )}
