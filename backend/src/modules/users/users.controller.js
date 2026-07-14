@@ -197,39 +197,61 @@ const toggleBlockStudent = async (req, res, next) => {
 };
 exports.toggleBlockStudent = toggleBlockStudent;
 const bulkImportStudents = async (req, res, next) => {
-    const { students } = req.body; // Array of {email, firstName, lastName, departmentCode, password}
+    const { students } = req.body;
     if (!Array.isArray(students) || students.length === 0) {
         return res.status(400).json({ success: false, message: 'List of students is required.' });
     }
     try {
-        let imported = 0;
+        const emails = students.map(s => s.email).filter(Boolean);
+        // 1. Batch select existing emails in a single query
+        const existingUsers = await db_1.prisma.user.findMany({
+            where: { email: { in: emails } },
+            select: { email: true }
+        });
+        const existingEmails = new Set(existingUsers.map(u => u.email));
+        // 2. Fetch all departments to map codes
+        const departments = await db_1.prisma.department.findMany();
+        const deptMap = new Map(departments.map(d => [d.code.toUpperCase(), d.id]));
+        // 3. Pre-compute default password hash to avoid hashing it N times
+        const defaultHash = await bcryptjs_1.default.hash('user@123', 10);
+        const hashCache = new Map();
+        hashCache.set('user@123', defaultHash);
+        const newStudentsData = [];
         let skipped = 0;
         for (const record of students) {
             const { email, firstName, lastName, departmentCode, password } = record;
-            const existing = await db_1.prisma.user.findUnique({ where: { email } });
-            if (existing) {
+            if (!email) {
                 skipped++;
                 continue;
             }
-            let deptId = null;
-            if (departmentCode) {
-                const dept = await db_1.prisma.department.findUnique({ where: { code: departmentCode } });
-                if (dept)
-                    deptId = dept.id;
+            if (existingEmails.has(email)) {
+                skipped++;
+                continue;
             }
-            const passwordHash = await bcryptjs_1.default.hash(password || 'user@123', 10);
-            await db_1.prisma.user.create({
-                data: {
-                    email,
-                    passwordHash,
-                    firstName,
-                    lastName,
-                    departmentId: deptId,
-                    role: 'STUDENT',
-                    status: 'ACTIVE'
-                }
+            const deptId = departmentCode ? (deptMap.get(departmentCode.toUpperCase()) || null) : null;
+            const pwd = password || 'user@123';
+            let passwordHash = hashCache.get(pwd);
+            if (!passwordHash) {
+                passwordHash = await bcryptjs_1.default.hash(pwd, 10);
+                hashCache.set(pwd, passwordHash);
+            }
+            newStudentsData.push({
+                email,
+                passwordHash,
+                firstName: firstName || 'Student',
+                lastName: lastName || '',
+                departmentId: deptId,
+                role: 'STUDENT',
+                status: 'ACTIVE'
             });
-            imported++;
+        }
+        // 4. Batch insert all new records in a single query
+        let imported = 0;
+        if (newStudentsData.length > 0) {
+            const result = await db_1.prisma.user.createMany({
+                data: newStudentsData
+            });
+            imported = result.count;
         }
         await db_1.prisma.auditLog.create({
             data: {
