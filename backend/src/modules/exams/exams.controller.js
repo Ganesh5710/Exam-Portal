@@ -75,6 +75,7 @@ const getExams = async (req, res, next) => {
     }
 };
 exports.getExams = getExams;
+const createExam = async (req, res, next) => {
     const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, departmentId, questionIds } = req.body;
     try {
         // Create exam
