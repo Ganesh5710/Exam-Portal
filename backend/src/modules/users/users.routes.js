@@ -33,6 +33,7 @@ router.put('/:id', (0, validate_1.validate)(studentUpdateSchema), users_controll
 router.delete('/bulk', users_controller_1.bulkDeleteStudents);
 router.delete('/:id', users_controller_1.deleteStudent);
 router.patch('/:id/block', users_controller_1.toggleBlockStudent);
+router.patch('/:id/toggle-block', users_controller_1.toggleBlockStudent);
 router.post('/import', users_controller_1.bulkImportStudents);
 router.post('/import-file', upload.single('file'), users_controller_1.importStudentsFile);
 exports.default = router;

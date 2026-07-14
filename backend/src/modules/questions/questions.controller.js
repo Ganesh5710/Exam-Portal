@@ -148,6 +148,7 @@ const bulkImportQuestions = async (req, res, next) => {
             deptCache.set(d.name.toLowerCase().trim(), d.id);
         });
 
+        const toInsert = [];
         for (const record of questions) {
             const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department } = record;
             
@@ -190,22 +191,28 @@ const bulkImportQuestions = async (req, res, next) => {
                 }
             }
 
-            await db_1.prisma.question.create({
-                data: {
-                    type,
-                    content,
-                    options: options || null,
-                    answers,
-                    explanation: explanation || null,
-                    score: parseFloat(score) || 1.0,
-                    negativeMarks: parseFloat(negativeMarks) || 0.0,
-                    difficulty: difficulty || 'MEDIUM',
-                    tags: tags || [],
-                    departmentId: resolvedDeptId
-                }
+            toInsert.push({
+                type,
+                content,
+                options: options || null,
+                answers,
+                explanation: explanation || null,
+                score: parseFloat(score) || 1.0,
+                negativeMarks: parseFloat(negativeMarks) || 0.0,
+                difficulty: difficulty || 'MEDIUM',
+                tags: tags || [],
+                departmentId: resolvedDeptId
             });
-            imported++;
         }
+
+        // Batch insert in chunks of 500
+        const chunkSize = 500;
+        for (let i = 0; i < toInsert.length; i += chunkSize) {
+            const chunk = toInsert.slice(i, i + chunkSize);
+            const result = await db_1.prisma.question.createMany({ data: chunk, skipDuplicates: true });
+            imported += result.count;
+        }
+
         await db_1.prisma.auditLog.create({
             data: {
                 userId: req.user?.id,

@@ -170,64 +170,83 @@ const approveImport = async (req, res, next) => {
         let processedCount = 0;
         let duplicatesCount = 0;
         let failedCount = 0;
+
+        // Resolve all department IDs up front
+        const questionsWithDept = [];
         for (const q of questions) {
             try {
                 const qDeptId = await resolveDepartmentId(q);
-                if (!qDeptId) {
-                    failedCount++;
-                    continue;
-                }
+                if (!qDeptId) { failedCount++; continue; }
+                questionsWithDept.push({ ...q, _resolvedDeptId: qDeptId });
+            } catch (e) { failedCount++; }
+        }
 
-                const existing = await db_1.prisma.question.findFirst({
-                    where: {
-                        departmentId: qDeptId,
-                        content: q.content
-                    }
-                });
-                if (existing) {
-                    const action = duplicateActions?.[q.content] || 'SKIP';
-                    if (action === 'SKIP') {
-                        duplicatesCount++;
-                        continue;
-                    }
-                    else if (action === 'REPLACE' || action === 'UPDATE') {
-                        await db_1.prisma.question.update({
-                            where: { id: existing.id },
-                            data: {
-                                options: q.options || null,
-                                answers: q.answers,
-                                explanation: q.explanation || null,
-                                score: parseFloat(q.score) || 5.0,
-                                negativeMarks: parseFloat(q.negativeMarks) || 0.0,
-                                difficulty: q.difficulty || 'MEDIUM',
-                                tags: q.tags || []
-                            }
-                        });
-                        processedCount++;
-                        continue;
-                    }
+        // Separate duplicates from new questions
+        const toInsert = [];
+        const toUpdate = [];
+
+        for (const q of questionsWithDept) {
+            const existing = await db_1.prisma.question.findFirst({
+                where: { departmentId: q._resolvedDeptId, content: q.content }
+            });
+            if (existing) {
+                const action = duplicateActions?.[q.content] || 'SKIP';
+                if (action === 'SKIP') {
+                    duplicatesCount++;
+                } else if (action === 'REPLACE' || action === 'UPDATE') {
+                    toUpdate.push({ existingId: existing.id, q });
                 }
-                await db_1.prisma.question.create({
+            } else {
+                toInsert.push({
+                    type: q.type,
+                    content: q.content,
+                    options: q.options || null,
+                    answers: q.answers,
+                    explanation: q.explanation || null,
+                    score: parseFloat(q.score) || 5.0,
+                    negativeMarks: parseFloat(q.negativeMarks) || 0.0,
+                    difficulty: q.difficulty || 'MEDIUM',
+                    tags: q.tags || [],
+                    departmentId: q._resolvedDeptId
+                });
+            }
+        }
+
+        // Batch insert new questions in chunks of 500
+        const chunkSize = 500;
+        for (let i = 0; i < toInsert.length; i += chunkSize) {
+            const chunk = toInsert.slice(i, i + chunkSize);
+            try {
+                const result = await db_1.prisma.question.createMany({ data: chunk, skipDuplicates: true });
+                processedCount += result.count;
+            } catch (e) {
+                logger_1.logger.error(`Batch insert error: ${e.message}`);
+                failedCount += chunk.length;
+            }
+        }
+
+        // Handle updates individually (these are rare)
+        for (const { existingId, q } of toUpdate) {
+            try {
+                await db_1.prisma.question.update({
+                    where: { id: existingId },
                     data: {
-                        type: q.type,
-                        content: q.content,
                         options: q.options || null,
                         answers: q.answers,
                         explanation: q.explanation || null,
                         score: parseFloat(q.score) || 5.0,
                         negativeMarks: parseFloat(q.negativeMarks) || 0.0,
                         difficulty: q.difficulty || 'MEDIUM',
-                        tags: q.tags || [],
-                        departmentId: qDeptId
+                        tags: q.tags || []
                     }
                 });
                 processedCount++;
-            }
-            catch (itemErr) {
-                logger_1.logger.error(`Error saving individual question: ${itemErr.message}`);
+            } catch (e) {
+                logger_1.logger.error(`Update error: ${e.message}`);
                 failedCount++;
             }
         }
+
         // Create Audit Log entry
         await db_1.prisma.auditLog.create({
             data: {
