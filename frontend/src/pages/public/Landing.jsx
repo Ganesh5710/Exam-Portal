@@ -861,6 +861,44 @@ export const Landing = () => {
           left: 130%;
           opacity: 1;
         }
+        
+        /* ── 3D HERO GRAPHIC STYLING ── */
+        .perspective-container {
+          perspective: 1500px;
+        }
+        .rotate-3d-card {
+          transform: rotateY(-10deg) rotateX(8deg) rotateZ(-1deg);
+          transform-style: preserve-3d;
+          transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .rotate-3d-card:hover {
+          transform: rotateY(-5deg) rotateX(4deg) rotateZ(0deg) scale(1.02);
+        }
+        .float-slow {
+          animation: float-slow-anim 6s ease-in-out infinite;
+        }
+        .float-slow-delay {
+          animation: float-slow-anim 6s ease-in-out infinite 2s;
+        }
+        .float-medium {
+          animation: float-medium-anim 5s ease-in-out infinite 1s;
+        }
+        .float-fast {
+          animation: float-fast-anim 4.5s ease-in-out infinite 0.5s;
+        }
+        
+        @keyframes float-slow-anim {
+          0%, 100% { transform: translateY(0px) translateZ(30px); }
+          50% { transform: translateY(-10px) translateZ(40px); }
+        }
+        @keyframes float-medium-anim {
+          0%, 100% { transform: translateY(0px) translateZ(40px); }
+          50% { transform: translateY(-12px) translateZ(55px); }
+        }
+        @keyframes float-fast-anim {
+          0%, 100% { transform: translateY(0px) translateZ(50px); }
+          50% { transform: translateY(-14px) translateZ(65px); }
+        }
       `}</style>
 
       {/* Grid Pattern */}
@@ -943,7 +981,7 @@ export const Landing = () => {
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-        <div className="flex flex-row justify-center gap-4 mb-20 relative z-20">
+        <div className="flex flex-row justify-center gap-4 mb-10 relative z-20">
           <a href="#proctor-calibration" className="px-6 py-3.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-extrabold rounded-full shadow-xl shadow-violet-600/30 hover:shadow-violet-600/55 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn text-xs uppercase tracking-wider">
             Explore Features ⚡
           </a>
@@ -954,6 +992,158 @@ export const Landing = () => {
           }`}>
             Launch Demo
           </a>
+        </div>
+
+        {/* ── 3D INTERACTIVE PLATFORM PREVIEW ── */}
+        <div className="w-full max-w-5xl mt-12 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-20">
+          
+          {/* 3D Main Card Container with Tilts */}
+          <div className="rotate-3d-card relative">
+            
+            {/* Outer Mockup Browser Frame */}
+            <div className={`rounded-3xl border p-1.5 backdrop-blur-md shadow-[0_50px_100px_rgba(0,0,0,0.5)] transition-colors duration-500 ${
+              isDarkMode 
+                ? "bg-[#0b081e]/35 border-white/[0.08]" 
+                : "bg-white/40 border-slate-200/80 shadow-slate-100"
+            }`}>
+              {/* Browser Window bar */}
+              <div className={`flex items-center justify-between px-6 py-4 border-b rounded-t-[22px] ${
+                isDarkMode ? "border-white/5 bg-[#070514]/60" : "border-slate-200/60 bg-slate-50/80"
+              }`}>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                  <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-[9px] font-mono tracking-wider ${
+                  isDarkMode ? "bg-slate-950/85 text-slate-500" : "bg-slate-200/55 text-slate-500"
+                }`}>
+                  https://portal.skillbrix.com/dashboard/analytics
+                </div>
+                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase font-mono">
+                  ASSESSMENT CMD
+                </div>
+              </div>
+
+              {/* Browser Window Screen Area */}
+              <div className={`h-[420px] rounded-b-[22px] overflow-hidden relative flex flex-col justify-center items-center px-8 transition-colors duration-500 ${
+                isDarkMode 
+                  ? "bg-slate-950/50 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.06)_0%,transparent_70%)]" 
+                  : "bg-slate-50/50 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.03)_0%,transparent_70%)]"
+              }`}>
+                
+                {/* Abstract background vector grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:2rem_2rem] pointer-events-none" />
+
+                {/* Dashboard content preview layout */}
+                <div className="max-w-xl text-center space-y-6 z-10" style={{ transform: "translateZ(30px)" }}>
+                  <h3 className={`text-3xl md:text-5xl font-black tracking-tight leading-tight transition-colors duration-500 ${
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  }`}>
+                    Build Modern Assessments.
+                  </h3>
+                  <p className={`text-sm md:text-base max-w-lg leading-relaxed transition-colors duration-500 ${
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  }`}>
+                    Manage, proctor, and evaluate at scale. Launch high-fidelity certification flows, active live telemetry signals, and view detailed metrics.
+                  </p>
+                  
+                  {/* Mock Features Bullets */}
+                  <div className="flex flex-wrap justify-center gap-6 text-xs font-bold transition-colors">
+                    <span className="flex items-center gap-1.5 text-violet-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-450" />
+                      Launch in minutes
+                    </span>
+                    <span className="flex items-center gap-1.5 text-fuchsia-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-450" />
+                      Instant autograde
+                    </span>
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-450" />
+                      99% Accuracy
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3D Decorative Sparkles */}
+                <div className="absolute bottom-10 right-12 w-6 h-6 border border-white/10 rounded-full flex items-center justify-center opacity-40 animate-pulse">✦</div>
+                <div className="absolute top-12 left-16 w-4 h-4 border border-white/10 rounded-full flex items-center justify-center opacity-30 animate-ping">✦</div>
+                
+                {/* Subtle bottom attempts label */}
+                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full border text-[10px] font-bold transition-colors ${
+                  isDarkMode ? "bg-slate-900/80 border-white/5 text-slate-500" : "bg-white border-slate-200 text-slate-600 shadow-sm"
+                }`}>
+                  Last 24h: 3,840 candidates evaluated
+                </div>
+              </div>
+            </div>
+
+            {/* ── FOUR FLOATING 3D CARDS OVERLAYS ── */}
+            {/* Top Left Card: Integrity Signal */}
+            <div className={`absolute -left-20 top-8 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-slow border-white/10 ${
+              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-violet-400">Integrity Signal</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight mb-0.5">99.8%</div>
+              <div className="text-[10px] text-slate-500 font-medium">Gaze tracking accuracy confidence</div>
+            </div>
+
+            {/* Bottom Left Card: Peak Throughput */}
+            <div className={`absolute -left-28 bottom-12 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-medium border-white/10 ${
+              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-fuchsia-400">Peak Throughput</span>
+                <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight mb-0.5">2,500/min</div>
+              <div className="text-[10px] text-slate-500 font-medium">Concurrent candidate traffic load</div>
+            </div>
+
+            {/* Top Right Card: Completion Pulse */}
+            <div className={`absolute -right-20 top-16 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-slow-delay border-white/10 ${
+              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400">Completion Pulse</span>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight mb-0.5">+24.8%</div>
+              <div className="text-[10px] text-slate-500 font-medium">Week-over-week assessment completion</div>
+            </div>
+
+            {/* Bottom Right Card: Review Velocity */}
+            <div className={`absolute -right-28 bottom-8 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-fast border-white/10 ${
+              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">Review Velocity</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              </div>
+              <div className="text-3xl font-extrabold tracking-tight mb-0.5">38 sec</div>
+              <div className="text-[10px] text-slate-500 font-medium">Average autograde feedback latency</div>
+            </div>
+
+          </div>
+
+          {/* Centered pill badge rows below the card mockup */}
+          <div className="flex flex-wrap justify-center gap-3 mt-12">
+            {["SOC 2 Ready", "AI Proctored", "99.99% Uptime", "Global Delivery"].map((badge, idx) => (
+              <span 
+                key={idx}
+                className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${
+                  isDarkMode 
+                    ? "bg-[#0b081e]/30 border-white/[0.08] text-slate-400 hover:text-white" 
+                    : "bg-slate-50 border-slate-200 text-slate-650 hover:text-slate-900"
+                }`}
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
         </div>
       </header>
 
