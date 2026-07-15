@@ -916,36 +916,33 @@ export const Landing = () => {
       </div>
 
       {/* Navigation Header */}
-      <nav className={`fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl h-[60px] rounded-2xl border z-50 flex items-center justify-between px-6 transition-all duration-500 ${
+      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[94%] max-w-7xl h-[72px] rounded-full border z-50 flex items-center justify-between px-4 pl-5 pr-4 transition-all duration-500 ${
         isDarkMode 
-          ? "bg-[#0a0818]/85 border-white/[0.08] backdrop-blur-2xl text-white shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(124,92,252,0.05)]" 
-          : "bg-white/90 border-slate-200/70 backdrop-blur-2xl text-slate-900 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.06),0_0_0_1px_rgba(124,92,252,0.04)]"
+          ? "bg-[#0a0818]/90 border-white/[0.07] backdrop-blur-2xl text-white shadow-[0_12px_48px_-8px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.03)]" 
+          : "bg-white/92 border-slate-200/60 backdrop-blur-2xl text-slate-900 shadow-[0_12px_48px_-8px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,0.8)]"
       }`}>
-        {/* Inner subtle gradient border glow */}
-        <div className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-500 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
-          style={{ background: 'linear-gradient(135deg, rgba(124,92,252,0.08) 0%, transparent 40%, transparent 60%, rgba(236,72,153,0.06) 100%)', borderRadius: 'inherit' }}
+        {/* Inner subtle gradient shimmer */}
+        <div className={`absolute inset-0 rounded-full pointer-events-none transition-opacity duration-500 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
+          style={{ background: 'linear-gradient(120deg, rgba(124,92,252,0.06) 0%, transparent 35%, transparent 65%, rgba(236,72,153,0.04) 100%)', borderRadius: 'inherit' }}
         />
 
-        <Link to="/" className="flex items-center gap-2.5 group relative z-10">
-          <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-violet-500/30 group-hover:scale-110 group-hover:shadow-violet-500/50 transition-all duration-300">
+        <Link to="/" className="flex items-center gap-3 group relative z-10">
+          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-2xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-violet-500/25 group-hover:scale-105 group-hover:shadow-violet-500/40 transition-all duration-300">
             SB
           </div>
-          <span className={`text-lg font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <span className={`text-xl font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Skill<span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent font-extrabold">brix</span>
           </span>
         </Link>
 
-        <div className={`hidden md:flex items-center gap-1 relative z-10 ${
-          isDarkMode ? "text-slate-400" : "text-slate-500"
+        <div className={`hidden md:flex items-center gap-2 relative z-10 ${
+          isDarkMode ? "text-slate-300" : "text-slate-600"
         }`}>
-          {[{label: "Proctoring", href: "#proctor-calibration"}, {label: "Sandbox", href: "#code-sandbox"}, {label: "Analytics", href: "#cohort-map"}, {label: "AI Support", href: "#helpdesk-chat"}].map((link) => (
-            <a key={link.label} href={link.href} className={`relative px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200 group ${
-              isDarkMode ? "hover:text-white hover:bg-white/[0.06]" : "hover:text-slate-900 hover:bg-slate-100/80"
+          {[{label: "Test", href: "#proctor-calibration"}, {label: "Services", href: "#code-sandbox"}, {label: "About", href: "#cohort-map"}, {label: "Contact", href: "#helpdesk-chat"}].map((link) => (
+            <a key={link.label} href={link.href} className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 ${
+              isDarkMode ? "hover:text-white hover:bg-white/[0.06]" : "hover:text-slate-900 hover:bg-slate-100"
             }`}>
               {link.label}
-              <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 ${
-                isDarkMode ? "bg-violet-400" : "bg-violet-500"
-              }`} />
             </a>
           ))}
         </div>
@@ -954,23 +951,25 @@ export const Landing = () => {
           {/* Theme Toggle */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`p-2 rounded-xl border transition-all duration-300 ${
+            className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 ${
               isDarkMode 
-                ? "bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08]" 
+                ? "bg-white/[0.05] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.1]" 
                 : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             }`}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          <Link to="/login" className={`px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200 ${
-            isDarkMode ? "text-slate-300 hover:text-white hover:bg-white/[0.06]" : "text-slate-600 hover:text-slate-950 hover:bg-slate-100"
+          <Link to="/login" className={`px-6 py-2.5 text-sm font-semibold rounded-full border transition-all duration-200 ${
+            isDarkMode 
+              ? "border-white/[0.15] text-white hover:bg-white/[0.08] hover:border-white/[0.25]" 
+              : "border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400"
           }`}>
             Login
           </Link>
-          <Link to="/login" className="px-5 py-2.5 text-[11px] font-black uppercase tracking-widest bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
-            Launch Portal
+          <Link to="/login" className="px-6 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full shadow-lg shadow-violet-500/25 hover:shadow-violet-500/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
+            Launch Demo
           </Link>
         </div>
       </nav>
