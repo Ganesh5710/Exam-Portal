@@ -939,14 +939,26 @@ export const Landing = () => {
 
         {/* ── PARALLAX FLOATING WIDGETS ── */}
         <div 
-          className={`absolute top-1/2 left-[10%] pointer-events-none hidden lg:block border p-4 rounded-2xl shadow-xl transition-all duration-500 ${
-            isDarkMode ? "border-white/5 bg-[#0a0815]/80 text-white" : "border-slate-200 bg-white/95 text-slate-800 shadow-md"
+          className={`absolute top-[38%] left-[3%] xl:left-[calc(50%-620px)] pointer-events-none hidden lg:block border p-4 rounded-[20px] shadow-2xl transition-all duration-500 z-20 ${
+            isDarkMode ? "border-white/5 bg-[#0a0815]/85 text-white" : "border-slate-200/80 bg-white/95 text-slate-800 shadow-slate-100"
           }`}
-          style={{ transform: `translate(${parallaxOffset.x * 2}px, ${parallaxOffset.y * 2}px)` }}
+          style={{ transform: `translate(${parallaxOffset.x * 1.5}px, ${parallaxOffset.y * 1.5}px)` }}
         >
           <div className="flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? "text-white" : "text-slate-800"}`}>WebSocket Stable</span>
+            <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>WebSocket Stable</span>
+          </div>
+        </div>
+
+        <div 
+          className={`absolute top-[58%] right-[3%] xl:right-[calc(50%-620px)] pointer-events-none hidden lg:block border p-4 rounded-[20px] shadow-2xl transition-all duration-500 z-20 ${
+            isDarkMode ? "border-white/5 bg-[#0a0815]/85 text-white" : "border-slate-200/80 bg-white/95 text-slate-800 shadow-slate-100"
+          }`}
+          style={{ transform: `translate(${parallaxOffset.x * -1.5}px, ${parallaxOffset.y * -1.5}px)` }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-violet-500 animate-ping" />
+            <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>Proctor Active</span>
           </div>
         </div>
 
@@ -966,7 +978,7 @@ export const Landing = () => {
           <h2 className={`text-3xl md:text-5xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Designed for scale, reliability, and absolute security
           </h2>
-          <p className={`text-xs mt-3 transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Click on any card to zoom in and check its visual interface details.</p>
+          <p className={`text-sm md:text-base mt-4 max-w-xl mx-auto transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Click on any card to zoom in and check its visual interface details.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ transformStyle: "preserve-3d" }}>
