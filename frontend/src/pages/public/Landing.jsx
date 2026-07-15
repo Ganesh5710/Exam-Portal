@@ -61,7 +61,7 @@ const faqs = [
 ];
 
 // Ultra-Premium Interactive Bento Card Wrapper
-const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
+const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -88,6 +88,7 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
 
   return (
     <div
+      id={id}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
@@ -736,12 +737,11 @@ export const Landing = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-          <a href="#proctor-calibration" className="hover:text-white transition-colors">Calibration</a>
+          <a href="#proctor-calibration" className="hover:text-white transition-colors">Proctoring</a>
           <a href="#code-sandbox" className="hover:text-white transition-colors">Sandbox</a>
-          <a href="#scoring-simulator" className="hover:text-white transition-colors">Score Simulator</a>
-          <a href="#session-timeline" className="hover:text-white transition-colors">Timeline</a>
-          <a href="#cohort-map" className="hover:text-white transition-colors">Cohorts</a>
-          <a href="#helpdesk-chat" className="hover:text-white transition-colors">AI Helpdesk</a>
+          <a href="#cohort-map" className="hover:text-white transition-colors">Analytics</a>
+          <a href="#api-integrations" className="hover:text-white transition-colors">Integrations</a>
+          <a href="#helpdesk-chat" className="hover:text-white transition-colors">AI Support</a>
         </div>
 
         <div className="flex items-center gap-3">
