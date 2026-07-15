@@ -63,7 +63,7 @@ const faqs = [
 ];
 
 // Ultra-Premium Interactive Bento Card Wrapper
-const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick }) => {
+const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick, isDarkMode }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -104,11 +104,19 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
     >
       {/* Background layer with rounded clipping and glassmorphism */}
       <div 
-        className="absolute inset-0 rounded-[32px] border border-white/[0.06] bg-[#070514]/80 backdrop-blur-2xl overflow-hidden pointer-events-none"
+        className={`absolute inset-0 rounded-[32px] border overflow-hidden pointer-events-none transition-all duration-500 ${
+          isDarkMode 
+            ? "border-white/[0.06] bg-[#070514]/80 backdrop-blur-2xl" 
+            : "border-slate-200/80 bg-white/95 shadow-sm shadow-slate-100/50 backdrop-blur-2xl"
+        }`}
         style={{
           boxShadow: isHovered 
-            ? `0 35px 70px -15px rgba(0,0,0,0.9), 0 0 50px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`
-            : '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)',
+            ? (isDarkMode 
+                ? `0 35px 70px -15px rgba(0,0,0,0.9), 0 0 50px -10px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)` 
+                : `0 20px 40px -10px rgba(0,0,0,0.06), 0 0 35px -5px ${glowColor.replace(/0.45/, '0.12')}, inset 0 1px 0 rgba(255,255,255,0.6)`)
+            : (isDarkMode 
+                ? '0 20px 40px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02)' 
+                : '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)'),
           transition: "box-shadow 0.3s ease",
           transform: "translateZ(0px)"
         }}
@@ -117,7 +125,9 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
         <div 
           className="absolute inset-0 pointer-events-none transition-opacity duration-500"
           style={{
-            background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, ${glowColor}, transparent 80%)`,
+            background: `radial-gradient(circle 220px at ${mousePos.x}px ${mousePos.y}px, ${
+              isDarkMode ? glowColor : glowColor.replace(/0.45/, '0.12')
+            }, transparent 80%)`,
             opacity: isHovered ? 1 : 0
           }}
         />
@@ -125,7 +135,9 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
         <div 
           className="absolute inset-0 pointer-events-none transition-opacity duration-300"
           style={{
-            background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.1), transparent 60%)`,
+            background: `radial-gradient(circle 350px at ${mousePos.x}px ${mousePos.y}px, ${
+              isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(124, 92, 252, 0.05)'
+            }, transparent 60%)`,
             opacity: isHovered ? 1 : 0
           }}
         />
@@ -809,7 +821,6 @@ export const Landing = () => {
           <a href="#proctor-calibration" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Proctoring</a>
           <a href="#code-sandbox" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Sandbox</a>
           <a href="#cohort-map" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Analytics</a>
-          <a href="#api-integrations" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Integrations</a>
           <a href="#helpdesk-chat" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>AI Support</a>
         </div>
 
@@ -903,6 +914,7 @@ export const Landing = () => {
               <PremiumBentoCard 
                 key={card.id}
                 id={sectionId}
+                isDarkMode={isDarkMode}
                 onClick={() => setSelectedCard(card)}
                 glowColor={card.glowColor}
                 className={card.className || ""}
