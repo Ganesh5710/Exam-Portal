@@ -1095,22 +1095,31 @@ export const Landing = () => {
                       { label: "Completion Rate", value: "94.2%", change: "+3.1%", color: "emerald", sparkline: "M0,18 L5,16 L10,14 L15,12 L20,13 L25,10 L30,8 L35,9 L40,6 L45,4 L50,2" },
                       { label: "Avg. Score", value: "76.8", change: "+2.4", color: "cyan", sparkline: "M0,15 L5,14 L10,16 L15,13 L20,11 L25,12 L30,9 L35,10 L40,7 L45,8 L50,5" },
                       { label: "Integrity Pass", value: "98.6%", change: "+0.8%", color: "fuchsia", sparkline: "M0,5 L5,6 L10,4 L15,5 L20,3 L25,4 L30,3 L35,2 L40,3 L45,2 L50,1" }
-                    ].map((metric, i) => (
-                      <div key={i} className={`p-3 rounded-xl border transition-all ${
-                        isDarkMode ? "bg-white/[0.02] border-white/[0.05]" : "bg-slate-50/80 border-slate-100"
-                      }`}>
-                        <div className={`text-[8px] font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{metric.label}</div>
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <span className={`text-lg font-extrabold block leading-none ${isDarkMode ? "text-white" : "text-slate-900"}`}>{metric.value}</span>
-                            <span className={`text-[9px] font-bold mt-1 inline-block text-${metric.color}-400`}>↑ {metric.change}</span>
+                    ].map((metric, i) => {
+                      const colorMap = {
+                        violet: "text-violet-400",
+                        emerald: "text-emerald-400",
+                        cyan: "text-cyan-400",
+                        fuchsia: "text-fuchsia-400"
+                      };
+                      const textColorClass = colorMap[metric.color] || "text-slate-400";
+                      return (
+                        <div key={i} className={`p-3 rounded-xl border transition-all ${
+                          isDarkMode ? "bg-white/[0.02] border-white/[0.05]" : "bg-slate-50/80 border-slate-100"
+                        }`}>
+                          <div className={`text-[8px] font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{metric.label}</div>
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <span className={`text-lg font-extrabold block leading-none ${isDarkMode ? "text-white" : "text-slate-900"}`}>{metric.value}</span>
+                              <span className={`text-[9px] font-bold mt-1 inline-block ${textColorClass}`}>↑ {metric.change}</span>
+                            </div>
+                            <svg width="50" height="22" viewBox="0 0 50 22" className={`${textColorClass} opacity-60`}>
+                              <path d={metric.sparkline} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           </div>
-                          <svg width="50" height="22" viewBox="0 0 50 22" className={`text-${metric.color}-400 opacity-60`}>
-                            <path d={metric.sparkline} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Main Content Grid: Chart + Table */}
@@ -1542,7 +1551,7 @@ export const Landing = () => {
 
                           {/* Mock Webcam Frame */}
                           <div className={`h-24 rounded-xl border relative overflow-hidden flex flex-col items-center justify-center ${
-                            isDarkMode ? "bg-slate-955/60 border-white/5" : "bg-slate-100 border-slate-200"
+                            isDarkMode ? "bg-slate-950/60 border-white/5" : "bg-slate-100 border-slate-200"
                           }`}>
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.03)_0%,transparent_70%)]" />
                             <div className={`w-8 h-8 rounded-full border flex items-center justify-center relative ${
