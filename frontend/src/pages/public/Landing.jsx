@@ -916,13 +916,18 @@ export const Landing = () => {
       </div>
 
       {/* Navigation Header */}
-      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-7xl h-16 rounded-full border z-50 flex items-center justify-between px-8 transition-all duration-500 ${
+      <nav className={`fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl h-[60px] rounded-2xl border z-50 flex items-center justify-between px-6 transition-all duration-500 ${
         isDarkMode 
-          ? "bg-[#02000A]/70 border-white/[0.08] backdrop-blur-xl text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]" 
-          : "bg-white/80 border-slate-200/80 backdrop-blur-xl text-slate-900 shadow-[0_8px_32px_0_rgba(148,163,184,0.1)]"
+          ? "bg-[#0a0818]/85 border-white/[0.08] backdrop-blur-2xl text-white shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(124,92,252,0.05)]" 
+          : "bg-white/90 border-slate-200/70 backdrop-blur-2xl text-slate-900 shadow-[0_8px_40px_-8px_rgba(0,0,0,0.06),0_0_0_1px_rgba(124,92,252,0.04)]"
       }`}>
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md shadow-violet-500/25 group-hover:scale-105 transition-transform">
+        {/* Inner subtle gradient border glow */}
+        <div className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-500 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
+          style={{ background: 'linear-gradient(135deg, rgba(124,92,252,0.08) 0%, transparent 40%, transparent 60%, rgba(236,72,153,0.06) 100%)', borderRadius: 'inherit' }}
+        />
+
+        <Link to="/" className="flex items-center gap-2.5 group relative z-10">
+          <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-violet-500/30 group-hover:scale-110 group-hover:shadow-violet-500/50 transition-all duration-300">
             SB
           </div>
           <span className={`text-lg font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -930,35 +935,41 @@ export const Landing = () => {
           </span>
         </Link>
 
-        <div className={`hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-wider transition-colors ${
-          isDarkMode ? "text-slate-400" : "text-slate-600"
+        <div className={`hidden md:flex items-center gap-1 relative z-10 ${
+          isDarkMode ? "text-slate-400" : "text-slate-500"
         }`}>
-          <a href="#proctor-calibration" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Proctoring</a>
-          <a href="#code-sandbox" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Sandbox</a>
-          <a href="#cohort-map" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Analytics</a>
-          <a href="#helpdesk-chat" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>AI Support</a>
+          {[{label: "Proctoring", href: "#proctor-calibration"}, {label: "Sandbox", href: "#code-sandbox"}, {label: "Analytics", href: "#cohort-map"}, {label: "AI Support", href: "#helpdesk-chat"}].map((link) => (
+            <a key={link.label} href={link.href} className={`relative px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200 group ${
+              isDarkMode ? "hover:text-white hover:bg-white/[0.06]" : "hover:text-slate-900 hover:bg-slate-100/80"
+            }`}>
+              {link.label}
+              <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 ${
+                isDarkMode ? "bg-violet-400" : "bg-violet-500"
+              }`} />
+            </a>
+          ))}
         </div>
 
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-3 relative z-10">
           {/* Theme Toggle */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`p-2 rounded-full border transition-all duration-300 ${
+            className={`p-2 rounded-xl border transition-all duration-300 ${
               isDarkMode 
-                ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
-                : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                ? "bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08]" 
+                : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             }`}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+            {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
           </button>
 
-          <Link to="/login" className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-            isDarkMode ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-950"
+          <Link to="/login" className={`px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200 ${
+            isDarkMode ? "text-slate-300 hover:text-white hover:bg-white/[0.06]" : "text-slate-600 hover:text-slate-950 hover:bg-slate-100"
           }`}>
             Login
           </Link>
-          <Link to="/login" className="px-5 py-2.5 text-xs font-black uppercase tracking-widest bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
+          <Link to="/login" className="px-5 py-2.5 text-[11px] font-black uppercase tracking-widest bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
             Launch Portal
           </Link>
         </div>
@@ -995,7 +1006,7 @@ export const Landing = () => {
         </div>
 
         {/* ── 3D INTERACTIVE PLATFORM PREVIEW ── */}
-        <div className="w-full max-w-6xl mt-16 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-10" style={{ marginBottom: '80px' }}>
+        <div className="w-full max-w-5xl mt-16 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-10" style={{ marginBottom: '80px', overflow: 'visible' }}>
           
           {/* Ambient glow behind the mockup */}
           <div className={`absolute -inset-20 rounded-full pointer-events-none transition-opacity duration-700 ${isDarkMode ? 'opacity-60' : 'opacity-20'}`}
@@ -1179,54 +1190,51 @@ export const Landing = () => {
 
             {/* ── FOUR FLOATING 3D CARDS OVERLAYS ── */}
             {/* Top Left Card: Integrity Signal */}
-            <div className={`absolute -left-16 top-16 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow ${
+            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow ${
               isDarkMode 
-                ? "bg-[#0d0a1f]/95 border border-violet-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(124,92,252,0.1)]" 
-                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(124,92,252,0.06)]"
-            }`} style={{ backdropFilter: 'blur(20px)' }}>
+                ? "bg-[#0d0a1f]/95 border border-violet-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(124,92,252,0.15)]" 
+                : "bg-white/98 border border-violet-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(124,92,252,0.08)]"
+            }`} style={{ backdropFilter: 'blur(24px)', left: '-220px', top: '40px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Integrity Signal</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-md shadow-emerald-400/50" />
               </div>
               <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>99.8%</div>
               <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Gaze tracking accuracy</div>
-              {/* Mini sparkline */}
               <svg width="100%" height="20" viewBox="0 0 100 20" className="mt-2 opacity-40">
                 <path d="M0,15 Q10,10 20,12 T40,8 T60,10 T80,5 T100,3" fill="none" stroke={isDarkMode ? "#a78bfa" : "#7c5cfc"} strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
 
             {/* Bottom Left Card: Peak Throughput */}
-            <div className={`absolute -left-20 bottom-20 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-medium ${
+            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-medium ${
               isDarkMode 
-                ? "bg-[#0d0a1f]/95 border border-fuchsia-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(236,72,153,0.1)]" 
-                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(236,72,153,0.06)]"
-            }`} style={{ backdropFilter: 'blur(20px)' }}>
+                ? "bg-[#0d0a1f]/95 border border-fuchsia-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(236,72,153,0.15)]" 
+                : "bg-white/98 border border-fuchsia-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(236,72,153,0.08)]"
+            }`} style={{ backdropFilter: 'blur(24px)', left: '-200px', bottom: '60px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-fuchsia-400" : "text-fuchsia-600"}`}>Peak Throughput</span>
                 <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-md shadow-fuchsia-400/50" />
               </div>
               <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>2,847<span className="text-base font-bold text-slate-500">/min</span></div>
               <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Concurrent candidate load</div>
-              {/* Mini progress bar */}
               <div className={`w-full h-1.5 rounded-full mt-2.5 ${isDarkMode ? "bg-white/[0.06]" : "bg-slate-200"}`}>
                 <div className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 w-[82%]" />
               </div>
             </div>
 
             {/* Top Right Card: Completion Pulse */}
-            <div className={`absolute -right-16 top-24 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow-delay ${
+            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow-delay ${
               isDarkMode 
-                ? "bg-[#0d0a1f]/95 border border-cyan-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(6,182,212,0.1)]" 
-                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(6,182,212,0.06)]"
-            }`} style={{ backdropFilter: 'blur(20px)' }}>
+                ? "bg-[#0d0a1f]/95 border border-cyan-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(6,182,212,0.15)]" 
+                : "bg-white/98 border border-cyan-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(6,182,212,0.08)]"
+            }`} style={{ backdropFilter: 'blur(24px)', right: '-220px', top: '60px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-cyan-400" : "text-cyan-600"}`}>Completion Pulse</span>
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-md shadow-cyan-400/50" />
               </div>
               <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>+24.8%</div>
               <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Week-over-week completion</div>
-              {/* Mini bar segments */}
               <div className="flex gap-0.5 mt-2.5">
                 {[70, 75, 68, 80, 85, 78, 92, 88, 95, 82].map((h, i) => (
                   <div key={i} className={`flex-1 rounded-sm ${isDarkMode ? "bg-cyan-400/20" : "bg-cyan-200"}`} style={{ height: `${h / 6}px` }}>
@@ -1237,18 +1245,17 @@ export const Landing = () => {
             </div>
 
             {/* Bottom Right Card: Review Velocity */}
-            <div className={`absolute -right-20 bottom-12 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-fast ${
+            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-fast ${
               isDarkMode 
-                ? "bg-[#0d0a1f]/95 border border-emerald-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(16,185,129,0.1)]" 
-                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(16,185,129,0.06)]"
-            }`} style={{ backdropFilter: 'blur(20px)' }}>
+                ? "bg-[#0d0a1f]/95 border border-emerald-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(16,185,129,0.15)]" 
+                : "bg-white/98 border border-emerald-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(16,185,129,0.08)]"
+            }`} style={{ backdropFilter: 'blur(24px)', right: '-200px', bottom: '40px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>Review Velocity</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-md shadow-emerald-400/50" />
               </div>
               <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>0.38<span className="text-base font-bold text-slate-500">s</span></div>
               <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Autograde feedback latency</div>
-              {/* Circular indicator */}
               <div className="flex items-center gap-2 mt-2">
                 <svg width="24" height="24" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" fill="none" stroke={isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"} strokeWidth="2" />
