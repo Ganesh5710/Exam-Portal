@@ -247,6 +247,62 @@ export const Landing = () => {
     return () => clearInterval(logInterval);
   }, []);
 
+  // ── EXTRA FEATURE 11: ASSESSMENT COMMAND CENTER STATE ──
+  const [ccEvent, setCcEvent] = useState("normal"); // "normal" | "cheat" | "frozen"
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [ccLogs, setCcLogs] = useState([
+    "[12:30:00] Admin session initialized.",
+    "[12:30:02] Connected to Edge WebSocket node (Mumbai-01).",
+    "[12:30:05] Monitoring 4 active candidate workspaces..."
+  ]);
+  const [ccCandidates, setCcCandidates] = useState([
+    { id: 1, name: "Arjun Mehta", course: "Computer Science", status: "Active", warnings: 0, avatar: "AM", integrity: "100%" },
+    { id: 2, name: "Sarah Connor", course: "Mathematics III", status: "Active", warnings: 0, avatar: "SC", integrity: "100%" },
+    { id: 3, name: "Carlos Ray", course: "Electrical Systems", status: "Active", warnings: 0, avatar: "CR", integrity: "98%" },
+    { id: 4, name: "Yuki Tanaka", course: "Data Structures", status: "Active", warnings: 0, avatar: "YT", integrity: "100%" }
+  ]);
+
+  useEffect(() => {
+    let interval = null;
+    if (ccEvent === "normal") {
+      setCcCandidates(prev => prev.map(c => ({ ...c, warnings: 0, status: "Active", integrity: c.id === 3 ? "98%" : "100%" })));
+      interval = setInterval(() => {
+        const events = [
+          "Candidate Arjun Mehta: Webcam feed synced (100% integrity)",
+          "Candidate Yuki Tanaka: Code sandbox compiled successfully (JS runtime)",
+          "Telemetry Node (Mumbai-01): Average ping stable at 12ms",
+          "Candidate Carlos Ray: Answer state auto-saved to cloud database"
+        ];
+        const randomEvent = events[Math.floor(Math.random() * events.length)];
+        const time = new Date().toTimeString().split(' ')[0];
+        setCcLogs(prev => [`[${time}] ${randomEvent}`, ...prev.slice(0, 8)]);
+      }, 4000);
+    } else if (ccEvent === "cheat") {
+      setCcCandidates(prev => prev.map(c => {
+        if (c.id === 2) return { ...c, warnings: 3, status: "Flagged", integrity: "45%" };
+        if (c.id === 3) return { ...c, warnings: 1, status: "Warning", integrity: "85%" };
+        return c;
+      }));
+      interval = setInterval(() => {
+        const time = new Date().toTimeString().split(' ')[0];
+        const alerts = [
+          "[ALERT] Sarah Connor switched tabs! Warning 3/5 sent.",
+          "[WARNING] Carlos Ray: Multi-face pattern detected.",
+          "[ALERT] Sarah Connor: Gaze deviation > 45°.",
+          "Telemetry Monitor: Flagging candidate Sarah Connor to admin dashboard."
+        ];
+        const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+        setCcLogs(prev => [`[${time}] ${randomAlert}`, ...prev.slice(0, 8)]);
+      }, 3000);
+    } else if (ccEvent === "frozen") {
+      setCcCandidates(prev => prev.map(c => ({ ...c, status: "Frozen" })));
+      const time = new Date().toTimeString().split(' ')[0];
+      setCcLogs(prev => [`[${time}] [SYSTEM] All candidate exam sessions frozen by Admin.`, ...prev.slice(0, 8)]);
+    }
+
+    return () => clearInterval(interval);
+  }, [ccEvent]);
+
   // ── EXTRA FEATURE 4: BULK EXCEL/CSV TEMPLATE GENERATOR ──
   const [selectedTemplate, setSelectedTemplate] = useState("questions");
   const templates = {
@@ -1027,6 +1083,275 @@ export const Landing = () => {
           </div>
         </div>
       )}
+
+      {/* ── ASSESSMENT COMMAND CENTER (ULTRA PREMIUM FEATURE) ── */}
+      <section className={`py-24 border-t px-6 transition-colors duration-500 relative z-10 ${
+        isDarkMode ? "border-white/[0.04] bg-[#02000A]" : "border-slate-200 bg-[#f8f9fc]"
+      }`}>
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-600/5 via-transparent to-cyan-500/5 pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="text-xs font-bold text-violet-400 uppercase tracking-widest px-3 py-1 rounded-full border border-violet-500/20 bg-violet-500/5">
+              Operations Monitor
+            </span>
+            <h2 className={`text-3xl md:text-5xl font-black mt-4 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Assessment Command Center
+            </h2>
+            <p className={`text-sm mt-3 transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              Unified real-time proctor control pane. Toggle student behaviors and monitor live events.
+            </p>
+          </div>
+
+          {/* Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Column 1 & 2: Candidate Live Feed Cards */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
+                  Candidate Grid
+                </h3>
+                <span className="text-xs text-slate-500">4 Candidates Active</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ccCandidates.map((candidate) => {
+                  const isFlagged = candidate.status === "Flagged";
+                  const isWarning = candidate.status === "Warning";
+                  const isFrozen = candidate.status === "Frozen";
+                  
+                  return (
+                    <div 
+                      key={candidate.id} 
+                      className={`p-5 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${
+                        isFrozen 
+                          ? (isDarkMode ? "bg-cyan-950/20 border-cyan-500/30" : "bg-cyan-50/50 border-cyan-200")
+                          : isFlagged
+                            ? (isDarkMode ? "bg-red-950/20 border-red-500/30 animate-pulse" : "bg-red-50/50 border-red-200")
+                            : isWarning
+                              ? (isDarkMode ? "bg-amber-950/20 border-amber-500/30" : "bg-amber-50/50 border-amber-200")
+                              : (isDarkMode ? "bg-slate-900/40 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm shadow-slate-100")
+                      }`}
+                    >
+                      {/* Frozen Overlay */}
+                      {isFrozen && (
+                        <div className="absolute inset-0 bg-[#02000a]/20 backdrop-blur-[1px] flex items-center justify-center z-20">
+                          <span className="bg-cyan-500 text-white font-extrabold text-[9px] uppercase tracking-widest px-3 py-1 rounded-full shadow-md animate-pulse">
+                            Session Frozen
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Header row */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
+                            isFlagged 
+                              ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                              : "bg-violet-600/10 text-violet-500 border border-violet-500/20"
+                          }`}>
+                            {candidate.avatar}
+                          </div>
+                          <div>
+                            <h4 className={`text-xs font-bold transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                              {candidate.name}
+                            </h4>
+                            <p className="text-[10px] text-slate-500">{candidate.course}</p>
+                          </div>
+                        </div>
+
+                        {/* Status tag */}
+                        <span className={`text-[8px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                          isFrozen
+                            ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                            : isFlagged
+                              ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
+                              : isWarning
+                                ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        }`}>
+                          {candidate.status}
+                        </span>
+                      </div>
+
+                      {/* Mock Webcam Frame */}
+                      <div className={`h-24 rounded-xl border relative overflow-hidden flex flex-col items-center justify-center ${
+                        isDarkMode ? "bg-slate-950/60 border-white/5" : "bg-slate-100 border-slate-200"
+                      }`}>
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.03)_0%,transparent_70%)]" />
+                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center relative ${
+                          isFlagged 
+                            ? "border-red-500/30 bg-red-500/5 text-red-400" 
+                            : "border-violet-500/25 bg-violet-600/5 text-violet-400"
+                        }`}>
+                          <Video size={12} className={isFlagged ? "animate-pulse" : ""} />
+                        </div>
+                        <span className={`text-[7.5px] font-mono mt-1.5 ${isFlagged ? "text-red-400 font-bold" : "text-slate-500"}`}>
+                          {isFlagged ? "Webcam Flagged - Gaze Left" : "Webcam Feed: Operational"}
+                        </span>
+
+                        {/* Scanlines indicator */}
+                        <div className="absolute top-1 left-2 flex items-center gap-1">
+                          <span className={`w-1.5 h-1.5 rounded-full animate-ping ${isFlagged ? "bg-red-500" : "bg-emerald-500"}`} />
+                          <span className={`text-[6.5px] uppercase font-bold tracking-widest ${isFlagged ? "text-red-400" : "text-slate-400"}`}>
+                            {isFlagged ? "ALERT" : "LIVE"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Integrity score progress bar */}
+                      <div className="mt-3.5 space-y-1">
+                        <div className="flex justify-between text-[8.5px] font-bold text-slate-500 uppercase">
+                          <span>Integrity Metric</span>
+                          <span className={isFlagged ? "text-red-400" : "text-slate-300"}>{candidate.integrity}</span>
+                        </div>
+                        <div className={`h-1.5 rounded-full w-full ${isDarkMode ? "bg-white/5" : "bg-slate-200"}`}>
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isFlagged ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-emerald-500"
+                            }`} 
+                            style={{ width: candidate.integrity }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Column 3: Control Panel & Live Logs */}
+            <div className="lg:col-span-1 space-y-4">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
+                  Controller Node
+                </h3>
+              </div>
+
+              <div className={`p-6 rounded-[24px] border space-y-5 ${
+                isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
+              }`}>
+                {/* Event Select Buttons */}
+                <div className="space-y-2">
+                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                    Select Simulation Event
+                  </span>
+                  
+                  <div className={`flex flex-col gap-1.5 p-1 rounded-2xl ${isDarkMode ? "bg-slate-950/60 border border-white/5" : "bg-slate-200/50 border border-slate-200"}`}>
+                    <button 
+                      onClick={() => setCcEvent("normal")}
+                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                        ccEvent === "normal" 
+                          ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10" 
+                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <span>Normal Class flow</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => setCcEvent("cheat")}
+                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                        ccEvent === "cheat" 
+                          ? "bg-red-600 border-red-500 text-white shadow-md shadow-red-600/10 animate-pulse" 
+                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <span>Simulate Cheating Alerts</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                    </button>
+
+                    <button 
+                      onClick={() => setCcEvent("frozen")}
+                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                        ccEvent === "frozen" 
+                          ? "bg-cyan-600 border-cyan-500 text-white shadow-md shadow-cyan-600/10" 
+                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      <span>Freeze Exam Session</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Output Console */}
+                <div className="space-y-2">
+                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                    Edge Log Feed (Mumbai-01)
+                  </span>
+
+                  <div className={`p-4 rounded-2xl h-36 font-mono text-[9px] overflow-y-auto space-y-1.5 transition-all ${
+                    isDarkMode ? "bg-slate-950 text-slate-400 border border-white/5" : "bg-white text-slate-600 border border-slate-200 shadow-inner"
+                  }`}>
+                    {ccLogs.map((log, idx) => {
+                      const isAlert = log.includes("[ALERT]");
+                      const isWarn = log.includes("[WARNING]");
+                      const isSys = log.includes("[SYSTEM]");
+                      const isAnn = log.includes("[BROADCAST]");
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`leading-normal ${
+                            isAlert 
+                              ? "text-red-400 font-bold" 
+                              : isWarn
+                                ? "text-amber-400"
+                                : isSys
+                                  ? "text-cyan-400"
+                                  : isAnn
+                                    ? "text-fuchsia-400 font-bold"
+                                    : "text-slate-400"
+                          }`}
+                        >
+                          <span className="text-violet-500/80">›</span> {log}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Broadcast Msg Announcement Form */}
+                <div className="space-y-2">
+                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                    Broadcast Announcement
+                  </span>
+
+                  <div className="flex gap-1.5">
+                    <input 
+                      type="text"
+                      placeholder="Send alert message to candidates..."
+                      value={broadcastMsg}
+                      onChange={(e) => setBroadcastMsg(e.target.value)}
+                      className={`flex-1 border rounded-xl px-3 py-2 text-[10px] focus:outline-none transition-all ${
+                        isDarkMode ? "bg-slate-950 border-white/10 text-white focus:border-violet-500" : "bg-white border-slate-200 text-slate-800 focus:border-violet-500 shadow-sm"
+                      }`}
+                    />
+                    <button 
+                      onClick={() => {
+                        if (!broadcastMsg.trim()) return;
+                        const time = new Date().toTimeString().split(' ')[0];
+                        setCcLogs(prev => [`[${time}] [BROADCAST] Alert: "${broadcastMsg}"`, ...prev.slice(0, 8)]);
+                        setBroadcastMsg("");
+                        toast.success("Broadcast announcement sent!");
+                      }}
+                      className="px-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-violet-600/10"
+                    >
+                      <Send size={10} />
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials */}
       <section className={`py-24 border-t px-6 transition-colors duration-500 ${isDarkMode ? "border-white/[0.04] bg-slate-950/20" : "border-slate-200 bg-slate-100/10"}`}>
