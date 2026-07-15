@@ -40,7 +40,8 @@ import {
   MessageSquare,
   Send,
   Sun,
-  Moon
+  Moon,
+  Video
 } from "lucide-react";
 
 const faqs = [
