@@ -995,152 +995,289 @@ export const Landing = () => {
         </div>
 
         {/* ── 3D INTERACTIVE PLATFORM PREVIEW ── */}
-        <div className="w-full max-w-5xl mt-12 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-20">
+        <div className="w-full max-w-6xl mt-16 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-10" style={{ marginBottom: '80px' }}>
           
+          {/* Ambient glow behind the mockup */}
+          <div className={`absolute -inset-20 rounded-full pointer-events-none transition-opacity duration-700 ${isDarkMode ? 'opacity-60' : 'opacity-20'}`}
+            style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(124, 92, 252, 0.25), rgba(236, 72, 153, 0.1) 40%, transparent 70%)', filter: 'blur(60px)' }}
+          />
+
           {/* 3D Main Card Container with Tilts */}
           <div className="rotate-3d-card relative">
             
             {/* Outer Mockup Browser Frame */}
-            <div className={`rounded-3xl border p-1.5 backdrop-blur-md shadow-[0_50px_100px_rgba(0,0,0,0.5)] transition-colors duration-500 ${
+            <div className={`rounded-3xl border p-0 overflow-hidden transition-all duration-500 ${
               isDarkMode 
-                ? "bg-[#0b081e]/35 border-white/[0.08]" 
-                : "bg-white/40 border-slate-200/80 shadow-slate-100"
+                ? "bg-[#0a0818] border-white/[0.1] shadow-[0_60px_120px_-20px_rgba(0,0,0,0.8),0_0_80px_-10px_rgba(124,92,252,0.15)]" 
+                : "bg-white border-slate-200 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08),0_0_40px_-10px_rgba(124,92,252,0.06)]"
             }`}>
               {/* Browser Window bar */}
-              <div className={`flex items-center justify-between px-6 py-4 border-b rounded-t-[22px] ${
-                isDarkMode ? "border-white/5 bg-[#070514]/60" : "border-slate-200/60 bg-slate-50/80"
+              <div className={`flex items-center justify-between px-5 py-3 border-b ${
+                isDarkMode ? "border-white/[0.06] bg-[#0d0a1f]" : "border-slate-100 bg-slate-50/90"
               }`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-                  <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-                  <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#ff5f57] shadow-sm shadow-red-500/30" />
+                  <span className="w-3 h-3 rounded-full bg-[#febc2e] shadow-sm shadow-yellow-500/30" />
+                  <span className="w-3 h-3 rounded-full bg-[#28c840] shadow-sm shadow-green-500/30" />
                 </div>
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-[9px] font-mono tracking-wider ${
-                  isDarkMode ? "bg-slate-950/85 text-slate-500" : "bg-slate-200/55 text-slate-500"
+                <div className={`flex items-center gap-2 px-4 py-1 rounded-lg text-[10px] font-mono ${
+                  isDarkMode ? "bg-white/[0.04] text-slate-500 border border-white/[0.04]" : "bg-slate-100 text-slate-500 border border-slate-200/60"
                 }`}>
-                  https://portal.skillbrix.com/dashboard/analytics
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  portal.skillbrix.com/dashboard
                 </div>
-                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase font-mono">
-                  ASSESSMENT CMD
+                <div className={`text-[9px] font-bold tracking-widest uppercase font-mono ${isDarkMode ? "text-slate-600" : "text-slate-400"}`}>
+                  ⌘ DASHBOARD
                 </div>
               </div>
 
-              {/* Browser Window Screen Area */}
-              <div className={`h-[420px] rounded-b-[22px] overflow-hidden relative flex flex-col justify-center items-center px-8 transition-colors duration-500 ${
-                isDarkMode 
-                  ? "bg-slate-950/50 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.06)_0%,transparent_70%)]" 
-                  : "bg-slate-50/50 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.03)_0%,transparent_70%)]"
-              }`}>
+              {/* ── REAL DASHBOARD UI INSIDE BROWSER ── */}
+              <div className="flex h-[400px]">
                 
-                {/* Abstract background vector grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:2rem_2rem] pointer-events-none" />
-
-                {/* Dashboard content preview layout */}
-                <div className="max-w-xl text-center space-y-6 z-10" style={{ transform: "translateZ(30px)" }}>
-                  <h3 className={`text-3xl md:text-5xl font-black tracking-tight leading-tight transition-colors duration-500 ${
-                    isDarkMode ? "text-white" : "text-slate-900"
-                  }`}>
-                    Build Modern Assessments.
-                  </h3>
-                  <p className={`text-sm md:text-base max-w-lg leading-relaxed transition-colors duration-500 ${
-                    isDarkMode ? "text-slate-400" : "text-slate-500"
-                  }`}>
-                    Manage, proctor, and evaluate at scale. Launch high-fidelity certification flows, active live telemetry signals, and view detailed metrics.
-                  </p>
-                  
-                  {/* Mock Features Bullets */}
-                  <div className="flex flex-wrap justify-center gap-6 text-xs font-bold transition-colors">
-                    <span className="flex items-center gap-1.5 text-violet-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-violet-450" />
-                      Launch in minutes
-                    </span>
-                    <span className="flex items-center gap-1.5 text-fuchsia-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-450" />
-                      Instant autograde
-                    </span>
-                    <span className="flex items-center gap-1.5 text-cyan-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-450" />
-                      99% Accuracy
-                    </span>
-                  </div>
+                {/* Sidebar */}
+                <div className={`w-14 flex-shrink-0 border-r flex flex-col items-center py-4 gap-3 ${
+                  isDarkMode ? "bg-[#080616] border-white/[0.04]" : "bg-slate-50 border-slate-100"
+                }`}>
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-[10px] font-black shadow-md shadow-violet-500/30 mb-2">S</div>
+                  {[
+                    <svg key="home" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2"/></svg>,
+                    <svg key="users" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.2"/><path d="M2 14c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+                    <svg key="chart" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="8" width="3" height="7" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="6.5" y="4" width="3" height="11" rx="1" stroke="currentColor" strokeWidth="1.2"/><rect x="12" y="1" width="3" height="14" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>,
+                    <svg key="shield" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L2 4v4c0 3.5 2.5 6.2 6 7 3.5-.8 6-3.5 6-7V4L8 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/><path d="M5.5 8l2 2 3.5-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                    <svg key="gear" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M13 3l-1.5 1.5M4.5 11.5L3 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                  ].map((icon, i) => (
+                    <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                      i === 0
+                        ? (isDarkMode ? "bg-violet-500/10 text-violet-400 border border-violet-500/20" : "bg-violet-50 text-violet-600 border border-violet-200")
+                        : (isDarkMode ? "text-slate-600 hover:text-slate-400 hover:bg-white/[0.03]" : "text-slate-400 hover:text-slate-600 hover:bg-slate-100")
+                    }`}>
+                      {icon}
+                    </div>
+                  ))}
                 </div>
 
-                {/* 3D Decorative Sparkles */}
-                <div className="absolute bottom-10 right-12 w-6 h-6 border border-white/10 rounded-full flex items-center justify-center opacity-40 animate-pulse">✦</div>
-                <div className="absolute top-12 left-16 w-4 h-4 border border-white/10 rounded-full flex items-center justify-center opacity-30 animate-ping">✦</div>
-                
-                {/* Subtle bottom attempts label */}
-                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full border text-[10px] font-bold transition-colors ${
-                  isDarkMode ? "bg-slate-900/80 border-white/5 text-slate-500" : "bg-white border-slate-200 text-slate-600 shadow-sm"
-                }`}>
-                  Last 24h: 3,840 candidates evaluated
+                {/* Main Dashboard Content */}
+                <div className={`flex-1 overflow-hidden p-5 ${isDarkMode ? "bg-[#090717]" : "bg-white"}`}>
+                  
+                  {/* Dashboard Header Row */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Analytics Overview</h4>
+                      <p className={`text-[10px] mt-0.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>Real-time examination metrics</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                        isDarkMode ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                      }`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Live
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-lg text-[8px] font-bold ${
+                        isDarkMode ? "bg-white/[0.04] text-slate-400 border border-white/[0.06]" : "bg-slate-50 text-slate-500 border border-slate-200"
+                      }`}>Last 24h</span>
+                    </div>
+                  </div>
+
+                  {/* Metric Cards Row */}
+                  <div className="grid grid-cols-4 gap-3 mb-4">
+                    {[
+                      { label: "Active Sessions", value: "1,247", change: "+12%", color: "violet", sparkline: "M0,20 L5,18 L10,15 L15,17 L20,12 L25,14 L30,8 L35,10 L40,5 L45,7 L50,3" },
+                      { label: "Completion Rate", value: "94.2%", change: "+3.1%", color: "emerald", sparkline: "M0,18 L5,16 L10,14 L15,12 L20,13 L25,10 L30,8 L35,9 L40,6 L45,4 L50,2" },
+                      { label: "Avg. Score", value: "76.8", change: "+2.4", color: "cyan", sparkline: "M0,15 L5,14 L10,16 L15,13 L20,11 L25,12 L30,9 L35,10 L40,7 L45,8 L50,5" },
+                      { label: "Integrity Pass", value: "98.6%", change: "+0.8%", color: "fuchsia", sparkline: "M0,5 L5,6 L10,4 L15,5 L20,3 L25,4 L30,3 L35,2 L40,3 L45,2 L50,1" }
+                    ].map((metric, i) => (
+                      <div key={i} className={`p-3 rounded-xl border transition-all ${
+                        isDarkMode ? "bg-white/[0.02] border-white/[0.05]" : "bg-slate-50/80 border-slate-100"
+                      }`}>
+                        <div className={`text-[8px] font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{metric.label}</div>
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <span className={`text-lg font-extrabold block leading-none ${isDarkMode ? "text-white" : "text-slate-900"}`}>{metric.value}</span>
+                            <span className={`text-[9px] font-bold mt-1 inline-block text-${metric.color}-400`}>↑ {metric.change}</span>
+                          </div>
+                          <svg width="50" height="22" viewBox="0 0 50 22" className={`text-${metric.color}-400 opacity-60`}>
+                            <path d={metric.sparkline} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Main Content Grid: Chart + Table */}
+                  <div className="grid grid-cols-5 gap-3" style={{ height: 'calc(100% - 155px)' }}>
+                    
+                    {/* Chart Area */}
+                    <div className={`col-span-3 rounded-xl border p-3 ${
+                      isDarkMode ? "bg-white/[0.015] border-white/[0.05]" : "bg-slate-50/60 border-slate-100"
+                    }`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Session Volume</span>
+                        <div className="flex gap-1">
+                          {["1D", "7D", "30D"].map((t, i) => (
+                            <span key={t} className={`px-1.5 py-0.5 rounded text-[7px] font-bold ${
+                              i === 1 
+                                ? (isDarkMode ? "bg-violet-500/15 text-violet-400" : "bg-violet-100 text-violet-600") 
+                                : (isDarkMode ? "text-slate-600" : "text-slate-400")
+                            }`}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                      {/* SVG Bar Chart */}
+                      <svg width="100%" height="120" viewBox="0 0 280 120" preserveAspectRatio="none" className="mt-1">
+                        {/* Grid lines */}
+                        {[0, 30, 60, 90].map(y => (
+                          <line key={y} x1="0" y1={y} x2="280" y2={y} stroke={isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.04)"} strokeWidth="0.5" />
+                        ))}
+                        {/* Bars */}
+                        {[65, 45, 78, 52, 88, 70, 95, 60, 82, 72, 90, 55, 75, 85].map((h, i) => (
+                          <rect key={i} x={i * 20 + 2} y={120 - h} width="14" height={h} rx="3" 
+                            fill={i === 6 ? (isDarkMode ? "rgba(124,92,252,0.7)" : "rgba(124,92,252,0.6)") : (isDarkMode ? "rgba(124,92,252,0.15)" : "rgba(124,92,252,0.12)")}
+                          />
+                        ))}
+                        {/* Trend line */}
+                        <path d="M9,55 Q40,75 69,42 T129,28 T189,35 T249,18 T279,25" fill="none" stroke="rgba(236,72,153,0.5)" strokeWidth="1.5" strokeDasharray="3,2" />
+                      </svg>
+                    </div>
+
+                    {/* Candidates Mini Table */}
+                    <div className={`col-span-2 rounded-xl border p-3 flex flex-col ${
+                      isDarkMode ? "bg-white/[0.015] border-white/[0.05]" : "bg-slate-50/60 border-slate-100"
+                    }`}>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <span className={`text-[9px] font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Top Candidates</span>
+                        <span className={`text-[8px] ${isDarkMode ? "text-violet-400" : "text-violet-500"} font-bold cursor-pointer`}>View All →</span>
+                      </div>
+                      <div className="flex-1 space-y-1.5 overflow-hidden">
+                        {[
+                          { name: "Arjun M.", score: "96.4", rank: "1", pct: 96 },
+                          { name: "Sarah C.", score: "94.1", rank: "2", pct: 94 },
+                          { name: "Yuki T.", score: "91.8", rank: "3", pct: 92 },
+                          { name: "Carlos R.", score: "89.5", rank: "4", pct: 90 },
+                          { name: "Priya K.", score: "87.2", rank: "5", pct: 87 },
+                          { name: "Alex W.", score: "85.9", rank: "6", pct: 86 }
+                        ].map((c, i) => (
+                          <div key={i} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${
+                            isDarkMode ? "hover:bg-white/[0.03]" : "hover:bg-slate-100/80"
+                          }`}>
+                            <span className={`text-[8px] font-bold w-4 ${isDarkMode ? "text-slate-600" : "text-slate-400"}`}>#{c.rank}</span>
+                            <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[7px] font-bold ${
+                              i === 0 ? "bg-violet-500/15 text-violet-400" : i === 1 ? "bg-fuchsia-500/15 text-fuchsia-400" : (isDarkMode ? "bg-white/[0.05] text-slate-400" : "bg-slate-100 text-slate-500")
+                            }`}>{c.name.charAt(0)}</div>
+                            <span className={`text-[9px] font-semibold flex-1 ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>{c.name}</span>
+                            <div className={`w-16 h-1.5 rounded-full overflow-hidden ${isDarkMode ? "bg-white/[0.05]" : "bg-slate-200"}`}>
+                              <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${c.pct}%` }} />
+                            </div>
+                            <span className={`text-[9px] font-bold tabular-nums w-8 text-right ${isDarkMode ? "text-white" : "text-slate-900"}`}>{c.score}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* ── FOUR FLOATING 3D CARDS OVERLAYS ── */}
             {/* Top Left Card: Integrity Signal */}
-            <div className={`absolute -left-20 top-8 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-slow border-white/10 ${
-              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
-            }`}>
+            <div className={`absolute -left-16 top-16 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow ${
+              isDarkMode 
+                ? "bg-[#0d0a1f]/95 border border-violet-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(124,92,252,0.1)]" 
+                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(124,92,252,0.06)]"
+            }`} style={{ backdropFilter: 'blur(20px)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-wider text-violet-400">Integrity Signal</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Integrity Signal</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-md shadow-emerald-400/50" />
               </div>
-              <div className="text-3xl font-extrabold tracking-tight mb-0.5">99.8%</div>
-              <div className="text-[10px] text-slate-500 font-medium">Gaze tracking accuracy confidence</div>
+              <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>99.8%</div>
+              <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Gaze tracking accuracy</div>
+              {/* Mini sparkline */}
+              <svg width="100%" height="20" viewBox="0 0 100 20" className="mt-2 opacity-40">
+                <path d="M0,15 Q10,10 20,12 T40,8 T60,10 T80,5 T100,3" fill="none" stroke={isDarkMode ? "#a78bfa" : "#7c5cfc"} strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
             </div>
 
             {/* Bottom Left Card: Peak Throughput */}
-            <div className={`absolute -left-28 bottom-12 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-medium border-white/10 ${
-              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
-            }`}>
+            <div className={`absolute -left-20 bottom-20 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-medium ${
+              isDarkMode 
+                ? "bg-[#0d0a1f]/95 border border-fuchsia-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(236,72,153,0.1)]" 
+                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(236,72,153,0.06)]"
+            }`} style={{ backdropFilter: 'blur(20px)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-wider text-fuchsia-400">Peak Throughput</span>
-                <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-fuchsia-400" : "text-fuchsia-600"}`}>Peak Throughput</span>
+                <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-md shadow-fuchsia-400/50" />
               </div>
-              <div className="text-3xl font-extrabold tracking-tight mb-0.5">2,500/min</div>
-              <div className="text-[10px] text-slate-500 font-medium">Concurrent candidate traffic load</div>
+              <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>2,847<span className="text-base font-bold text-slate-500">/min</span></div>
+              <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Concurrent candidate load</div>
+              {/* Mini progress bar */}
+              <div className={`w-full h-1.5 rounded-full mt-2.5 ${isDarkMode ? "bg-white/[0.06]" : "bg-slate-200"}`}>
+                <div className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 w-[82%]" />
+              </div>
             </div>
 
             {/* Top Right Card: Completion Pulse */}
-            <div className={`absolute -right-20 top-16 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-slow-delay border-white/10 ${
-              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
-            }`}>
+            <div className={`absolute -right-16 top-24 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow-delay ${
+              isDarkMode 
+                ? "bg-[#0d0a1f]/95 border border-cyan-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(6,182,212,0.1)]" 
+                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(6,182,212,0.06)]"
+            }`} style={{ backdropFilter: 'blur(20px)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-wider text-cyan-400">Completion Pulse</span>
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-cyan-400" : "text-cyan-600"}`}>Completion Pulse</span>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-md shadow-cyan-400/50" />
               </div>
-              <div className="text-3xl font-extrabold tracking-tight mb-0.5">+24.8%</div>
-              <div className="text-[10px] text-slate-500 font-medium">Week-over-week assessment completion</div>
+              <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>+24.8%</div>
+              <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Week-over-week completion</div>
+              {/* Mini bar segments */}
+              <div className="flex gap-0.5 mt-2.5">
+                {[70, 75, 68, 80, 85, 78, 92, 88, 95, 82].map((h, i) => (
+                  <div key={i} className={`flex-1 rounded-sm ${isDarkMode ? "bg-cyan-400/20" : "bg-cyan-200"}`} style={{ height: `${h / 6}px` }}>
+                    <div className="w-full rounded-sm bg-cyan-400" style={{ height: `${h / 8}px` }} />
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Bottom Right Card: Review Velocity */}
-            <div className={`absolute -right-28 bottom-8 w-60 border p-4.5 rounded-[22px] shadow-2xl backdrop-blur-xl transition-all duration-500 float-fast border-white/10 ${
-              isDarkMode ? "bg-[#0b081e]/85 text-white" : "bg-white border-slate-200 text-slate-800 shadow-slate-100/50"
-            }`}>
+            <div className={`absolute -right-20 bottom-12 w-56 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-fast ${
+              isDarkMode 
+                ? "bg-[#0d0a1f]/95 border border-emerald-500/20 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.6),0_0_20px_-5px_rgba(16,185,129,0.1)]" 
+                : "bg-white/95 border border-slate-200 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(16,185,129,0.06)]"
+            }`} style={{ backdropFilter: 'blur(20px)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400">Review Velocity</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>Review Velocity</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-md shadow-emerald-400/50" />
               </div>
-              <div className="text-3xl font-extrabold tracking-tight mb-0.5">38 sec</div>
-              <div className="text-[10px] text-slate-500 font-medium">Average autograde feedback latency</div>
+              <div className={`text-3xl font-extrabold tracking-tight mb-0.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>0.38<span className="text-base font-bold text-slate-500">s</span></div>
+              <div className={`text-[10px] font-medium ${isDarkMode ? "text-slate-500" : "text-slate-500"}`}>Autograde feedback latency</div>
+              {/* Circular indicator */}
+              <div className="flex items-center gap-2 mt-2">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" fill="none" stroke={isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"} strokeWidth="2" />
+                  <circle cx="12" cy="12" r="10" fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="56.5" strokeDashoffset="8" strokeLinecap="round" transform="rotate(-90 12 12)" />
+                </svg>
+                <span className={`text-[9px] font-bold ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>96% faster</span>
+              </div>
             </div>
 
           </div>
 
           {/* Centered pill badge rows below the card mockup */}
-          <div className="flex flex-wrap justify-center gap-3 mt-12">
-            {["SOC 2 Ready", "AI Proctored", "99.99% Uptime", "Global Delivery"].map((badge, idx) => (
+          <div className="flex flex-wrap justify-center gap-3 mt-14">
+            {[
+              { label: "SOC 2 Ready", icon: "🔒" },
+              { label: "AI Proctored", icon: "🤖" },
+              { label: "99.99% Uptime", icon: "⚡" },
+              { label: "Global Delivery", icon: "🌐" }
+            ].map((badge, idx) => (
               <span 
                 key={idx}
-                className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${
+                className={`px-4 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all hover:-translate-y-0.5 cursor-default ${
                   isDarkMode 
-                    ? "bg-[#0b081e]/30 border-white/[0.08] text-slate-400 hover:text-white" 
-                    : "bg-slate-50 border-slate-200 text-slate-650 hover:text-slate-900"
+                    ? "bg-white/[0.03] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/[0.15]" 
+                    : "bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 shadow-sm"
                 }`}
               >
-                {badge}
+                <span className="text-xs">{badge.icon}</span>
+                {badge.label}
               </span>
             ))}
           </div>
