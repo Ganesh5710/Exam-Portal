@@ -885,63 +885,61 @@ export const Landing = () => {
           <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-base shadow-lg shadow-violet-500/25 group-hover:scale-105 transition-transform">
             SB
           </div>
-          <span className={`text-xl font-black tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <span className={`text-2xl font-black tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Skill<span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent font-extrabold">brix</span>
           </span>
         </Link>
 
-        <div className={`hidden md:flex items-center gap-8 text-sm font-medium transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+        <div className={`hidden md:flex items-center gap-10 text-[15px] font-bold transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
           <a href="#proctor-calibration" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Proctoring</a>
           <a href="#code-sandbox" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Sandbox</a>
           <a href="#cohort-map" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Analytics</a>
           <a href="#helpdesk-chat" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>AI Support</a>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* Theme Toggle */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`p-2.5 rounded-xl border transition-all duration-300 ${
+            className={`p-3 rounded-xl border transition-all duration-300 ${
               isDarkMode 
                 ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
                 : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          <Link to="/login" className={`px-4.5 py-2 text-sm font-semibold transition-colors ${isDarkMode ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-950"}`}>
+          <Link to="/login" className={`px-5 py-2.5 text-base font-bold transition-colors ${isDarkMode ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-955"}`}>
             Login
           </Link>
-          <Link to="/login" className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
+          <Link to="/login" className="px-6 py-3.5 text-base font-extrabold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
             Launch Portal →
           </Link>
         </div>
       </nav>
 
       {/* Hero Header */}
-      <header className="pt-44 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border transition-all duration-500 text-[11px] font-bold uppercase tracking-widest mb-8 shadow-inner ${
+      <header className="pt-48 pb-24 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+        <div className={`inline-flex items-center gap-2 px-4.5 py-2.5 rounded-full border transition-all duration-500 text-[13px] font-extrabold uppercase tracking-widest mb-10 shadow-inner ${
           isDarkMode ? "border-violet-500/20 bg-violet-500/5 text-violet-300" : "border-violet-200 bg-violet-100/50 text-violet-700"
         }`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
+          <span className="w-2 h-2 rounded-full bg-violet-400 animate-ping" />
           The Advanced Assessment Architecture
         </div>
 
-        <h1 className={`text-5xl md:text-8.5xl font-black tracking-tight leading-[1.02] max-w-6xl mb-8 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <h1 className={`text-6xl md:text-9xl font-black tracking-tight leading-[0.98] max-w-7xl mb-10 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
           The <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">Futuristic Standard</span><br className="hidden md:block" /> for Online Examinations
         </h1>
 
-        <p className={`text-base md:text-xl max-w-3xl mb-12 leading-relaxed font-normal transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+        <p className={`text-lg md:text-2xl max-w-4xl mb-14 leading-relaxed font-normal transition-colors duration-500 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-
-
         <div className="flex flex-col sm:flex-row gap-4 mb-20 relative z-20">
-          <a href="#proctor-calibration" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
-            Explore 10 Premium Features <ArrowRight size={16} />
+          <a href="#proctor-calibration" className="px-10 py-5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-extrabold rounded-2xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn text-base">
+            Explore 10 Premium Features <ArrowRight size={18} />
           </a>
         </div>
       </header>
@@ -950,9 +948,9 @@ export const Landing = () => {
       <section id="features" className={`py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 border-t transition-colors duration-500 ${
         isDarkMode ? "border-white/[0.04]" : "border-slate-200"
       }`}>
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Core</div>
-          <h2 className={`text-3xl md:text-5xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <div className="text-sm font-black text-violet-400 uppercase tracking-widest mb-4">Enterprise Core</div>
+          <h2 className={`text-4xl md:text-6xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Designed for scale, reliability, and absolute security
           </h2>
           <p className={`text-sm md:text-base mt-4 max-w-xl mx-auto transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Click on any card to zoom in and check its visual interface details.</p>
@@ -991,15 +989,15 @@ export const Landing = () => {
                       }`} style={{ transform: "translateZ(15px)" }}>
                         <Icon size={22} />
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-widest transition-all duration-500 ${
+                      <span className={`px-3 py-1 rounded border text-[10px] font-bold uppercase tracking-widest transition-all duration-500 ${
                         isDarkMode ? "bg-white/5 border-white/10 text-slate-400" : "bg-slate-100 border-slate-200 text-slate-600"
                       }`} style={{ transform: "translateZ(10px)" }}>
                         {card.badge}
                       </span>
                     </div>
                     <div>
-                      <h3 className={`text-xl font-bold mb-2 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`} style={{ transform: "translateZ(20px)" }}>{card.title}</h3>
-                      <p className={`text-sm leading-relaxed font-normal transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`} style={{ transform: "translateZ(10px)" }}>{card.description}</p>
+                      <h3 className={`text-2xl font-black mb-3 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`} style={{ transform: "translateZ(20px)" }}>{card.title}</h3>
+                      <p className={`text-[15px] leading-relaxed font-medium transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`} style={{ transform: "translateZ(10px)" }}>{card.description}</p>
                     </div>
                   </div>
 
