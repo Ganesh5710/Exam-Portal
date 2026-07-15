@@ -142,10 +142,10 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
     </div>
   );
 };
-
 export const Landing = () => {
   const [activeFaq, setActiveFaq] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [activeFooterModal, setActiveFooterModal] = useState(null);
   
   // Safe Timer Engine (seconds tracking)
   const [secondsLeft, setSecondsLeft] = useState(5399); 
@@ -800,9 +800,20 @@ export const Landing = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8" style={{ transformStyle: "preserve-3d" }}>
           {featureCards.map((card, idx) => {
             const Icon = card.icon;
+            
+            // Map bento card ID to the corresponding anchor ID expected by the navigation menu links
+            let sectionId = "";
+            if (card.id === "proctor") sectionId = "proctor-calibration";
+            else if (card.id === "scoring") sectionId = "scoring-simulator";
+            else if (card.id === "sandbox") sectionId = "code-sandbox";
+            else if (card.id === "stats") sectionId = "cohort-map";
+            else if (card.id === "helpdesk") sectionId = "helpdesk-chat";
+            else if (card.id === "timed") sectionId = "session-timeline";
+
             return (
               <PremiumBentoCard 
                 key={card.id}
+                id={sectionId}
                 onClick={() => setSelectedCard(card)}
                 glowColor={card.glowColor}
                 className={card.className || ""}
@@ -1021,11 +1032,108 @@ export const Landing = () => {
         </div>
 
         <div className="flex gap-6 text-xs text-slate-500">
-          <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-          <a href="#" className="hover:text-white transition-colors">Support</a>
+          <button onClick={() => setActiveFooterModal("privacy")} className="hover:text-white transition-colors focus:outline-none">Privacy Policy</button>
+          <button onClick={() => setActiveFooterModal("terms")} className="hover:text-white transition-colors focus:outline-none">Terms of Service</button>
+          <button onClick={() => setActiveFooterModal("support")} className="hover:text-white transition-colors focus:outline-none">Support</button>
         </div>
       </footer>
+
+      {/* ── FOOTER INFORMATION MODAL ── */}
+      {activeFooterModal && (
+        <div className="fixed inset-0 bg-[#02000a]/90 backdrop-blur-md z-50 flex items-center justify-center p-6 transition-all duration-300">
+          <div className="absolute w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none bg-violet-500/10" />
+          
+          <div className="w-full max-w-2xl glass-card-wow rounded-3xl p-8 relative z-10 border border-white/10 max-h-[85vh] overflow-y-auto">
+            {/* Close Button */}
+            <button 
+              onClick={() => setActiveFooterModal(null)}
+              className="absolute top-5 right-5 p-2 bg-white/5 border border-white/10 text-slate-400 hover:text-white rounded-full transition-colors focus:outline-none"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Content */}
+            {activeFooterModal === "privacy" && (
+              <div className="space-y-4 text-left">
+                <h3 className="text-2xl font-black text-white">Privacy Policy</h3>
+                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Effective Date: July 15, 2026</p>
+                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                  <p>
+                    Skillbrix Solutions is committed to protecting your academic and telemetry privacy. This policy outlines how candidate verification data is handled during active examination sessions.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">1. Local Telemetry Verification</h4>
+                  <p>
+                    All webcam signals, eye-gaze tracking parameters, and face positions are processed strictly inside the student's browser sandbox using client-side WebAssembly scripts. No raw video feed is uploaded or stored on our servers.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">2. WebSocket Security</h4>
+                  <p>
+                    Integrity status and tab-focus logs are sent over secure WebSocket channels. The telemetry checks are encrypted in-transit and cleared automatically from active session indices within 48 hours after exam commits.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">3. Data Compliance</h4>
+                  <p>
+                    Skillbrix complies with global academic privacy mandates. Candidate data is strictly restricted to department administrators and is never sold or utilized for profiling.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeFooterModal === "terms" && (
+              <div className="space-y-4 text-left">
+                <h3 className="text-2xl font-black text-white">Terms of Service</h3>
+                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Last Updated: July 15, 2026</p>
+                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                  <p>
+                    Welcome to Skillbrix. By accessing or conducting assessments on our platform, you agree to these academic integrity terms.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">1. Integrity Enforceability</h4>
+                  <p>
+                    Exams on this portal are proctored. By entering an assessment session, candidates consent to tab-focus locking and screen integrity monitoring.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">2. Sandbox Resources</h4>
+                  <p>
+                    The code execution sandbox supports sandboxed scripts. Abuse or execution of malicious commands will result in instant IP lockout and score nullification.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">3. System Commits</h4>
+                  <p>
+                    Submissions are hard-committed on timer expiry. Any attempt to modify telemetry requests will result in an immediate automatic submit flag.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeFooterModal === "support" && (
+              <div className="space-y-4 text-left">
+                <h3 className="text-2xl font-black text-white">Developer Support Center</h3>
+                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Available 24/7</p>
+                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                  <p>
+                    Need assistance setting up schemas or checking database latency nodes? We are here to help.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">1. Direct Communication</h4>
+                  <p>
+                    Reach our technical operations team directly at <span className="text-violet-400 font-bold">support@skillbrix.com</span> for system integrations or LTI keys.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">2. Helpdesk Assistant</h4>
+                  <p>
+                    You can ask quick questions about template schemas, proctor parameters, or database tables directly using the AI chatbot inside the features grid.
+                  </p>
+                  <h4 className="text-white font-bold mt-4">3. System Heartbeats</h4>
+                  <p>
+                    Check live service latencies in the Node Heartbeat card to diagnose Redis or PostgreSQL database network speed drops.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <button 
+              onClick={() => setActiveFooterModal(null)}
+              className="mt-8 w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg shadow-violet-600/20"
+            >
+              Close Document
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
