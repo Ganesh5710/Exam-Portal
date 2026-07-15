@@ -878,68 +878,81 @@ export const Landing = () => {
       </div>
 
       {/* Navigation Header */}
-      <nav className={`fixed top-0 left-0 right-0 h-20 border-b z-50 flex items-center justify-between px-6 md:px-12 transition-all duration-500 ${
-        isDarkMode ? "bg-[#02000A]/70 border-white/[0.04] backdrop-blur-xl text-white" : "bg-[#f8f9fc]/80 border-slate-200 backdrop-blur-xl text-slate-900"
+      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-7xl h-16 rounded-full border z-50 flex items-center justify-between px-8 transition-all duration-500 ${
+        isDarkMode 
+          ? "bg-[#02000A]/70 border-white/[0.08] backdrop-blur-xl text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]" 
+          : "bg-white/80 border-slate-200/80 backdrop-blur-xl text-slate-900 shadow-[0_8px_32px_0_rgba(148,163,184,0.1)]"
       }`}>
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-base shadow-lg shadow-violet-500/25 group-hover:scale-105 transition-transform">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md shadow-violet-500/25 group-hover:scale-105 transition-transform">
             SB
           </div>
-          <span className={`text-xl font-black tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <span className={`text-lg font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Skill<span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent font-extrabold">brix</span>
           </span>
         </Link>
 
-        <div className={`hidden md:flex items-center gap-8 text-sm font-semibold transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+        <div className={`hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-wider transition-colors ${
+          isDarkMode ? "text-slate-400" : "text-slate-600"
+        }`}>
           <a href="#proctor-calibration" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Proctoring</a>
           <a href="#code-sandbox" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Sandbox</a>
           <a href="#cohort-map" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>Analytics</a>
           <a href="#helpdesk-chat" className={`transition-colors ${isDarkMode ? "hover:text-white" : "hover:text-slate-900"}`}>AI Support</a>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           {/* Theme Toggle */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`p-2.5 rounded-xl border transition-all duration-300 ${
+            className={`p-2 rounded-full border transition-all duration-300 ${
               isDarkMode 
                 ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
                 : "bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
 
-          <Link to="/login" className={`px-4.5 py-2 text-sm font-semibold transition-colors ${isDarkMode ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-950"}`}>
+          <Link to="/login" className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+            isDarkMode ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-950"
+          }`}>
             Login
           </Link>
-          <Link to="/login" className="px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white rounded-xl shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
-            Launch Portal →
+          <Link to="/login" className="px-5 py-2.5 text-xs font-black uppercase tracking-widest bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
+            Launch Portal
           </Link>
         </div>
       </nav>
 
       {/* Hero Header */}
-      <header className="pt-44 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border transition-all duration-500 text-[11px] font-bold uppercase tracking-widest mb-8 shadow-inner ${
+      <header className="pt-48 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border transition-all duration-500 text-[10px] font-black uppercase tracking-widest mb-6 shadow-inner ${
           isDarkMode ? "border-violet-500/20 bg-violet-500/5 text-violet-300" : "border-violet-200 bg-violet-100/50 text-violet-700"
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
           The Advanced Assessment Architecture
         </div>
 
-        <h1 className={`text-5xl md:text-8xl font-black tracking-tight leading-[1.02] max-w-6xl mb-8 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <h1 className={`text-4xl md:text-7xl font-bold tracking-tight leading-[1.08] max-w-5xl mb-6 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
           The <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">Futuristic Standard</span><br className="hidden md:block" /> for Online Examinations
         </h1>
 
-        <p className={`text-base md:text-xl max-w-3xl mb-12 leading-relaxed font-normal transition-colors duration-500 ${isDarkMode ? "text-slate-450" : "text-slate-600"}`}>
+        <p className={`text-sm md:text-base max-w-2xl mb-10 leading-relaxed font-medium transition-colors duration-500 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-20 relative z-20">
-          <a href="#proctor-calibration" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn text-sm">
-            Explore 10 Premium Features <ArrowRight size={16} />
+        <div className="flex flex-row justify-center gap-4 mb-20 relative z-20">
+          <a href="#proctor-calibration" className="px-6 py-3.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-extrabold rounded-full shadow-xl shadow-violet-600/30 hover:shadow-violet-600/55 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn text-xs uppercase tracking-wider">
+            Explore Features ⚡
+          </a>
+          <a href="#scoring-simulator" className={`px-6 py-3.5 border rounded-full font-bold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider ${
+            isDarkMode 
+              ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white" 
+              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+          }`}>
+            Launch Demo
           </a>
         </div>
       </header>
@@ -1092,251 +1105,283 @@ export const Landing = () => {
             </p>
           </div>
 
-          {/* Grid Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Column 1 & 2: Candidate Live Feed Cards */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
-                  Candidate Grid
-                </h3>
-                <span className="text-xs text-slate-500">4 Candidates Active</span>
+          {/* Mac-style Browser Mockup Wrapper */}
+          <div className={`rounded-3xl border p-1.5 backdrop-blur-sm shadow-2xl transition-all duration-500 ${
+            isDarkMode 
+              ? "bg-[#0b081e]/30 border-white/[0.08] shadow-[#02000a]" 
+              : "bg-white/40 border-slate-200/85 shadow-slate-100/60"
+          }`}>
+            {/* Browser Header Bar */}
+            <div className={`flex items-center justify-between px-6 py-4 border-b rounded-t-[22px] ${
+              isDarkMode ? "border-white/5 bg-[#070514]/60" : "border-slate-200/60 bg-slate-50/80"
+            }`}>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
+              </div>
+              
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-lg text-[9px] font-mono tracking-wider ${
+                isDarkMode ? "bg-slate-950/80 text-slate-500" : "bg-slate-200/50 text-slate-500"
+              }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                https://proctor.skillbrix.com/live/session_48a9c
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {ccCandidates.map((candidate) => {
-                  const isFlagged = candidate.status === "Flagged";
-                  const isWarning = candidate.status === "Warning";
-                  const isFrozen = candidate.status === "Frozen";
-                  
-                  return (
-                    <div 
-                      key={candidate.id} 
-                      className={`p-5 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${
-                        isFrozen 
-                          ? (isDarkMode ? "bg-cyan-950/20 border-cyan-500/30" : "bg-cyan-50/50 border-cyan-200")
-                          : isFlagged
-                            ? (isDarkMode ? "bg-red-950/20 border-red-500/30 animate-pulse" : "bg-red-50/50 border-red-200")
-                            : isWarning
-                              ? (isDarkMode ? "bg-amber-950/20 border-amber-500/30" : "bg-amber-50/50 border-amber-200")
-                              : (isDarkMode ? "bg-slate-900/40 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm shadow-slate-100")
-                      }`}
-                    >
-                      {/* Frozen Overlay */}
-                      {isFrozen && (
-                        <div className="absolute inset-0 bg-[#02000a]/20 backdrop-blur-[1px] flex items-center justify-center z-20">
-                          <span className="bg-cyan-500 text-white font-extrabold text-[9px] uppercase tracking-widest px-3 py-1 rounded-full shadow-md animate-pulse">
-                            Session Frozen
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Header row */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
-                            isFlagged 
-                              ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                              : "bg-violet-600/10 text-violet-500 border border-violet-500/20"
-                          }`}>
-                            {candidate.avatar}
-                          </div>
-                          <div>
-                            <h4 className={`text-xs font-bold transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                              {candidate.name}
-                            </h4>
-                            <p className="text-[10px] text-slate-500">{candidate.course}</p>
-                          </div>
-                        </div>
-
-                        {/* Status tag */}
-                        <span className={`text-[8px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border ${
-                          isFrozen
-                            ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
-                            : isFlagged
-                              ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
-                              : isWarning
-                                ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                                : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                        }`}>
-                          {candidate.status}
-                        </span>
-                      </div>
-
-                      {/* Mock Webcam Frame */}
-                      <div className={`h-24 rounded-xl border relative overflow-hidden flex flex-col items-center justify-center ${
-                        isDarkMode ? "bg-slate-950/60 border-white/5" : "bg-slate-100 border-slate-200"
-                      }`}>
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.03)_0%,transparent_70%)]" />
-                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center relative ${
-                          isFlagged 
-                            ? "border-red-500/30 bg-red-500/5 text-red-400" 
-                            : "border-violet-500/25 bg-violet-600/5 text-violet-400"
-                        }`}>
-                          <Video size={12} className={isFlagged ? "animate-pulse" : ""} />
-                        </div>
-                        <span className={`text-[7.5px] font-mono mt-1.5 ${isFlagged ? "text-red-400 font-bold" : "text-slate-500"}`}>
-                          {isFlagged ? "Webcam Flagged - Gaze Left" : "Webcam Feed: Operational"}
-                        </span>
-
-                        {/* Scanlines indicator */}
-                        <div className="absolute top-1 left-2 flex items-center gap-1">
-                          <span className={`w-1.5 h-1.5 rounded-full animate-ping ${isFlagged ? "bg-red-500" : "bg-emerald-500"}`} />
-                          <span className={`text-[6.5px] uppercase font-bold tracking-widest ${isFlagged ? "text-red-400" : "text-slate-400"}`}>
-                            {isFlagged ? "ALERT" : "LIVE"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Integrity score progress bar */}
-                      <div className="mt-3.5 space-y-1">
-                        <div className="flex justify-between text-[8.5px] font-bold text-slate-500 uppercase">
-                          <span>Integrity Metric</span>
-                          <span className={isFlagged ? "text-red-400" : "text-slate-300"}>{candidate.integrity}</span>
-                        </div>
-                        <div className={`h-1.5 rounded-full w-full ${isDarkMode ? "bg-white/5" : "bg-slate-200"}`}>
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isFlagged ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-emerald-500"
-                            }`} 
-                            style={{ width: candidate.integrity }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase font-mono hidden sm:block">
+                Assessment Command Center
               </div>
             </div>
 
-            {/* Column 3: Control Panel & Live Logs */}
-            <div className="lg:col-span-1 space-y-4">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
-                  Controller Node
-                </h3>
-              </div>
-
-              <div className={`p-6 rounded-[24px] border space-y-5 ${
-                isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
-              }`}>
-                {/* Event Select Buttons */}
-                <div className="space-y-2">
-                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
-                    Select Simulation Event
-                  </span>
-                  
-                  <div className={`flex flex-col gap-1.5 p-1 rounded-2xl ${isDarkMode ? "bg-slate-950/60 border border-white/5" : "bg-slate-200/50 border border-slate-200"}`}>
-                    <button 
-                      onClick={() => setCcEvent("normal")}
-                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
-                        ccEvent === "normal" 
-                          ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10" 
-                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-                      }`}
-                    >
-                      <span>Normal Class flow</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    </button>
-                    
-                    <button 
-                      onClick={() => setCcEvent("cheat")}
-                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
-                        ccEvent === "cheat" 
-                          ? "bg-red-600 border-red-500 text-white shadow-md shadow-red-600/10 animate-pulse" 
-                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-                      }`}
-                    >
-                      <span>Simulate Cheating Alerts</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                    </button>
-
-                    <button 
-                      onClick={() => setCcEvent("frozen")}
-                      className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
-                        ccEvent === "frozen" 
-                          ? "bg-cyan-600 border-cyan-500 text-white shadow-md shadow-cyan-600/10" 
-                          : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
-                      }`}
-                    >
-                      <span>Freeze Exam Session</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                    </button>
+            {/* Browser Content Area */}
+            <div className="p-6 md:p-8">
+              {/* Grid Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* Column 1 & 2: Candidate Live Feed Cards */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
+                      Candidate Grid
+                    </h3>
+                    <span className="text-xs text-slate-500">4 Candidates Active</span>
                   </div>
-                </div>
 
-                {/* Live Output Console */}
-                <div className="space-y-2">
-                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
-                    Edge Log Feed (Mumbai-01)
-                  </span>
-
-                  <div className={`p-4 rounded-2xl h-36 font-mono text-[9px] overflow-y-auto space-y-1.5 transition-all ${
-                    isDarkMode ? "bg-slate-950 text-slate-400 border border-white/5" : "bg-white text-slate-600 border border-slate-200 shadow-inner"
-                  }`}>
-                    {ccLogs.map((log, idx) => {
-                      const isAlert = log.includes("[ALERT]");
-                      const isWarn = log.includes("[WARNING]");
-                      const isSys = log.includes("[SYSTEM]");
-                      const isAnn = log.includes("[BROADCAST]");
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {ccCandidates.map((candidate) => {
+                      const isFlagged = candidate.status === "Flagged";
+                      const isWarning = candidate.status === "Warning";
+                      const isFrozen = candidate.status === "Frozen";
                       
                       return (
                         <div 
-                          key={idx} 
-                          className={`leading-normal ${
-                            isAlert 
-                              ? "text-red-400 font-bold" 
-                              : isWarn
-                                ? "text-amber-400"
-                                : isSys
-                                  ? "text-cyan-400"
-                                  : isAnn
-                                    ? "text-fuchsia-400 font-bold"
-                                    : "text-slate-400"
+                          key={candidate.id} 
+                          className={`p-5 rounded-[24px] border transition-all duration-300 relative overflow-hidden ${
+                            isFrozen 
+                              ? (isDarkMode ? "bg-cyan-950/20 border-cyan-500/30" : "bg-cyan-50/50 border-cyan-200")
+                              : isFlagged
+                                ? (isDarkMode ? "bg-red-950/20 border-red-500/30 animate-pulse" : "bg-red-50/50 border-red-200")
+                                : isWarning
+                                  ? (isDarkMode ? "bg-amber-950/20 border-amber-500/30" : "bg-amber-50/50 border-amber-200")
+                                  : (isDarkMode ? "bg-slate-900/40 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm shadow-slate-100")
                           }`}
                         >
-                          <span className="text-violet-500/80">›</span> {log}
+                          {/* Frozen Overlay */}
+                          {isFrozen && (
+                            <div className="absolute inset-0 bg-[#02000a]/20 backdrop-blur-[1px] flex items-center justify-center z-20">
+                              <span className="bg-cyan-500 text-white font-extrabold text-[9px] uppercase tracking-widest px-3 py-1 rounded-full shadow-md animate-pulse">
+                                Session Frozen
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Header row */}
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm ${
+                                isFlagged 
+                                  ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                                  : "bg-violet-600/10 text-violet-500 border border-violet-500/20"
+                              }`}>
+                                {candidate.avatar}
+                              </div>
+                              <div>
+                                <h4 className={`text-xs font-bold transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                                  {candidate.name}
+                                </h4>
+                                <p className="text-[10px] text-slate-500">{candidate.course}</p>
+                              </div>
+                            </div>
+
+                            {/* Status tag */}
+                            <span className={`text-[8px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                              isFrozen
+                                ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                                : isFlagged
+                                  ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
+                                  : isWarning
+                                    ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                    : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            }`}>
+                              {candidate.status}
+                            </span>
+                          </div>
+
+                          {/* Mock Webcam Frame */}
+                          <div className={`h-24 rounded-xl border relative overflow-hidden flex flex-col items-center justify-center ${
+                            isDarkMode ? "bg-slate-955/60 border-white/5" : "bg-slate-100 border-slate-200"
+                          }`}>
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.03)_0%,transparent_70%)]" />
+                            <div className={`w-8 h-8 rounded-full border flex items-center justify-center relative ${
+                              isFlagged 
+                                ? "border-red-500/30 bg-red-500/5 text-red-400" 
+                                : "border-violet-500/25 bg-violet-600/5 text-violet-400"
+                            }`}>
+                              <Video size={12} className={isFlagged ? "animate-pulse" : ""} />
+                            </div>
+                            <span className={`text-[7.5px] font-mono mt-1.5 ${isFlagged ? "text-red-400 font-bold" : "text-slate-500"}`}>
+                              {isFlagged ? "Webcam Flagged - Gaze Left" : "Webcam Feed: Operational"}
+                            </span>
+
+                            {/* Scanlines indicator */}
+                            <div className="absolute top-1 left-2 flex items-center gap-1">
+                              <span className={`w-1.5 h-1.5 rounded-full animate-ping ${isFlagged ? "bg-red-500" : "bg-emerald-500"}`} />
+                              <span className={`text-[6.5px] uppercase font-bold tracking-widest ${isFlagged ? "text-red-400" : "text-slate-400"}`}>
+                                {isFlagged ? "ALERT" : "LIVE"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Integrity score progress bar */}
+                          <div className="mt-3.5 space-y-1">
+                            <div className="flex justify-between text-[8.5px] font-bold text-slate-500 uppercase">
+                              <span>Integrity Metric</span>
+                              <span className={isFlagged ? "text-red-400" : "text-slate-300"}>{candidate.integrity}</span>
+                            </div>
+                            <div className={`h-1.5 rounded-full w-full ${isDarkMode ? "bg-white/5" : "bg-slate-200"}`}>
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  isFlagged ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-emerald-500"
+                                }`} 
+                                style={{ width: candidate.integrity }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Broadcast Msg Announcement Form */}
-                <div className="space-y-2">
-                  <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
-                    Broadcast Announcement
-                  </span>
+                {/* Column 3: Control Panel & Live Logs */}
+                <div className="lg:col-span-1 space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-700"}`}>
+                      Controller Node
+                    </h3>
+                  </div>
 
-                  <div className="flex gap-1.5">
-                    <input 
-                      type="text"
-                      placeholder="Send alert message to candidates..."
-                      value={broadcastMsg}
-                      onChange={(e) => setBroadcastMsg(e.target.value)}
-                      className={`flex-1 border rounded-xl px-3 py-2 text-[10px] focus:outline-none transition-all ${
-                        isDarkMode ? "bg-slate-950 border-white/10 text-white focus:border-violet-500" : "bg-white border-slate-200 text-slate-800 focus:border-violet-500 shadow-sm"
-                      }`}
-                    />
-                    <button 
-                      onClick={() => {
-                        if (!broadcastMsg.trim()) return;
-                        const time = new Date().toTimeString().split(' ')[0];
-                        setCcLogs(prev => [`[${time}] [BROADCAST] Alert: "${broadcastMsg}"`, ...prev.slice(0, 8)]);
-                        setBroadcastMsg("");
-                        toast.success("Broadcast announcement sent!");
-                      }}
-                      className="px-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-violet-600/10"
-                    >
-                      <Send size={10} />
-                    </button>
+                  <div className={`p-6 rounded-[24px] border space-y-5 ${
+                    isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
+                  }`}>
+                    {/* Event Select Buttons */}
+                    <div className="space-y-2">
+                      <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                        Select Simulation Event
+                      </span>
+                      
+                      <div className={`flex flex-col gap-1.5 p-1 rounded-2xl ${isDarkMode ? "bg-slate-950/60 border border-white/5" : "bg-slate-200/50 border border-slate-200"}`}>
+                        <button 
+                          onClick={() => setCcEvent("normal")}
+                          className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                            ccEvent === "normal" 
+                              ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10" 
+                              : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                          }`}
+                        >
+                          <span>Normal Class flow</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        </button>
+                        
+                        <button 
+                          onClick={() => setCcEvent("cheat")}
+                          className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                            ccEvent === "cheat" 
+                              ? "bg-red-600 border-red-500 text-white shadow-md shadow-red-600/10 animate-pulse" 
+                              : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                          }`}
+                        >
+                          <span>Simulate Cheating Alerts</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                        </button>
+
+                        <button 
+                          onClick={() => setCcEvent("frozen")}
+                          className={`py-2 px-3 rounded-xl text-[9px] font-extrabold uppercase transition-all text-left flex items-center justify-between border ${
+                            ccEvent === "frozen" 
+                              ? "bg-cyan-600 border-cyan-500 text-white shadow-md shadow-cyan-600/10" 
+                              : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                          }`}
+                        >
+                          <span>Freeze Exam Session</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live Output Console */}
+                    <div className="space-y-2">
+                      <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                        Edge Log Feed (Mumbai-01)
+                      </span>
+
+                      <div className={`p-4 rounded-2xl h-36 font-mono text-[9px] overflow-y-auto space-y-1.5 transition-all ${
+                        isDarkMode ? "bg-slate-950 text-slate-400 border border-white/5" : "bg-white text-slate-600 border border-slate-200 shadow-inner"
+                      }`}>
+                        {ccLogs.map((log, idx) => {
+                          const isAlert = log.includes("[ALERT]");
+                          const isWarn = log.includes("[WARNING]");
+                          const isSys = log.includes("[SYSTEM]");
+                          const isAnn = log.includes("[BROADCAST]");
+                          
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`leading-normal ${
+                                isAlert 
+                                  ? "text-red-400 font-bold" 
+                                  : isWarn
+                                    ? "text-amber-400"
+                                    : isSys
+                                      ? "text-cyan-400"
+                                      : isAnn
+                                        ? "text-fuchsia-400 font-bold"
+                                        : "text-slate-400"
+                              }`}
+                            >
+                              <span className="text-violet-500/80">›</span> {log}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Broadcast Msg Announcement Form */}
+                    <div className="space-y-2">
+                      <span className="text-[8px] text-slate-500 block uppercase font-bold tracking-widest">
+                        Broadcast Announcement
+                      </span>
+
+                      <div className="flex gap-1.5">
+                        <input 
+                          type="text"
+                          placeholder="Send alert message to candidates..."
+                          value={broadcastMsg}
+                          onChange={(e) => setBroadcastMsg(e.target.value)}
+                          className={`flex-1 border rounded-xl px-3 py-2 text-[10px] focus:outline-none transition-all ${
+                            isDarkMode ? "bg-slate-950 border-white/10 text-white focus:border-violet-500" : "bg-white border-slate-200 text-slate-800 focus:border-violet-500 shadow-sm"
+                          }`}
+                        />
+                        <button 
+                          onClick={() => {
+                            if (!broadcastMsg.trim()) return;
+                            const time = new Date().toTimeString().split(' ')[0];
+                            setCcLogs(prev => [`[${time}] [BROADCAST] Alert: "${broadcastMsg}"`, ...prev.slice(0, 8)]);
+                            setBroadcastMsg("");
+                            toast.success("Broadcast announcement sent!");
+                          }}
+                          className="px-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-violet-600/10"
+                        >
+                          <Send size={10} />
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
               </div>
             </div>
-
           </div>
         </div>
       </section>
