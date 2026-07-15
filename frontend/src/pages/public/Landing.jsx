@@ -132,7 +132,7 @@ const PremiumBentoCard = ({ children, className, glowColor = "rgba(124, 92, 252,
       <div 
         className="flex flex-col h-full relative z-20 pointer-events-auto"
         style={{ 
-          transform: isHovered ? "translateZ(60px)" : "translateZ(0px)", 
+          transform: isHovered ? "translateZ(45px)" : "translateZ(12px)", 
           transition: "transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
           transformStyle: "preserve-3d"
         }}
@@ -622,7 +622,7 @@ export const Landing = () => {
       icon: Clock,
       glowColor: "rgba(239, 68, 68, 0.45)",
       badge: "Fail-Safe",
-      className: "md:col-span-2",
+      className: "md:col-span-1",
       visualWidget: (
         <div className="w-full bg-[#050212]/90 border border-white/[0.04] p-4 rounded-2xl flex flex-col justify-between group-hover:border-red-500/20 transition-all min-h-[170px] text-left">
           <div className="flex justify-between items-center">
