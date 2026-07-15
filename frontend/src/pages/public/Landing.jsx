@@ -332,11 +332,11 @@ export const Landing = () => {
       badge: "Telemetry-Ready",
       className: "md:col-span-2",
       visualWidget: (
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 w-full p-4 rounded-2xl group-hover:border-violet-500/20 transition-all min-h-[170px] relative overflow-hidden text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 w-full p-4 rounded-[24px] group-hover:border-violet-500/20 transition-all min-h-[170px] relative overflow-hidden text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
-          <div className={`flex flex-col items-center justify-center p-3 border rounded-xl relative ${
-            isDarkMode ? "border-white/[0.03] bg-white/[0.01]" : "border-slate-200 bg-white"
+          <div className={`flex flex-col items-center justify-center p-3 border rounded-xl relative transition-colors duration-500 ${
+            isDarkMode ? "border-white/[0.03] bg-slate-950/40" : "border-slate-200 bg-white shadow-sm"
           }`}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(124,92,252,0.05)_0%,transparent_70%)]" />
             <div className={`w-14 h-14 rounded-full border flex items-center justify-center relative ${
@@ -358,8 +358,8 @@ export const Landing = () => {
               {calibState === "calibrating" ? "Calibrating..." : "Calibrate"}
             </button>
           </div>
-          <div className={`flex flex-col justify-between p-3 border rounded-xl font-mono text-[9px] h-full overflow-hidden ${
-            isDarkMode ? "border-white/[0.03] bg-slate-950/60 text-slate-400" : "border-slate-200 bg-white text-slate-600"
+          <div className={`flex flex-col justify-between p-3 border rounded-xl font-mono text-[9px] h-full overflow-hidden transition-colors duration-500 ${
+            isDarkMode ? "border-white/[0.03] bg-slate-950/40 text-slate-400" : "border-slate-200 bg-white text-slate-600 shadow-sm"
           }`}>
             <div className={`text-[8px] font-bold uppercase tracking-widest border-b pb-1.5 mb-1.5 flex justify-between ${
               isDarkMode ? "text-slate-500 border-white/[0.04]" : "text-slate-400 border-slate-100"
@@ -387,30 +387,30 @@ export const Landing = () => {
       badge: "Weights-Core",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-fuchsia-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-fuchsia-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="space-y-3">
             <div className="space-y-1">
-              <div className={`flex justify-between text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              <div className={`flex justify-between text-[10px] font-bold uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
                 <span>Correct Answer (+{correctWeight})</span>
               </div>
               <input 
                 type="range" min={1} max={4} value={correctWeight}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => setCorrectWeight(parseInt(e.target.value))}
-                className="w-full accent-fuchsia-500 h-1 rounded-lg bg-white/5"
+                className="w-full accent-fuchsia-500 h-1.5 rounded-lg bg-slate-200 dark:bg-white/10 cursor-pointer"
               />
             </div>
             <div className="space-y-1">
-              <div className={`flex justify-between text-[10px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              <div className={`flex justify-between text-[10px] font-bold uppercase tracking-wide ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
                 <span>Negative Penalty (-{penaltyWeight})</span>
               </div>
               <input 
                 type="range" min={0} max={2} value={penaltyWeight}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => setPenaltyWeight(parseInt(e.target.value))}
-                className="w-full accent-fuchsia-500 h-1 rounded-lg bg-white/5"
+                className="w-full accent-fuchsia-500 h-1.5 rounded-lg bg-slate-200 dark:bg-white/10 cursor-pointer"
               />
             </div>
           </div>
@@ -432,11 +432,11 @@ export const Landing = () => {
       badge: "Isolated Node",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="space-y-2">
-            <div className={`flex justify-between items-center px-2 py-0.5 rounded border ${
+            <div className={`flex justify-between items-center px-2 py-0.5 rounded-xl border ${
               isDarkMode ? "bg-slate-950 border-white/5" : "bg-slate-200 border-slate-300"
             }`}>
               <span className={`text-[8px] font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-600"}`}>compiler.node</span>
@@ -457,8 +457,8 @@ export const Landing = () => {
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => setSandboxCode(e.target.value)}
               rows={2}
-              className={`w-full border rounded p-2 text-[9px] font-mono focus:outline-none resize-none ${
-                isDarkMode ? "bg-[#030014] border-white/10 text-slate-300" : "bg-white border-slate-300 text-slate-800"
+              className={`w-full border rounded-xl p-3 text-[10px] font-mono focus:outline-none resize-none transition-all ${
+                isDarkMode ? "bg-[#030014] border-white/10 text-slate-300 focus:border-emerald-500/30" : "bg-white border-slate-200 text-slate-800 focus:border-emerald-500"
               }`}
             />
           </div>
@@ -466,7 +466,7 @@ export const Landing = () => {
             <button 
               onClick={(e) => { e.stopPropagation(); handleRunSandbox(); }}
               disabled={isCompilingSandbox}
-              className="w-full py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[8px] uppercase tracking-widest transition-colors disabled:opacity-50"
+              className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-[8px] uppercase tracking-widest transition-colors disabled:opacity-50"
             >
               {isCompilingSandbox ? "Executing..." : "Run Sandbox"}
             </button>
@@ -490,24 +490,25 @@ export const Landing = () => {
       badge: "Analytics-Core",
       className: "md:col-span-2",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-cyan-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-cyan-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
-          <div className={`flex gap-2 mb-2 border-b pb-2 ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
+          <div className={`flex gap-1 mb-2 border rounded-full p-0.5 ${isDarkMode ? "bg-slate-950 border-white/5" : "bg-slate-200/50 border-slate-200/60"}`}>
             {["CSE", "ECE", "MECH"].map((dept) => (
               <button
                 key={dept}
                 onClick={(e) => { e.stopPropagation(); setSelectedDept(dept); }}
-                className={`flex-1 py-1 rounded text-[9px] font-bold uppercase transition-colors ${
+                className={`flex-1 py-1.5 rounded-full text-[9.5px] font-extrabold uppercase transition-all duration-300 border ${
                   selectedDept === dept 
-                    ? (isDarkMode ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400" : "bg-cyan-50 border border-cyan-200 text-cyan-600") 
-                    : (isDarkMode ? "bg-white/5 text-slate-400" : "bg-slate-200/50 text-slate-500")
+                    ? (isDarkMode ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400" : "bg-white border-slate-200 text-cyan-600 shadow-sm shadow-slate-100") 
+                    : (isDarkMode ? "bg-transparent border-transparent text-slate-500 hover:text-slate-300" : "bg-transparent border-transparent text-slate-500 hover:text-slate-800")
                 }`}
               >
-                {dept} Division
+                {dept}
               </button>
             ))}
           </div>
+          
           <div className="grid grid-cols-3 gap-2 text-center py-2">
             <div className={`border-r ${isDarkMode ? "border-white/[0.04]" : "border-slate-200"}`}>
               <span className="text-[8px] text-slate-500 block uppercase font-bold">Candidates</span>
@@ -534,8 +535,8 @@ export const Landing = () => {
       badge: "LTI-Compatible",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-orange-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-orange-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="grid grid-cols-2 gap-2 my-auto">
             {["Slack", "Canvas LTI", "Moodle", "GSuite Sync"].map((app) => (
@@ -544,10 +545,10 @@ export const Landing = () => {
                 onClick={(e) => e.stopPropagation()}
                 onMouseEnter={() => setActiveConn(app)}
                 onMouseLeave={() => setActiveConn(null)}
-                className={`p-2 rounded-lg border text-center transition-all cursor-pointer ${
+                className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
                   activeConn === app 
                     ? "bg-orange-600/10 border-orange-500/30 text-orange-500" 
-                    : (isDarkMode ? "bg-slate-950 border-white/5 text-slate-400" : "bg-white border-slate-200 text-slate-500")
+                    : (isDarkMode ? "bg-slate-950 border-white/5 text-slate-400" : "bg-white border-slate-200 text-slate-500 shadow-sm")
                 }`}
               >
                 <span className="text-[9px] font-bold block truncate">{app}</span>
@@ -569,26 +570,26 @@ export const Landing = () => {
       badge: "Excel-Core",
       className: "md:col-span-2",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-emerald-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
-          <div className="flex gap-2 mb-2">
+          <div className={`flex gap-1 mb-2 border p-0.5 rounded-full ${isDarkMode ? "bg-slate-950 border-white/5" : "bg-slate-200/50 border-slate-200/60"}`}>
             <button 
               onClick={(e) => { e.stopPropagation(); setSelectedTemplate("questions"); }}
-              className={`flex-1 py-1 rounded text-[8px] font-bold uppercase transition-colors ${
+              className={`flex-1 py-1 rounded-full text-[8.5px] font-extrabold uppercase transition-all duration-300 border ${
                 selectedTemplate === "questions" 
-                  ? "bg-emerald-600 text-white" 
-                  : (isDarkMode ? "bg-white/5 text-slate-400" : "bg-slate-200 text-slate-600")
+                  ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10" 
+                  : (isDarkMode ? "bg-transparent border-transparent text-slate-500" : "bg-transparent border-transparent text-slate-500")
               }`}
             >
               Questions Schema
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); setSelectedTemplate("students"); }}
-              className={`flex-1 py-1 rounded text-[8px] font-bold uppercase transition-colors ${
+              className={`flex-1 py-1 rounded-full text-[8.5px] font-extrabold uppercase transition-all duration-300 border ${
                 selectedTemplate === "students" 
-                  ? "bg-emerald-600 text-white" 
-                  : (isDarkMode ? "bg-white/5 text-slate-400" : "bg-slate-200 text-slate-600")
+                  ? "bg-emerald-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10" 
+                  : (isDarkMode ? "bg-transparent border-transparent text-slate-500" : "bg-transparent border-transparent text-slate-500")
               }`}
             >
               Students Schema
@@ -599,8 +600,8 @@ export const Landing = () => {
             onClick={(e) => e.stopPropagation()}
             value={templates[selectedTemplate]}
             rows={3}
-            className={`w-full border rounded-xl p-2.5 text-[8px] font-mono focus:outline-none resize-none ${
-              isDarkMode ? "bg-[#030014] border-white/10 text-slate-400" : "bg-white border-slate-300 text-slate-700"
+            className={`w-full border rounded-xl p-2.5 text-[8px] font-mono focus:outline-none resize-none transition-all ${
+              isDarkMode ? "bg-[#030014] border-white/10 text-slate-400" : "bg-white border-slate-200 text-slate-700"
             }`}
           />
         </div>
@@ -615,21 +616,36 @@ export const Landing = () => {
       badge: "System-Online",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-blue-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-blue-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="space-y-2 my-auto">
-            <div className="flex justify-between items-center text-[9px]">
-              <span className={isDarkMode ? "text-slate-400" : "text-slate-600"}>PostgreSQL</span>
-              <span className="text-emerald-500 font-bold">{pingTimes.postgres}</span>
+            <div className={`flex justify-between items-center text-[10px] p-2.5 rounded-xl border ${
+              isDarkMode ? "bg-slate-950 border-white/5" : "bg-white border-slate-200/50 shadow-sm"
+            }`}>
+              <span className={`font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>PostgreSQL</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-500 font-extrabold font-mono">{pingTimes.postgres}</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-[9px]">
-              <span className={isDarkMode ? "text-slate-400" : "text-slate-600"}>Redis Cache</span>
-              <span className="text-emerald-500 font-bold">{pingTimes.redis}</span>
+            <div className={`flex justify-between items-center text-[10px] p-2.5 rounded-xl border ${
+              isDarkMode ? "bg-slate-950 border-white/5" : "bg-white border-slate-200/50 shadow-sm"
+            }`}>
+              <span className={`font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Redis Cache</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-500 font-extrabold font-mono">{pingTimes.redis}</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-[9px]">
-              <span className={isDarkMode ? "text-slate-400" : "text-slate-600"}>Socket.IO Heartbeat</span>
-              <span className="text-emerald-500 font-bold">{pingTimes.socket}</span>
+            <div className={`flex justify-between items-center text-[10px] p-2.5 rounded-xl border ${
+              isDarkMode ? "bg-slate-950 border-white/5" : "bg-white border-slate-200/50 shadow-sm"
+            }`}>
+              <span className={`font-semibold ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Sockets Heartbeat</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-500 font-extrabold font-mono">{pingTimes.socket}</span>
+              </div>
             </div>
           </div>
           <button 
@@ -652,16 +668,16 @@ export const Landing = () => {
       badge: "AI-Companion",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-purple-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-purple-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
-          <div className={`border rounded-lg p-2 h-20 overflow-y-auto space-y-1.5 text-[8px] ${
-            isDarkMode ? "bg-[#030014] border-white/5" : "bg-white border-slate-200"
+          <div className={`border rounded-xl p-2.5 h-20 overflow-y-auto space-y-1.5 text-[8px] transition-all ${
+            isDarkMode ? "bg-[#030014] border-white/5" : "bg-white border-slate-200 shadow-inner"
           }`}>
             {chatLogs.map((msg, idx) => (
               <div key={idx} className={msg.sender === "You" ? "text-right" : "text-left"}>
                 <span className="text-slate-500 block text-[6.5px] uppercase font-bold">{msg.sender}</span>
-                <p className={`mt-0.5 inline-block px-2 py-0.5 rounded-lg max-w-[85%] ${
+                <p className={`mt-0.5 inline-block px-2.5 py-1 rounded-lg max-w-[85%] text-[8px] ${
                   isDarkMode ? "bg-white/5 text-white" : "bg-slate-100 text-slate-800"
                 }`}>{msg.text}</p>
               </div>
@@ -674,11 +690,11 @@ export const Landing = () => {
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => setChatInput(e.target.value)}
               placeholder="Ask AI..."
-              className={`flex-1 border rounded-lg px-2 py-1 text-[9px] focus:outline-none ${
-                isDarkMode ? "bg-slate-950 border-white/10 text-white" : "bg-white border-slate-300 text-slate-800"
+              className={`flex-1 border rounded-xl px-3.5 py-2 text-[10px] focus:outline-none transition-all ${
+                isDarkMode ? "bg-slate-950 border-white/10 text-white focus:border-purple-500" : "bg-white border-slate-300 text-slate-800 focus:border-purple-500"
               }`}
             />
-            <button type="submit" className="p-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-all shadow-sm">
+            <button type="submit" className="p-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all shadow-md shadow-purple-600/15 flex items-center justify-center">
               <Send size={10} />
             </button>
           </form>
@@ -694,22 +710,22 @@ export const Landing = () => {
       badge: "Fail-Safe",
       className: "md:col-span-1",
       visualWidget: (
-        <div className={`w-full p-4 rounded-2xl flex flex-col justify-between group-hover:border-red-500/20 transition-all min-h-[170px] text-left border ${
-          isDarkMode ? "bg-[#050212]/90 border-white/[0.04]" : "bg-slate-100/50 border-slate-200"
+        <div className={`w-full p-4 rounded-[24px] flex flex-col justify-between group-hover:border-red-500/20 transition-all min-h-[170px] text-left border ${
+          isDarkMode ? "bg-[#0b081e] border-white/[0.04]" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5 text-red-500 animate-pulse">
               <Clock size={12} />
               <span className="text-[10px] font-bold font-mono">{formatTime(secondsLeft)}</span>
             </div>
-            <span className="text-[8px] text-slate-500 uppercase tracking-widest">Active Limit</span>
+            <span className="text-[8px] text-slate-500 uppercase tracking-widest font-extrabold">Active Limit</span>
           </div>
           <div className="space-y-2 mt-2">
             <input 
               type="range" min={0} max={100} value={timelineVal}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => setTimelineVal(parseInt(e.target.value))}
-              className="w-full accent-red-500 h-1 rounded-lg bg-white/5"
+              className="w-full accent-red-500 h-1.5 rounded-lg bg-slate-200 dark:bg-white/10 cursor-pointer"
             />
             <div className="space-y-0.5">
               <h4 className="text-[9px] font-bold text-red-500 uppercase tracking-wider">{getTimelineState().t}</h4>
