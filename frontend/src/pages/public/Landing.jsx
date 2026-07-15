@@ -929,7 +929,7 @@ export const Landing = () => {
           The Advanced Assessment Architecture
         </div>
 
-        <h1 className={`text-5xl md:text-7.5xl font-black tracking-tight leading-[1.02] max-w-6xl mb-8 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+        <h1 className={`text-5xl md:text-8xl font-black tracking-tight leading-[1.02] max-w-6xl mb-8 transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
           The <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">Futuristic Standard</span><br className="hidden md:block" /> for Online Examinations
         </h1>
 
