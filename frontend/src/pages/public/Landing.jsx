@@ -937,30 +937,7 @@ export const Landing = () => {
           Designed for maximum scale, flawless integrity, and extreme speed. Bulk import 2,000+ questions in seconds, track student activity in real-time, and auto-grade responses with custom scoring frameworks.
         </p>
 
-        {/* ── PARALLAX FLOATING WIDGETS ── */}
-        <div 
-          className={`absolute top-[38%] left-[3%] xl:left-[calc(50%-620px)] pointer-events-none hidden lg:block border p-4 rounded-[20px] shadow-2xl transition-all duration-500 z-20 ${
-            isDarkMode ? "border-white/5 bg-[#0a0815]/85 text-white" : "border-slate-200/80 bg-white/95 text-slate-800 shadow-slate-100"
-          }`}
-          style={{ transform: `translate(${parallaxOffset.x * 1.5}px, ${parallaxOffset.y * 1.5}px)` }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>WebSocket Stable</span>
-          </div>
-        </div>
 
-        <div 
-          className={`absolute top-[58%] right-[3%] xl:right-[calc(50%-620px)] pointer-events-none hidden lg:block border p-4 rounded-[20px] shadow-2xl transition-all duration-500 z-20 ${
-            isDarkMode ? "border-white/5 bg-[#0a0815]/85 text-white" : "border-slate-200/80 bg-white/95 text-slate-800 shadow-slate-100"
-          }`}
-          style={{ transform: `translate(${parallaxOffset.x * -1.5}px, ${parallaxOffset.y * -1.5}px)` }}
-        >
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-violet-500 animate-ping" />
-            <span className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>Proctor Active</span>
-          </div>
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-20 relative z-20">
           <a href="#proctor-calibration" className="px-8 py-4.5 bg-gradient-to-r from-violet-600 via-violet-500 to-fuchsia-600 text-white font-bold rounded-xl shadow-2xl shadow-violet-600/35 hover:shadow-violet-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shimmer-btn">
