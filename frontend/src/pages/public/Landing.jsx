@@ -965,12 +965,16 @@ export const Landing = () => {
           />
 
           {/* Modal Focus Card */}
-          <div className="w-full max-w-lg glass-card-wow rounded-3xl p-6 md:p-8 relative z-10 border border-white/10 transform scale-100 transition-transform duration-300">
+          <div className={`w-full max-w-lg glass-card-wow rounded-3xl p-6 md:p-8 relative z-10 transform scale-100 transition-all duration-300 border ${
+            isDarkMode ? "border-white/10" : "border-slate-200"
+          }`}>
             
             {/* Close */}
             <button 
               onClick={() => setSelectedCard(null)}
-              className="absolute top-5 right-5 p-2 bg-white/5 border border-white/10 text-slate-400 hover:text-white rounded-full transition-colors"
+              className={`absolute top-5 right-5 p-2 rounded-full transition-colors focus:outline-none ${
+                isDarkMode ? "bg-white/5 border border-white/10 text-slate-400 hover:text-white" : "bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900"
+              }`}
             >
               <X size={16} />
             </button>
@@ -981,8 +985,8 @@ export const Landing = () => {
                 {React.createElement(selectedCard.icon, { size: 20 })}
               </div>
               <div>
-                <h3 className="text-lg font-black text-white">{selectedCard.title}</h3>
-                <p className="text-xs text-slate-400">Deep Integration Mockup</p>
+                <h3 className={`text-lg font-black transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>{selectedCard.title}</h3>
+                <p className={`text-xs transition-colors ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Deep Integration Mockup</p>
               </div>
             </div>
 
@@ -991,7 +995,9 @@ export const Landing = () => {
               {selectedCard.visualWidget}
             </div>
 
-            <p className="text-xs md:text-sm text-slate-400 leading-relaxed mb-6 font-normal">
+            <p className={`text-xs md:text-sm leading-relaxed mb-6 font-normal transition-colors ${
+              isDarkMode ? "text-slate-400" : "text-slate-600"
+            }`}>
               {selectedCard.description}
             </p>
 
@@ -1162,11 +1168,15 @@ export const Landing = () => {
         <div className="fixed inset-0 bg-[#02000a]/90 backdrop-blur-md z-50 flex items-center justify-center p-6 transition-all duration-300">
           <div className="absolute w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none bg-violet-500/10" />
           
-          <div className="w-full max-w-2xl glass-card-wow rounded-3xl p-8 relative z-10 border border-white/10 max-h-[85vh] overflow-y-auto">
+          <div className={`w-full max-w-2xl glass-card-wow rounded-3xl p-8 relative z-10 max-h-[85vh] overflow-y-auto border ${
+            isDarkMode ? "border-white/10" : "border-slate-200"
+          }`}>
             {/* Close Button */}
             <button 
               onClick={() => setActiveFooterModal(null)}
-              className="absolute top-5 right-5 p-2 bg-white/5 border border-white/10 text-slate-400 hover:text-white rounded-full transition-colors focus:outline-none"
+              className={`absolute top-5 right-5 p-2 rounded-full transition-colors focus:outline-none ${
+                isDarkMode ? "bg-white/5 border border-white/10 text-slate-400 hover:text-white" : "bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900"
+              }`}
             >
               <X size={16} />
             </button>
@@ -1174,21 +1184,21 @@ export const Landing = () => {
             {/* Content */}
             {activeFooterModal === "privacy" && (
               <div className="space-y-4 text-left">
-                <h3 className="text-2xl font-black text-white">Privacy Policy</h3>
-                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Effective Date: July 15, 2026</p>
-                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                <h3 className={`text-2xl font-black transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>Privacy Policy</h3>
+                <p className={`text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Effective Date: July 15, 2026</p>
+                <div className={`text-sm space-y-3 leading-relaxed font-normal animate-fade-in transition-colors ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                   <p>
                     Skillbrix Solutions is committed to protecting your academic and telemetry privacy. This policy outlines how candidate verification data is handled during active examination sessions.
                   </p>
-                  <h4 className="text-white font-bold mt-4">1. Local Telemetry Verification</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>1. Local Telemetry Verification</h4>
                   <p>
                     All webcam signals, eye-gaze tracking parameters, and face positions are processed strictly inside the student's browser sandbox using client-side WebAssembly scripts. No raw video feed is uploaded or stored on our servers.
                   </p>
-                  <h4 className="text-white font-bold mt-4">2. WebSocket Security</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>2. WebSocket Security</h4>
                   <p>
                     Integrity status and tab-focus logs are sent over secure WebSocket channels. The telemetry checks are encrypted in-transit and cleared automatically from active session indices within 48 hours after exam commits.
                   </p>
-                  <h4 className="text-white font-bold mt-4">3. Data Compliance</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>3. Data Compliance</h4>
                   <p>
                     Skillbrix complies with global academic privacy mandates. Candidate data is strictly restricted to department administrators and is never sold or utilized for profiling.
                   </p>
@@ -1198,21 +1208,21 @@ export const Landing = () => {
 
             {activeFooterModal === "terms" && (
               <div className="space-y-4 text-left">
-                <h3 className="text-2xl font-black text-white">Terms of Service</h3>
-                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Last Updated: July 15, 2026</p>
-                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                <h3 className={`text-2xl font-black transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>Terms of Service</h3>
+                <p className={`text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Last Updated: July 15, 2026</p>
+                <div className={`text-sm space-y-3 leading-relaxed font-normal animate-fade-in transition-colors ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                   <p>
                     Welcome to Skillbrix. By accessing or conducting assessments on our platform, you agree to these academic integrity terms.
                   </p>
-                  <h4 className="text-white font-bold mt-4">1. Integrity Enforceability</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>1. Integrity Enforceability</h4>
                   <p>
                     Exams on this portal are proctored. By entering an assessment session, candidates consent to tab-focus locking and screen integrity monitoring.
                   </p>
-                  <h4 className="text-white font-bold mt-4">2. Sandbox Resources</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>2. Sandbox Resources</h4>
                   <p>
                     The code execution sandbox supports sandboxed scripts. Abuse or execution of malicious commands will result in instant IP lockout and score nullification.
                   </p>
-                  <h4 className="text-white font-bold mt-4">3. System Commits</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>3. System Commits</h4>
                   <p>
                     Submissions are hard-committed on timer expiry. Any attempt to modify telemetry requests will result in an immediate automatic submit flag.
                   </p>
@@ -1222,21 +1232,21 @@ export const Landing = () => {
 
             {activeFooterModal === "support" && (
               <div className="space-y-4 text-left">
-                <h3 className="text-2xl font-black text-white">Developer Support Center</h3>
-                <p className="text-xs text-violet-400 font-bold uppercase tracking-wider">Available 24/7</p>
-                <div className="text-sm text-slate-300 space-y-3 leading-relaxed font-normal animate-fade-in">
+                <h3 className={`text-2xl font-black transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>Developer Support Center</h3>
+                <p className={`text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Available 24/7</p>
+                <div className={`text-sm space-y-3 leading-relaxed font-normal animate-fade-in transition-colors ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
                   <p>
                     Need assistance setting up schemas or checking database latency nodes? We are here to help.
                   </p>
-                  <h4 className="text-white font-bold mt-4">1. Direct Communication</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>1. Direct Communication</h4>
                   <p>
                     Reach our technical operations team directly at <span className="text-violet-400 font-bold">support@skillbrix.com</span> for system integrations or LTI keys.
                   </p>
-                  <h4 className="text-white font-bold mt-4">2. Helpdesk Assistant</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>2. Helpdesk Assistant</h4>
                   <p>
                     You can ask quick questions about template schemas, proctor parameters, or database tables directly using the AI chatbot inside the features grid.
                   </p>
-                  <h4 className="text-white font-bold mt-4">3. System Heartbeats</h4>
+                  <h4 className={`font-bold mt-4 transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>3. System Heartbeats</h4>
                   <p>
                     Check live service latencies in the Node Heartbeat card to diagnose Redis or PostgreSQL database network speed drops.
                   </p>
