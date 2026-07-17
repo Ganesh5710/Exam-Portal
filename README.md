@@ -50,8 +50,10 @@ Allows granular control over exam grading criteria, parameters, and policies.
 - **Local Persistence Fail-Safe**: Local storage auto-sync keeps answers safe during connectivity loss.
 
 ## Technology Stack
-* **Frontend**: React, TypeScript, TailwindCSS, Vite
-* **Backend**: Node.js, Express, Socket.io, TypeScript, Prisma (SQLite)
+* **Frontend**: React (Vite), Tailwind CSS, Vanilla CSS 3D Transforms, custom SVG Chart components
+* **Backend**: Node.js, Express, Secure WebSockets (Socket.io)
+* **Libraries & Databases**: SheetJS (XLSX parsing), PostgreSQL / SQLite, Prisma ORM
+* **Tooling**: Git, NPM, production builds via Vite/Rollup
 
 ## How to Run Locally
 
