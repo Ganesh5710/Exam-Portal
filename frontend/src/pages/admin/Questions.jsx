@@ -135,6 +135,7 @@ export const Questions = () => {
     }
   };
 
+  // Formats and exports the active questions list as a CSV file compatible with MS Excel
   const handleExportCSV = () => {
     if (questions.length === 0) {
       toast.error("No questions available to export.");
@@ -154,6 +155,7 @@ export const Questions = () => {
       "DepartmentName",
       "DepartmentCode",
     ];
+    // Map individual questions attributes to rows and wrap values in quotes to escape delimiters
     const rows = questions.map((q) => {
       const optionsStr = Array.isArray(q.options) ? q.options.join("; ") : "";
       const answersStr = Array.isArray(q.answers)
@@ -193,6 +195,7 @@ export const Questions = () => {
     toast.success("CSV Export downloaded successfully!");
   };
 
+  // Generates and downloads a complete JSON representation of the question database for backups
   const handleExportJSON = () => {
     if (questions.length === 0) {
       toast.error("No questions available to export.");
