@@ -20,8 +20,11 @@ import {
 import toast from "react-hot-toast";
 
 // Utility script loader for dynamic CDN models loading
+// Resolves a promise once the script tag has finished importing into the document header.
+// Used for loading script assets dynamically on-demand, such as the TensorFlow Face Detection CDN.
 const loadScript = (src) => {
   return new Promise((resolve, reject) => {
+    // If script is already registered in the document body, resolve immediately
     if (document.querySelector(`script[src="${src}"]`)) {
       resolve();
       return;
