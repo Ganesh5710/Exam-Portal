@@ -102,6 +102,7 @@ export const Settings = () => {
   };
 
   const handleDownloadBackup = (fileName) => {
+    // Triggers a file download stream from the backend backup static endpoint
     window.open(`/api/v1/backups/${fileName}`, "_blank");
   };
 
