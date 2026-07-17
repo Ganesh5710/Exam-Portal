@@ -304,6 +304,7 @@ export const ExamsPortal = () => {
     setShowAssignModal(true);
   };
 
+  // Toggles question inclusion status inside the exam composition form state
   const handleToggleQuestion = (qId) => {
     const current = [...formData.selectedQuestions];
     if (current.includes(qId)) {
@@ -316,6 +317,7 @@ export const ExamsPortal = () => {
     }
   };
 
+  // Toggles selected student ID mappings for active test enrollment
   const handleToggleStudent = (sId) => {
     const current = [...assignedStudentIds];
     if (current.includes(sId)) {
