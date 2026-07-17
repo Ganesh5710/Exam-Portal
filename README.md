@@ -77,3 +77,9 @@ The application is structured as a decoupled client-server architecture:
    ```bash
    npm run dev
    ```
+
+## Environment Variables
+Ensure you have a `.env` file populated in the `backend/` directory with the following keys:
+- `PORT`: Network port for backend microservice (defaults to 5000).
+- `DATABASE_URL`: Connection string for PostgreSQL / SQLite databases.
+- `JWT_SECRET`: Secret key for secure token signatures.
