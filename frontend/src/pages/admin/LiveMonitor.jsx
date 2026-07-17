@@ -26,13 +26,15 @@ export const LiveMonitor = () => {
   useEffect(() => {
     if (!socket) return;
 
-    // Join admin proctor room
+    // Join the secure admin proctor telemetry monitor room
     socket.emit("join-admin-monitor");
 
+    // Listen for live assessment candidate socket updates
     socket.on("live-sessions-update", (updatedSessions) => {
       setSessions(updatedSessions);
     });
 
+    // Listen for integrity rules violations (tab switches, webcam absences, look aways)
     socket.on("violation-alert", (alert) => {
       toast.error(
         `Proctor Alert: ${alert.studentName} flagged for ${alert.type}!`,
@@ -42,7 +44,7 @@ export const LiveMonitor = () => {
         },
       );
 
-      // Append to the real-time NOC violation log
+      // Append to the real-time NOC violation log panel
       const newAlert = {
         studentName: alert.studentName,
         type: alert.type.replace(/_/g, " "),
@@ -53,6 +55,7 @@ export const LiveMonitor = () => {
     });
 
     return () => {
+      // Cleanup WebSocket socket event listeners on unmount to prevent leaks
       socket.off("live-sessions-update");
       socket.off("violation-alert");
     };
@@ -95,6 +98,7 @@ export const LiveMonitor = () => {
     setAnnouncementText("");
   };
 
+  // Helper utility to format integer seconds remaining into mm:ss strings
   const formatRemainingTime = (secs) => {
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
