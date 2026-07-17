@@ -37,6 +37,12 @@ Provides administrators with absolute visibility into candidate exam behaviors i
 - **Visual Proctoring Panel**: Live simulations tracking cheat violations, offline heartbeats, frozen nodes, and status indicators.
 - **Violation Logging Node**: Real-time terminal feeds displaying time-stamped proctor event strings (e.g. gaze lookaway logs).
 
+### 3. Bulk Excel/CSV Importer
+Accelerates test creation by allowing massive questions batches to be processed instantly.
+- **2,000+ Questions Capacity**: Fully optimized file upload parser that processes 2k questions in a few seconds.
+- **Client-Side Validation**: Immediate schema audit (verifying correct choices, score bounds, negative weight limits) before DB commit.
+- **Custom Parsing Engine**: Built using modern XLSX spreadsheet libraries to parse Excel and CSV files with clear structure error highlight.
+
 ## Technology Stack
 * **Frontend**: React, TypeScript, TailwindCSS, Vite
 * **Backend**: Node.js, Express, Socket.io, TypeScript, Prisma (SQLite)
