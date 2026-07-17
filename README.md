@@ -61,6 +61,12 @@ The application is structured as a decoupled client-server architecture:
 - **`frontend/`**: Single-Page Application (SPA) built using React, optimized with Vite for fast local reloading and lightweight production builds.
 - **`backend/`**: Node.js microservice handling session state management, real-time proctored Socket channels, and REST API controllers.
 
+## API Endpoints Overview
+
+- **Auth Router**: `POST /api/auth/login`, `POST /api/auth/register` (Token-based user session handling).
+- **Assessment Router**: `GET /api/exams`, `POST /api/exams/submit` (Test content and score calculation engines).
+- **Proctor Router**: `POST /api/telemetry/log` (Real-time tracking session logs validation).
+
 ## How to Run Locally
 
 1. **Install dependencies**:
