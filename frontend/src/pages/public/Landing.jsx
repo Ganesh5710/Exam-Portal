@@ -919,6 +919,8 @@ export const Landing = () => {
       </div>
 
       {/* Navigation Header */}
+      {/* Premium capsule pill navbar with custom heights (72px) and wide max boundaries. */}
+      {/* Employs dynamic background opacity filters for dark and light modes, overlaying subtle inner-border gradient glows. */}
       <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[94%] max-w-7xl h-[72px] rounded-full border z-50 flex items-center justify-between px-4 pl-5 pr-4 transition-all duration-500 ${
         isDarkMode 
           ? "bg-[#0a0818]/90 border-white/[0.07] backdrop-blur-2xl text-white shadow-[0_12px_48px_-8px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.03)]" 
