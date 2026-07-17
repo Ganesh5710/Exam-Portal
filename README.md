@@ -43,6 +43,12 @@ Accelerates test creation by allowing massive questions batches to be processed 
 - **Client-Side Validation**: Immediate schema audit (verifying correct choices, score bounds, negative weight limits) before DB commit.
 - **Custom Parsing Engine**: Built using modern XLSX spreadsheet libraries to parse Excel and CSV files with clear structure error highlight.
 
+### 4. Flexible Scoring Engine
+Allows granular control over exam grading criteria, parameters, and policies.
+- **Negative Marking Support**: Configurable penalties for wrong options, avoiding random guessing.
+- **Autograde Execution**: Instantly calculates and commits final scores upon assessment submissions.
+- **Local Persistence Fail-Safe**: Local storage auto-sync keeps answers safe during connectivity loss.
+
 ## Technology Stack
 * **Frontend**: React, TypeScript, TailwindCSS, Vite
 * **Backend**: Node.js, Express, Socket.io, TypeScript, Prisma (SQLite)
