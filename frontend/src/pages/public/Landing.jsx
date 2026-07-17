@@ -64,10 +64,12 @@ const faqs = [
 ];
 
 // Ultra-Premium Interactive Bento Card Wrapper
+// Manages local state for mouse tracking and calculates 3D rotation angles (rotateX, rotateY)
+// to provide a dynamic, perspective-based parallax tilt effect on user interaction.
 const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 252, 0.25)", onClick, isDarkMode }) => {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 }); // Tracks current cursor cursor x,y coordinates relative to card bounds
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });       // Calculated degrees of tilt on the X and Y axes
+  const [isHovered, setIsHovered] = useState(false);       // Tracking hover status to toggle CSS scale classes
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -77,6 +79,7 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
 
     const width = rect.width;
     const height = rect.height;
+    // Calculate rotation limits: -22deg to 22deg max rotation angle
     const rotateX = ((y / height) - 0.5) * -22;
     const rotateY = ((x / width) - 0.5) * 22;
     
@@ -97,7 +100,7 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
       onClick={onClick}
       className={`relative rounded-[32px] transition-all duration-300 flex flex-col h-full ${className}`}
       style={{
-        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.04 : 1}, ${isHovered ? 1.04 : 1}, 1)`,
+        transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale3d(${isHovered ? 1.03 : 1}, ${isHovered ? 1.03 : 1}, 1)`,
         cursor: "pointer",
         transformStyle: "preserve-3d",
         transition: "transform 0.15s ease-out"
