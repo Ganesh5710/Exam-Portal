@@ -112,12 +112,14 @@ export const Dashboard = () => {
               (sum, s) => sum + (s.totalScore || 0),
               0,
             );
-            averageScore =
-              Math.round((totalScore / completedSubs.length) * 10) / 10;
+            // Prevent division-by-zero errors when calculating average scores and pass rates
+            averageScore = completedSubs.length > 0 ?
+              Math.round((totalScore / completedSubs.length) * 10) / 10 : 0;
             const passed = completedSubs.filter(
               (s) => (s.totalScore || 0) >= 40,
             ).length;
-            passRate = Math.round((passed / completedSubs.length) * 100);
+            passRate = completedSubs.length > 0 ? 
+              Math.round((passed / completedSubs.length) * 100) : 0;
           }
         }
       }
