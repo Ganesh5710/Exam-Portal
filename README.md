@@ -31,6 +31,12 @@ Skillbrix features a premium 3D perspective dashboard preview on its landing pag
 - Supports four dynamic, responsive floating metrics cards (`Integrity Signal`, `Peak Throughput`, `Completion Pulse`, `Review Velocity`).
 - Built custom visual data graphics (SVG sparklines, progressive circular charts, and bar charts) displaying live simulated telemetries.
 
+### 2. AI Proctoring Command Center
+Provides administrators with absolute visibility into candidate exam behaviors in real-time.
+- **WebSocket State Machine**: Direct integration updates individual candidate cards instantly on screen changes or webcam warnings.
+- **Visual Proctoring Panel**: Live simulations tracking cheat violations, offline heartbeats, frozen nodes, and status indicators.
+- **Violation Logging Node**: Real-time terminal feeds displaying time-stamped proctor event strings (e.g. gaze lookaway logs).
+
 ## Technology Stack
 * **Frontend**: React, TypeScript, TailwindCSS, Vite
 * **Backend**: Node.js, Express, Socket.io, TypeScript, Prisma (SQLite)
