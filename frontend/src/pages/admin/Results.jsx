@@ -307,9 +307,11 @@ export const Results = () => {
     }
   };
 
+  // Logic helper to compute the maximum total exam score dynamically and format passing statuses
   const getScoreDisplay = (sub) => {
     const passed = sub.isPassed;
     const score = sub.totalScore ?? 0;
+    // Map max marks by summing up score weights of nested questions inside the exam questions list
     const maxMark =
       sub.exam?.examQuestions && sub.exam.examQuestions.length > 0
         ? sub.exam.examQuestions.reduce(
