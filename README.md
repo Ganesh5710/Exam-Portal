@@ -83,3 +83,9 @@ Ensure you have a `.env` file populated in the `backend/` directory with the fol
 - `PORT`: Network port for backend microservice (defaults to 5000).
 - `DATABASE_URL`: Connection string for PostgreSQL / SQLite databases.
 - `JWT_SECRET`: Secret key for secure token signatures.
+
+## Contributing
+We welcome contributions to Skillbrix! Please follow these standards:
+- Write semantic, clean code with structured styles.
+- Commit messages should follow the conventional commit format (e.g. `feat: ...`, `fix: ...`, `docs: ...`).
+- Test features thoroughly on local dev servers before submitting pull requests.
