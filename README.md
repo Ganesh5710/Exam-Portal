@@ -2,6 +2,12 @@
 
 An advanced, secure, and modern web-based examination platform featuring real-time AI-powered proctoring, a premium interactive 3D command center preview, automatic grading, and comprehensive administrator results dashboards.
 
+## Core Capabilities
+
+- **Interactive 3D Preview Widget**: Live perspective dashboard layout featuring mouse parallax rotation and floating telemetry overlays.
+- **WebSocket-Driven Monitor**: Instant WebSocket proctor updates tracking focus switches and gaze violations in real-time.
+- **Bulk Question Importer**: Fast parsing of up to 2,000+ questions from Excel/CSV templates with custom marking keys.
+
 ## Key Features
 
 ### 👨‍🎓 Student Terminal
