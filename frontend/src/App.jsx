@@ -27,6 +27,8 @@ import ExamTerminal from "./pages/student/ExamTerminal";
 import SubmissionConfirmation from "./pages/student/SubmissionConfirmation";
 
 // Route guards
+// Prevents unauthorized navigation by validating user roles and authentication status.
+// Redirects unauthenticated users to /login and handles role-based fallback pathways.
 const RequireAuth = ({ children, allowedRole }) => {
   const { user, loading } = useAuth();
 
@@ -38,10 +40,12 @@ const RequireAuth = ({ children, allowedRole }) => {
     );
   }
 
+  // Redirect to login if user object does not exist in local auth state context
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // Enforce role authorization parameters (e.g. STUDENT / ADMIN)
   if (user.role !== allowedRole) {
     return (
       <Navigate
