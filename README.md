@@ -89,3 +89,6 @@ We welcome contributions to Skillbrix! Please follow these standards:
 - Write semantic, clean code with structured styles.
 - Commit messages should follow the conventional commit format (e.g. `feat: ...`, `fix: ...`, `docs: ...`).
 - Test features thoroughly on local dev servers before submitting pull requests.
+
+## License
+Skillbrix is licensed under the MIT License. See [LICENSE](LICENSE) for details.
