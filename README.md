@@ -55,6 +55,12 @@ Allows granular control over exam grading criteria, parameters, and policies.
 * **Libraries & Databases**: SheetJS (XLSX parsing), PostgreSQL / SQLite, Prisma ORM
 * **Tooling**: Git, NPM, production builds via Vite/Rollup
 
+## System Architecture
+
+The application is structured as a decoupled client-server architecture:
+- **`frontend/`**: Single-Page Application (SPA) built using React, optimized with Vite for fast local reloading and lightweight production builds.
+- **`backend/`**: Node.js microservice handling session state management, real-time proctored Socket channels, and REST API controllers.
+
 ## How to Run Locally
 
 1. **Install dependencies**:
