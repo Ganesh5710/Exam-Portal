@@ -23,6 +23,14 @@ An advanced, secure, and modern web-based examination platform featuring real-ti
 * **Proctor Commands**: Force-terminate exam sessions or extend timers in real-time.
 * **Flexible Results Management**: Manual grading interface for descriptive questions, dynamic grade/percentage calculations, and bulk publish options.
 
+## Feature Walkthroughs
+
+### 1. Interactive 3D Mockup
+Skillbrix features a premium 3D perspective dashboard preview on its landing page. 
+- Integrated custom CSS 3D transforms (`perspective`, `rotateX`, `rotateY`) matching local mouse coordinate movements.
+- Supports four dynamic, responsive floating metrics cards (`Integrity Signal`, `Peak Throughput`, `Completion Pulse`, `Review Velocity`).
+- Built custom visual data graphics (SVG sparklines, progressive circular charts, and bar charts) displaying live simulated telemetries.
+
 ## Technology Stack
 * **Frontend**: React, TypeScript, TailwindCSS, Vite
 * **Backend**: Node.js, Express, Socket.io, TypeScript, Prisma (SQLite)
