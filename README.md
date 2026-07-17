@@ -1,6 +1,6 @@
-# SecureExam: Enterprise Online Exam Portal
+# Skillbrix: Next-Generation Online Examination Portal
 
-An advanced, secure, and modern web-based examination platform featuring AI-powered proctoring, real-time live monitoring, automatic grading, anti-cheat detection, and comprehensive admin results dashboards.
+An advanced, secure, and modern web-based examination platform featuring real-time AI-powered proctoring, a premium interactive 3D command center preview, automatic grading, and comprehensive administrator results dashboards.
 
 ## Key Features
 
