@@ -64,7 +64,19 @@ export const CompatibilityCheck = () => {
   };
 
   const handleStartExam = () => {
-    navigate(`/student/exams/${id}/terminal`);
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      element.requestFullscreen()
+        .then(() => {
+          navigate(`/student/exams/${id}/terminal`);
+        })
+        .catch(() => {
+          // Fallback if rejected (safari restriction or permissions)
+          navigate(`/student/exams/${id}/terminal`);
+        });
+    } else {
+      navigate(`/student/exams/${id}/terminal`);
+    }
   };
 
   const allPassed = browserPassed && networkPassed && cameraPassed;

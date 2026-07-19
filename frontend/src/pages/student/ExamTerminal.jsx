@@ -65,6 +65,18 @@ export const ExamTerminal = () => {
   const violationSustainedSeconds = useRef({});
 
   const isSubmitting = useRef(false);
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+
+  // Fullscreen state listener to dynamically lock/unlock exam view
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFsChange);
+    };
+  }, []);
 
   // Fetch exam questions
   useEffect(() => {
@@ -614,6 +626,42 @@ export const ExamTerminal = () => {
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
+
+  if (exam?.fullscreenRequired && !isFullscreen) {
+    return (
+      <div className="min-h-screen bg-[#02000a] text-white flex flex-col items-center justify-center p-6 no-select">
+        <div className="max-w-md w-full bg-slate-900 border border-red-500/30 rounded-2xl p-8 text-center space-y-6 shadow-2xl shadow-red-500/5">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-red-500/10 flex items-center justify-center text-red-400">
+            <AlertOctagon size={48} className="animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black tracking-tight text-white">Fullscreen Lockdown Active</h2>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              This examination requires absolute fullscreen mode for academic integrity. Access to exam contents is locked until fullscreen is restored.
+            </p>
+          </div>
+          
+          <div className="bg-slate-950 p-4 border border-slate-850 rounded-xl text-left space-y-2 text-xs text-slate-400">
+            <div className="flex gap-2.5">
+              <span className="text-red-400 font-bold">⚠️ Warning:</span>
+              <span>Exiting fullscreen mode logs security violations and alerts proctors in real-time.</span>
+            </div>
+            <div className="flex gap-2.5 border-t border-slate-800 pt-2">
+              <span className="text-red-400 font-bold">⚠️ Threshold:</span>
+              <span>Exceeding 5 security violations will result in automatic exam submission.</span>
+            </div>
+          </div>
+
+          <button
+            onClick={enterFullscreen}
+            className="w-full py-3.5 bg-violet-600 hover:bg-violet-750 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-violet-600/25 flex items-center justify-center gap-2"
+          >
+            <Maximize2 size={16} /> Restore Fullscreen & Unlock Exam
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col no-select">
