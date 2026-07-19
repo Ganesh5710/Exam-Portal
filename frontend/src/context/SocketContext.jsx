@@ -27,7 +27,10 @@ export const SocketProvider = ({ children }) => {
     }
 
     const configuredApiUrl = import.meta.env.VITE_API_URL || "";
+    // Normalize VITE_API_URL prefix into base server protocol target for Socket client
     const socketUrl = configuredApiUrl ? configuredApiUrl.replace(/\/api\/v1\/?$/, "") : window.location.origin;
+    
+    // Connect client using auto-recovery, timeout delays, and reconnect limitations
     const newSocket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,
