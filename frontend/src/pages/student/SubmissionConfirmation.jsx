@@ -16,10 +16,18 @@ export const SubmissionConfirmation = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let intervalId;
+
     const fetchResult = async () => {
       try {
         const res = await api.get(`/submissions/my-submission/${id}`);
-        setSubmission(res.data.data);
+        const data = res.data.data;
+        setSubmission(data);
+        
+        // Stop polling the database once the grades are published
+        if (data && data.status === "PUBLISHED") {
+          clearInterval(intervalId);
+        }
       } catch (err) {
         // silently fail (e.g. if submission not found yet)
       } finally {
@@ -29,9 +37,13 @@ export const SubmissionConfirmation = () => {
 
     if (id) {
       fetchResult();
-      const interval = setInterval(fetchResult, 30000); // Poll every 30 seconds
-      return () => clearInterval(interval);
+      // Poll every 3 seconds for instant results release detection without manual page refresh
+      intervalId = setInterval(fetchResult, 3000);
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [id]);
 
   const isPublished = submission && submission.status === "PUBLISHED";
