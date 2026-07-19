@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext";
 import { 
   Shield, 
   ArrowRight, 
@@ -162,10 +163,11 @@ const PremiumBentoCard = ({ id, children, className, glowColor = "rgba(124, 92, 
   );
 };
 export const Landing = () => {
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
   const [activeFaq, setActiveFaq] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [activeFooterModal, setActiveFooterModal] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   
   // Safe Timer Engine (seconds tracking)
   const [secondsLeft, setSecondsLeft] = useState(5399); 
@@ -955,7 +957,7 @@ export const Landing = () => {
         <div className="flex items-center gap-3 relative z-10">
           {/* Theme Toggle */}
           <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 ${
               isDarkMode 
                 ? "bg-white/[0.05] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.1]" 
