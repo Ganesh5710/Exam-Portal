@@ -10,12 +10,14 @@ const logger_1 = require("../config/logger");
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026-portal';
 const protect = async (req, res, next) => {
     let token;
+    // Extract access tokens from request Authorization headers or HTTP-only cookie parameters
     if (req.headers.authorization?.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
     else if (req.cookies?.accessToken) {
         token = req.cookies.accessToken;
     }
+    // Block operations immediately if token is not available
     if (!token) {
         return res.status(401).json({ success: false, message: 'Authentication required. Please login.' });
     }
