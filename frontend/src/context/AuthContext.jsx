@@ -13,11 +13,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Runs immediately on render startup to verify if cached sessions exist inside local storage
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("accessToken");
       const savedUser = localStorage.getItem("user");
 
+      // Verify availability of token metadata before matching user profile
       if (token && savedUser) {
         setUser(JSON.parse(savedUser));
       }
