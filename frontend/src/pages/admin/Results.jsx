@@ -18,6 +18,7 @@ import {
   InboxIcon,
   Trash2,
   Pencil,
+  Download,
   AlertOctagon,
   BarChart2,
   CheckSquare,
@@ -264,6 +265,79 @@ export const Results = () => {
     }
   };
 
+  // Fetches up to 10,000 candidate submissions matching current filters and downloads as CSV (Excel compatible)
+  const handleExportCSV = async () => {
+    try {
+      const params = { limit: 10000 };
+      if (statusFilter !== "ALL") params.status = statusFilter;
+      if (examFilter !== "ALL") params.examId = examFilter;
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+
+      const loadingToastId = toast.loading("Generating Excel export...");
+      const res = await api.get("/submissions", { params });
+      const allSubmissions = res.data.data?.submissions || [];
+      toast.dismiss(loadingToastId);
+
+      if (allSubmissions.length === 0) {
+        toast.error("No submissions found to export.");
+        return;
+      }
+
+      // Generate CSV formatted content
+      const headers = [
+        "Student Name",
+        "Email",
+        "Exam Title",
+        "Score",
+        "Max Score",
+        "Result Status",
+        "Percentage",
+        "Grade",
+        "Violations Count",
+        "Status",
+        "Submitted At"
+      ];
+
+      const rows = allSubmissions.map((sub) => {
+        const studentName = `${sub.student?.firstName || ""} ${sub.student?.lastName || ""}`.trim();
+        const maxMark = sub.exam?.examQuestions && sub.exam.examQuestions.length > 0
+          ? sub.exam.examQuestions.reduce((sum, eq) => sum + (eq.question?.score ?? 0), 0)
+          : (sub.exam?.passingMarks ?? 0);
+
+        return [
+          studentName,
+          sub.student?.email || "",
+          sub.exam?.title || "",
+          sub.totalScore ?? 0,
+          maxMark,
+          sub.isPassed ? "PASS" : "FAIL",
+          sub.percentage != null ? `${sub.percentage.toFixed(1)}%` : "0.0%",
+          sub.grade || "",
+          sub.violationsCount ?? 0,
+          sub.status || "",
+          sub.submitTime ? new Date(sub.submitTime).toLocaleString("en-IN") : ""
+        ].map((val) => `"${String(val).replace(/"/g, '""')}"`);
+      });
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((r) => r.join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `exam_results_export_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Exam results exported to Excel (CSV) successfully!");
+    } catch (err) {
+      toast.error("Failed to export exam results.");
+    }
+  };
+
   // ─── Helpers ───────────────────────────────────────────────────
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -379,12 +453,20 @@ export const Results = () => {
             Review, grade, edit, delete and publish student examination results.
           </p>
         </div>
-        <button
-          onClick={handlePublishAll}
-          className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-semibold text-xs rounded-lg flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all uppercase tracking-wider"
-        >
-          <Award size={15} /> Publish All Results
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg flex items-center gap-2 transition-all uppercase tracking-wider"
+          >
+            <Download size={15} /> Export Excel
+          </button>
+          <button
+            onClick={handlePublishAll}
+            className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-semibold text-xs rounded-lg flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all uppercase tracking-wider"
+          >
+            <Award size={15} /> Publish All Results
+          </button>
+        </div>
       </div>
 
       {/* Filters & Search Bar */}
