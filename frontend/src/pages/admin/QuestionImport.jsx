@@ -38,11 +38,13 @@ export const QuestionImport = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // 1. Fetch Subjects & existing Questions for duplicate check
+  // Fetch available course modules / department codes from back-end api
   const fetchSubjects = async () => {
     try {
       const res = await api.get("/departments");
       const list = res.data.data || [];
       setSubjects(list);
+      // Fallback selection targeting first item or autodetect
       if (list.length > 0) {
         setSelectedSubjectId(list[0].id);
       } else {
