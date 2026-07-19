@@ -131,3 +131,100 @@
   background: rgba(139, 92, 246, 0.35);
 }
 
+/* Premium Light Mode Overrides for Hardcoded Dark Classes */
+.light {
+  /* Override bg elements */
+  .bg-slate-950, 
+  .bg-slate-950\/40,
+  .bg-\[\#03000a\],
+  .bg-\[\#02000a\],
+  .bg-\[\#0a0818\]\/90 {
+    background-color: #f8fafc !important; /* light gray bg */
+  }
+
+  .bg-slate-900,
+  .bg-slate-900\/50,
+  .bg-slate-900\/60,
+  .bg-slate-900\/90,
+  .bg-card {
+    background-color: #ffffff !important; /* solid white card */
+  }
+
+  /* Override borders */
+  .border-slate-800,
+  .border-slate-900,
+  .border-slate-800\/50,
+  .border-slate-700,
+  .border-slate-700\/40,
+  .border-border {
+    border-color: #e2e8f0 !important; /* light border */
+  }
+
+  /* Override text colors */
+  .text-white,
+  .text-slate-100,
+  .text-slate-200,
+  .text-foreground {
+    color: #0f172a !important; /* slate-900 */
+  }
+
+  .text-slate-300,
+  .text-slate-400,
+  .text-slate-500,
+  .text-muted-foreground {
+    color: #475569 !important; /* slate-600 */
+  }
+
+  /* Exclude special text colors like primary green/red */
+  .text-emerald-400 {
+    color: #10b981 !important; /* emerald-500 */
+  }
+  .text-red-400 {
+    color: #ef4444 !important; /* red-500 */
+  }
+  .text-violet-400 {
+    color: #7c3aed !important; /* violet-600 */
+  }
+  .bg-emerald-500\/10 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+  }
+  .bg-red-500\/10 {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+  }
+  .bg-violet-500\/10 {
+    background-color: rgba(124, 58, 237, 0.1) !important;
+  }
+
+  /* Inputs, selects, textareas */
+  input, select, textarea {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+  
+  input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Table zebra hover */
+  tr:hover {
+    background-color: #f1f5f9 !important;
+  }
+  
+  /* Sidebar layouts active tags override */
+  .bg-primary {
+    background-color: #7c3aed !important; /* keep primary violet solid */
+  }
+  .text-primary-foreground {
+    color: #ffffff !important; /* white text for active tab */
+  }
+
+  /* AI Assistant widget styles override */
+  .fixed .bg-slate-900 {
+    background-color: #ffffff !important;
+  }
+  .fixed .bg-slate-950\/40 {
+    background-color: #f8fafc !important;
+  }
+}
+
