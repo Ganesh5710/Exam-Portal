@@ -132,28 +132,28 @@
 }
 
 /* Premium Light Mode Overrides for Hardcoded Dark Classes */
-.light .bg-slate-950, 
-.light .bg-slate-950\/40,
-.light .bg-\[\#03000a\],
-.light .bg-\[\#02000a\],
-.light .bg-\[\#0a0818\]\/90 {
+.light [class*="bg-slate-955"],
+.light [class*="bg-slate-950"],
+.light [class*="bg-[#03000a]"],
+.light [class*="bg-[#02000a]"],
+.light [class*="bg-[#0a0818]"] {
   background-color: #f8fafc !important; /* light gray bg */
 }
 
-.light .bg-slate-900,
-.light .bg-slate-900\/50,
-.light .bg-slate-900\/60,
-.light .bg-slate-900\/90,
+.light [class*="bg-slate-900"],
 .light .bg-card {
   background-color: #ffffff !important; /* solid white card */
 }
 
+/* Progress bar bg track overrides */
+.light [class*="bg-slate-800"] {
+  background-color: #e2e8f0 !important;
+}
+
 /* Override borders */
-.light .border-slate-800,
-.light .border-slate-900,
-.light .border-slate-800\/50,
-.light .border-slate-700,
-.light .border-slate-700\/40,
+.light [class*="border-slate-800"],
+.light [class*="border-slate-900"],
+.light [class*="border-slate-700"],
 .light .border-border {
   border-color: #e2e8f0 !important; /* light border */
 }
