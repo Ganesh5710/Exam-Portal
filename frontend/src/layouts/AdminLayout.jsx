@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { AIAssistantWidget } from "./AIAssistantWidget";
 import {
   LayoutDashboard,
   Users,
@@ -166,6 +167,9 @@ export const AdminLayout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Floating AI Dashboard Assistant */}
+      <AIAssistantWidget />
     </div>
   );
 };
