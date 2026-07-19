@@ -9,11 +9,12 @@ export const AIAssistantWidget = () => {
     {
       id: "welcome",
       sender: "bot",
-      text: "Hello! I am the Skillbrix AI Dashboard Assistant. Ask me any analytical question about student results, averages, or departments.",
+      text: "Hello! I am the Skillbrix AI Dashboard Assistant. You can ask me statistics queries or operational how-to questions about using the platform.",
       suggestions: [
-        "Show CSE students who failed",
-        "What is the average score of all exams?",
-        "List all students in the CSE department"
+        "How do I add students?",
+        "How do I publish results?",
+        "How to import questions via AI?",
+        "What is the average score of all exams?"
       ]
     }
   ]);
@@ -74,11 +75,12 @@ export const AIAssistantWidget = () => {
       {
         id: "welcome",
         sender: "bot",
-        text: "Hello! I am the Skillbrix AI Dashboard Assistant. Ask me any analytical question about student results, averages, or departments.",
+        text: "Hello! I am the Skillbrix AI Dashboard Assistant. You can ask me statistics queries or operational how-to questions about using the platform.",
         suggestions: [
-          "Show CSE students who failed",
-          "What is the average score of all exams?",
-          "List all students in the CSE department"
+          "How do I add students?",
+          "How do I publish results?",
+          "How to import questions via AI?",
+          "What is the average score of all exams?"
         ]
       }
     ]);

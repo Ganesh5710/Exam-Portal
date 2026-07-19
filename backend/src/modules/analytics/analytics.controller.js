@@ -105,6 +105,77 @@ exports.getExamPerformanceAnalytics = getExamPerformanceAnalytics;
 const localFallbackQuery = (query, context) => {
     const q = query.toLowerCase();
     
+    if (q.includes("add student") || q.includes("create student") || q.includes("how to add") || q.includes("register student")) {
+        return {
+            answer: `Here is how you can add students to the Skillbrix platform:
+1. Navigate to the **Students** tab on the left sidebar.
+2. **Single Addition**: Click the **Add Student** button, fill in their Email, Name, Department, and Password, then click save.
+3. **Bulk Addition**: Click **Download Template** to get the spreadsheet template, populate it with student records in Excel/CSV, and upload it using the **Import CSV** option to enroll hundreds of students at once.`,
+            columns: ["Addition Mode", "Description", "Ideal For"],
+            rows: [
+                ["Single Student", "Fill a form inside the browser dashboard manually", "Adding 1-5 new students"],
+                ["Bulk Import (CSV)", "Download standard CSV template, fill records, and upload", "Onboarding entire classrooms/batches"]
+            ],
+            chartType: null,
+            chartData: null
+        };
+    }
+
+    if (q.includes("publish result") || q.includes("publish grade") || q.includes("release result") || q.includes("publish results")) {
+        return {
+            answer: `Here is how you can publish exam results to candidate dashboards:
+1. Navigate to the **Results & Review** panel on the left sidebar.
+2. **Publish All**: Click the **Publish All Results** button in the top-right header to instantly release all completed exam grades.
+3. **Selective Release**: Locate a specific student entry in the table, click on the status column or edit action, and toggle their status to **Published**.
+4. Once published, students will see their score breakdown and pass/fail status in real-time on their student workspace without reloading.`,
+            columns: ["Method", "Action", "Visibility Status"],
+            rows: [
+                ["Publish All Button", "Releases all completed and graded records in one click", "Visible to all students immediately"],
+                ["Individual Toggle", "Edit score / grade and toggle release status specifically", "Visible only to that specific candidate"]
+            ],
+            chartType: null,
+            chartData: null
+        };
+    }
+
+    if (q.includes("import question") || q.includes("add question") || q.includes("create question") || q.includes("generate question")) {
+        return {
+            answer: `You can add questions to the Skillbrix Questions Bank in three ways:
+1. **AI Question Generator**: Navigate to the **AI Question Importer** page, input a topic (e.g. 'React Hooks'), select difficulty/quantity, and click **Generate**. The AI will generate structured MCQs, coding challenges, and fill-in-the-blanks.
+2. **Manual Creation**: Navigate to the **Questions Bank** and click **Create Question**.
+3. **Excel/CSV Upload**: In the **Questions Bank**, select **Import Questions** to upload a list of questions in bulk.`,
+            columns: ["Option", "Location", "Intelligence Level"],
+            rows: [
+                ["AI Importer", "AI Question Importer Tab", "High (Generates full options & explanations)"],
+                ["Excel Importer", "Questions Bank -> Upload", "Medium (Batch imports template structures)"],
+                ["Manual Form", "Questions Bank -> Create", "Manual (Full customizable configurations)"]
+            ],
+            chartType: null,
+            chartData: null
+        };
+    }
+
+    if (q.includes("monitor") || q.includes("proctor") || q.includes("live monitor") || q.includes("cheat") || q.includes("anti-cheat")) {
+        return {
+            answer: `To monitor active examinations and check for academic integrity:
+1. Navigate to the **Live Monitor** tab on the sidebar.
+2. This page connects to a WebSocket server, showing real-time logs of active candidate screens.
+3. It displays:
+   - **Fullscreen Violations**: If a student exits fullscreen mode (locked by our Fullscreen Lockdown Overlay).
+   - **Tab-Switch Counts**: If they blur/switch away from their active browser tab.
+   - **Webcam Gaze Detections**: Facial detection showing if multiple faces are present or if they look away.
+4. Exceeding 5 warnings triggers an automatic submission of their exam terminal.`,
+            columns: ["Violation Type", "Trigger Event", "System Response"],
+            rows: [
+                ["Tab Switch", "Candidate leaves browser tab or minimizes window", "Logs warning, increments switch counter"],
+                ["Fullscreen Exit", "Escapes fullscreen workspace mode", "Launches black lock overlay blocking exam view"],
+                ["Face Detection", "Webcam detects zero faces or multiple faces", "Transmits warning alerts to admin live feed"]
+            ],
+            chartType: null,
+            chartData: null
+        };
+    }
+
     if (q.includes("fail") || q.includes("failed")) {
         const failed = context.submissions.filter(s => !s.isPassed);
         return {
@@ -252,9 +323,12 @@ ${JSON.stringify(context, null, 2)}
 </DATABASE_CONTEXT>
 
 The user asked the following question: "${query}"
+This question might be a database statistics query (e.g. "show average scores") or an operational how-to question (e.g. "how do I add students?" or "how do I publish results?").
+If it is a how-to question, provide a detailed, step-by-step documentation guide on how to perform the action in the Skillbrix Exam Portal interface.
+For tables/charts: if the question is an operational how-to guide, return null or empty for columns, rows, chartType, and chartData unless compiling list modes is helpful.
 
 Return a JSON object with:
-1. "answer": string (A professional, conversational answer to the question, summarizing key insights based on the database context. Be clear and specific).
+1. "answer": string (A professional, conversational answer to the question, summarizing key insights or step-by-step guides based on the database/routing context. Use clean markdown formatting like bullet points or bold text if helpful).
 2. "columns": array of strings (e.g. ["Student Name", "Email", "Score", "Result"]) - if the answer contains a list of entities, records, or table data. Otherwise null or empty.
 3. "rows": array of arrays of strings/numbers (matching the columns) - if the answer contains a table. Otherwise null or empty.
 4. "chartType": string ("BAR", "PIE", "LINE", or null) - if the data can be visualised as a chart.
