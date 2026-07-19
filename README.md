@@ -23,6 +23,13 @@ An advanced, secure, and modern web-based examination platform featuring real-ti
 * **Proctor Commands**: Force-terminate exam sessions or extend timers in real-time.
 * **Flexible Results Management**: Manual grading interface for descriptive questions, dynamic grade/percentage calculations, and bulk publish options.
 
+### 🚀 Newly Added Features (July 2026)
+* **📊 Excel Results Streaming Export**: Administrators can stream and export complete candidate results to an Excel / CSV spreadsheet with passing percentages, violation counts, and pass/fail indicators directly from the admin panel.
+* **🔒 Strict Fullscreen Lockdown**: Forces candidates into absolute fullscreen mode during an exam. If they attempt to press Escape or minimize/exit fullscreen, it locks the screen, flags a violation telemetry signal, and counts it as a strike.
+* **⚡ Instant Live Result Publishing**: Submissions and graded results are immediately viewable to students without requiring manually reloading or refreshing the browser page.
+* **💬 Conversational AI Dashboard Assistant**: A floating AI widget inside the admin dashboard. Instructors can query statistics (e.g. "what is the average score of all exams?") or request operational how-to guides (e.g. "how do I add students?") and receive structured markdown instructions or dynamic tables/charts.
+* **🌓 Premium Light/Dark Theme Switcher**: Fully functional global theme switch that transforms both public routes (like the Landing Page) and all 10 administrative panels cleanly into responsive light or dark modes.
+
 ## Feature Walkthroughs
 
 ### 1. Interactive 3D Mockup
