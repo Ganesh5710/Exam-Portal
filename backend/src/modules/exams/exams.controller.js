@@ -268,6 +268,10 @@ const assignExam = async (req, res, next) => {
     }
 };
 exports.assignExam = assignExam;
+/**
+ * Validates candidate assignment permissions, verifies the active schedule window,
+ * updates student STARTED timestamp, and delivers sanitized exam questions with optional shuffling.
+ */
 const getExamQuestionsForStudent = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user?.id || '';
