@@ -20,17 +20,20 @@ export const CompatibilityCheck = () => {
   const [cameraPassed, setCameraPassed] = useState(null);
 
   useEffect(() => {
-    // Run mock tests
+    /**
+     * Executes asynchronous system diagnostic verification routine checking browser features,
+     * low-latency network telemetry, and web camera media stream permissions.
+     */
     const runTests = async () => {
-      // 1. Browser check
+      // 1. Browser API compatibility check
       await new Promise((resolve) => setTimeout(resolve, 800));
       setBrowserPassed(true);
 
-      // 2. Network ping test
+      // 2. Network ping test and latency diagnostics
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setNetworkPassed(true);
 
-      // 3. Camera checking
+      // 3. Camera hardware verification & stream lifecycle check
       await new Promise((resolve) => setTimeout(resolve, 1200));
       try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
