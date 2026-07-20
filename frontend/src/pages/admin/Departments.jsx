@@ -54,6 +54,10 @@ export const Departments = () => {
   }, []);
 
   /* ── filtered list ── */
+  /**
+   * Memoized search filter for departments matching user input query against
+   * department name or unique uppercase department code.
+   */
   const filtered = useMemo(() => {
     if (!search.trim()) return departments;
     const q = search.toLowerCase();
