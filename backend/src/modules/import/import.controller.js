@@ -89,6 +89,10 @@ const cancelJob = async (req, res, next) => {
 };
 exports.cancelJob = cancelJob;
 // 4. Batch Import approved questions with Prisma Transactions and Duplicate Resolution
+/**
+ * Batch processes user-approved questions from document import jobs.
+ * Resolves target department IDs, handles duplicate actions (SKIP/REPLACE), and inserts in chunks of 500.
+ */
 const approveImport = async (req, res, next) => {
     const { id } = req.params;
     const { departmentId, questions, duplicateActions } = req.body;
