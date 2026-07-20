@@ -70,9 +70,12 @@ The application is structured as a decoupled client-server architecture:
 
 ## API Endpoints Overview
 
-- **Auth Router**: `POST /api/auth/login`, `POST /api/auth/register` (Token-based user session handling).
-- **Assessment Router**: `GET /api/exams`, `POST /api/exams/submit` (Test content and score calculation engines).
-- **Proctor Router**: `POST /api/telemetry/log` (Real-time tracking session logs validation).
+- **Auth Router**: `POST /api/auth/login`, `POST /api/auth/verify-otp`, `POST /api/auth/logout` (Token & OTP authentication).
+- **Assessment Router**: `GET /api/exams`, `POST /api/exams`, `GET /api/exams/:id/questions` (Test lifecycle and scheduling).
+- **Submissions Router**: `POST /api/submissions/save`, `POST /api/submissions/submit`, `POST /api/submissions/bulk-publish` (Evaluation and grade release).
+- **Analytics Router**: `GET /api/analytics/dashboard-summary`, `POST /api/analytics/ai-assistant` (Telemetry and Gemini AI dashboard assistant).
+- **Import Router**: `POST /api/import/upload`, `GET /api/import/status/:id`, `POST /api/import/approve/:id` (Multi-format document parsing engine).
+- **Backup Router**: `POST /api/backup/create`, `GET /api/backup/list`, `POST /api/backup/restore` (Transactional database snapshots).
 
 ## How to Run Locally
 
