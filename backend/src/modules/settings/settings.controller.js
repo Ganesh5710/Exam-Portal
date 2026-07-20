@@ -3,6 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedDefaultSettings = exports.clearAllData = exports.updateSettings = exports.getSettings = void 0;
 const bcryptjs_1 = require("bcryptjs");
 const db_1 = require("../../database/db");
+/**
+ * Fetches all system configuration parameters from systemSettings table
+ * and converts array records into a simple key-value keymap object.
+ */
 const getSettings = async (req, res, next) => {
     try {
         const settings = await db_1.prisma.systemSettings.findMany();
