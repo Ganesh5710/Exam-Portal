@@ -3,6 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runAssistantQuery = exports.getExamPerformanceAnalytics = exports.getDashboardSummaryMetrics = void 0;
 const db_1 = require("../../database/db");
 const gemini_1 = require("../../config/gemini");
+/**
+ * Aggregates high-level system metrics including total students, live/todays exams,
+ * overall pass percentage rate, and overall average score across all candidate submissions.
+ */
 const getDashboardSummaryMetrics = async (req, res, next) => {
     try {
         const [studentsCount, examsCount, activeExamsCount, completedSubmissions] = await db_1.prisma.$transaction([
