@@ -36,6 +36,10 @@ export const ExamList = () => {
     fetchExams();
   }, []);
 
+  /**
+   * Triggers the assessment workflow by redirecting candidate to instructions screen.
+   * @param {Object} exam - Target assigned examination object payload
+   */
   const handleStartProcess = (exam) => {
     navigate(`/student/exams/${exam.id}/instructions`);
   };
