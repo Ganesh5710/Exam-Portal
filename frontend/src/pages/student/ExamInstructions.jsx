@@ -7,6 +7,10 @@ export const ExamInstructions = () => {
   const navigate = useNavigate();
   const [checkedRules, setCheckedRules] = useState(false);
 
+  /**
+   * Navigates candidate to the hardware system compatibility check page
+   * after explicit user acknowledgement of anti-cheat proctoring policies.
+   */
   const handleNext = () => {
     navigate(`/student/exams/${id}/compatibility`);
   };
