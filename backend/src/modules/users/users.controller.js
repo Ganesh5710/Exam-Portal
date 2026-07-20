@@ -341,6 +341,11 @@ const bulkDeleteStudents = async (req, res, next) => {
 };
 exports.bulkDeleteStudents = bulkDeleteStudents;
 
+/**
+ * Parses uploaded Excel, CSV, or JSON candidate files.
+ * Normalizes fuzzy column header titles, caches default password hashes, auto-creates missing departments,
+ * and bulk inserts candidate users in chunks of 500.
+ */
 const importStudentsFile = async (req, res, next) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'Please upload a file.' });
