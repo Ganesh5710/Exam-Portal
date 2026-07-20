@@ -3,6 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.bulkPublishSubmissions = exports.getMySubmission = exports.bulkDeleteSubmissions = exports.deleteSubmission = exports.updateSubmission = exports.getSubmissions = exports.gradeDescriptiveAnswer = exports.getSubmissionsForExam = exports.submitExam = exports.saveAnswers = void 0;
 const db_1 = require("../../database/db");
 const codeExecution_service_1 = require("../questions/codeExecution.service");
+/**
+ * Periodically upserts candidate answer entries into the database during active exam sessions,
+ * ensuring answer state persistence against browser crashes or network interruptions.
+ */
 const saveAnswers = async (req, res, next) => {
     const { examId, answers } = req.body; // answers is an array of { questionId, studentAnswer }
     const studentId = req.user?.id || '';
