@@ -4,6 +4,10 @@ exports.bulkDeleteQuestions = exports.generateAIQuestions = exports.runQuestionC
 const db_1 = require("../../database/db");
 const codeExecution_service_1 = require("./codeExecution.service");
 const gemini_1 = require("../../config/gemini");
+/**
+ * Retrieves questions matching optional query parameters (content search keyword,
+ * question type, difficulty level, and department ID), sorted by creation date descending.
+ */
 const getQuestions = async (req, res, next) => {
     const search = req.query.search || '';
     const type = req.query.type || undefined;
