@@ -46,6 +46,7 @@ export const SubmissionConfirmation = () => {
     };
   }, [id]);
 
+  /** Evaluates whether instructor has published official evaluation marks */
   const isPublished = submission && submission.status === "PUBLISHED";
 
   return (
