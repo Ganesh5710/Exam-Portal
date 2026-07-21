@@ -101,9 +101,6 @@ export default function ModernSaaSBackground({ isDarkMode = true }) {
         }}
       />
 
-      {/* Glowing Horizon Line */}
-      <div className="absolute top-[42%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-
       {/* Soft Bottom Vignette Transition */}
       <div
         className="absolute inset-0"

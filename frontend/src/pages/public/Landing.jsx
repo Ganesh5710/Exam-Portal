@@ -966,7 +966,7 @@ export const Landing = () => {
       </nav>
 
       {/* Hero Header */}
-      <header className="pt-36 pb-16 md:pt-44 md:pb-24 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+      <header className="pt-28 pb-12 md:pt-36 md:pb-16 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
         <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full border transition-all duration-500 text-[10px] font-black uppercase tracking-widest mb-6 shadow-inner ${
           isDarkMode ? "border-violet-500/20 bg-violet-500/10 text-violet-300" : "border-violet-200 bg-violet-100/50 text-violet-700"
         }`}>
