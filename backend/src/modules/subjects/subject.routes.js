@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { getSubjects, createSubject, updateSubject, deleteSubject } = require('./subject.controller');
-const { authenticateToken, authorizeRoles } = require('../../middleware/auth.middleware');
+const { protect, restrictTo } = require('../../middleware/auth');
 
-router.use(authenticateToken);
+router.use(protect);
 
 router.get('/', getSubjects);
-router.post('/', authorizeRoles('ADMIN', 'SUPER_ADMIN'), createSubject);
-router.put('/:id', authorizeRoles('ADMIN', 'SUPER_ADMIN'), updateSubject);
-router.delete('/:id', authorizeRoles('ADMIN', 'SUPER_ADMIN'), deleteSubject);
+router.post('/', restrictTo('ADMIN', 'SUPER_ADMIN'), createSubject);
+router.put('/:id', restrictTo('ADMIN', 'SUPER_ADMIN'), updateSubject);
+router.delete('/:id', restrictTo('ADMIN', 'SUPER_ADMIN'), deleteSubject);
 
 module.exports = router;
