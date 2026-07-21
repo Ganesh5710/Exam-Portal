@@ -921,70 +921,64 @@ export const Landing = () => {
       </div>
 
       {/* Navigation Header */}
-      {/* Premium capsule pill navbar with custom heights (72px) and wide max boundaries. */}
-      {/* Employs dynamic background opacity filters for dark and light modes, overlaying subtle inner-border gradient glows. */}
-      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[94%] max-w-7xl h-[72px] rounded-full border z-50 flex items-center justify-between px-4 pl-5 pr-4 transition-all duration-500 ${
+      {/* Clean glassmorphic floating capsule navbar */}
+      <nav className={`fixed top-4 left-1/2 -translate-x-1/2 w-[94%] max-w-7xl h-16 rounded-full border z-50 flex items-center justify-between px-5 transition-all duration-500 ${
         isDarkMode 
-          ? "bg-[#0a0818]/90 border-white/[0.07] backdrop-blur-2xl text-white shadow-[0_12px_48px_-8px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.03)]" 
-          : "bg-white/92 border-slate-200/60 backdrop-blur-2xl text-slate-900 shadow-[0_12px_48px_-8px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,0.8)]"
+          ? "bg-[#02000A]/80 border-white/10 backdrop-blur-xl text-white shadow-2xl shadow-black/50" 
+          : "bg-white/85 border-slate-200 backdrop-blur-xl text-slate-900 shadow-xl shadow-slate-200/50"
       }`}>
-        {/* Inner subtle gradient shimmer */}
-        <div className={`absolute inset-0 rounded-full pointer-events-none transition-opacity duration-500 ${isDarkMode ? 'opacity-100' : 'opacity-0'}`}
-          style={{ background: 'linear-gradient(120deg, rgba(124,92,252,0.06) 0%, transparent 35%, transparent 65%, rgba(236,72,153,0.04) 100%)', borderRadius: 'inherit' }}
-        />
-
         <Link to="/" className="flex items-center gap-3 group relative z-10">
-          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-2xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-violet-500/25 group-hover:scale-105 group-hover:shadow-violet-500/40 transition-all duration-300">
+          <div className="w-9 h-9 bg-gradient-to-br from-violet-500 via-violet-600 to-fuchsia-500 rounded-xl flex items-center justify-center font-black text-white text-xs shadow-lg shadow-violet-500/25 group-hover:scale-105 transition-all duration-300">
             SB
           </div>
-          <span className={`text-xl font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <span className={`text-lg font-bold tracking-tight transition-colors ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Skill<span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent font-extrabold">brix</span>
           </span>
         </Link>
 
-        <div className={`hidden md:flex items-center gap-2 relative z-10 ${
+        <div className={`hidden md:flex items-center gap-1 relative z-10 ${
           isDarkMode ? "text-slate-300" : "text-slate-600"
         }`}>
           {[{label: "Test", href: "#proctor-calibration"}, {label: "Services", href: "#code-sandbox"}, {label: "About", href: "#cohort-map"}, {label: "Contact", href: "#helpdesk-chat"}].map((link) => (
-            <a key={link.label} href={link.href} className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 ${
-              isDarkMode ? "hover:text-white hover:bg-white/[0.06]" : "hover:text-slate-900 hover:bg-slate-100"
+            <a key={link.label} href={link.href} className={`px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200 ${
+              isDarkMode ? "hover:text-white hover:bg-white/10" : "hover:text-slate-900 hover:bg-slate-100"
             }`}>
               {link.label}
             </a>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex items-center gap-2.5 relative z-10">
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
-            className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 ${
+            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-300 ${
               isDarkMode 
-                ? "bg-white/[0.05] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.1]" 
+                ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
                 : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
             }`}
             aria-label="Toggle Theme"
           >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
           </button>
 
-          <Link to="/login" className={`px-6 py-2.5 text-sm font-semibold rounded-full border transition-all duration-200 ${
+          <Link to="/login" className={`px-5 py-2 text-xs font-bold rounded-full border transition-all duration-200 ${
             isDarkMode 
-              ? "border-white/[0.15] text-white hover:bg-white/[0.08] hover:border-white/[0.25]" 
-              : "border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400"
+              ? "border-white/15 text-white hover:bg-white/10" 
+              : "border-slate-300 text-slate-700 hover:bg-slate-50"
           }`}>
             Login
           </Link>
-          <Link to="/login" className="px-6 py-2.5 text-sm font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full shadow-lg shadow-violet-500/25 hover:shadow-violet-500/45 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
+          <Link to="/login" className="px-5 py-2 text-xs font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-full shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shimmer-btn">
             Launch Demo
           </Link>
         </div>
       </nav>
 
       {/* Hero Header */}
-      <header className="pt-48 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border transition-all duration-500 text-[10px] font-black uppercase tracking-widest mb-6 shadow-inner ${
-          isDarkMode ? "border-violet-500/20 bg-violet-500/5 text-violet-300" : "border-violet-200 bg-violet-100/50 text-violet-700"
+      <header className="pt-36 pb-16 md:pt-44 md:pb-24 px-6 md:px-12 max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+        <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full border transition-all duration-500 text-[10px] font-black uppercase tracking-widest mb-6 shadow-inner ${
+          isDarkMode ? "border-violet-500/20 bg-violet-500/10 text-violet-300" : "border-violet-200 bg-violet-100/50 text-violet-700"
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
           The Advanced Assessment Architecture
@@ -1011,39 +1005,39 @@ export const Landing = () => {
           </a>
         </div>
 
-        {/* ── 3D INTERACTIVE PLATFORM PREVIEW ── */}
-        <div className="w-full max-w-5xl mt-16 relative px-4 md:px-10 perspective-container hidden lg:block select-none z-10" style={{ marginBottom: '80px', overflow: 'visible' }}>
+        {/* ── CLEAN INTERACTIVE PLATFORM PREVIEW ── */}
+        <div className="w-full max-w-5xl mt-12 relative px-4 md:px-6 hidden lg:block select-none z-10">
           
           {/* Ambient glow behind the mockup */}
-          <div className={`absolute -inset-20 rounded-full pointer-events-none transition-opacity duration-700 ${isDarkMode ? 'opacity-60' : 'opacity-20'}`}
-            style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(124, 92, 252, 0.25), rgba(236, 72, 153, 0.1) 40%, transparent 70%)', filter: 'blur(60px)' }}
+          <div className={`absolute -inset-10 rounded-full pointer-events-none transition-opacity duration-700 ${isDarkMode ? 'opacity-50' : 'opacity-15'}`}
+            style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(124, 92, 252, 0.2), rgba(236, 72, 153, 0.08) 40%, transparent 70%)', filter: 'blur(50px)' }}
           />
 
-          {/* 3D Main Card Container with Tilts */}
-          <div className="rotate-3d-card relative">
+          {/* Clean Flat Dashboard Mockup Card */}
+          <div className="relative hover:scale-[1.01] transition-all duration-500">
             
             {/* Outer Mockup Browser Frame */}
             <div className={`rounded-3xl border p-0 overflow-hidden transition-all duration-500 ${
               isDarkMode 
-                ? "bg-[#0a0818] border-white/[0.1] shadow-[0_60px_120px_-20px_rgba(0,0,0,0.8),0_0_80px_-10px_rgba(124,92,252,0.15)]" 
-                : "bg-white border-slate-200 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08),0_0_40px_-10px_rgba(124,92,252,0.06)]"
+                ? "bg-[#02000A] border-white/10 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9),0_0_50px_-10px_rgba(124,92,252,0.15)]" 
+                : "bg-white border-slate-200 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.08)]"
             }`}>
               {/* Browser Window bar */}
               <div className={`flex items-center justify-between px-5 py-3 border-b ${
-                isDarkMode ? "border-white/[0.06] bg-[#0d0a1f]" : "border-slate-100 bg-slate-50/90"
+                isDarkMode ? "border-white/10 bg-slate-950/80" : "border-slate-100 bg-slate-50"
               }`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-[#ff5f57] shadow-sm shadow-red-500/30" />
-                  <span className="w-3 h-3 rounded-full bg-[#febc2e] shadow-sm shadow-yellow-500/30" />
-                  <span className="w-3 h-3 rounded-full bg-[#28c840] shadow-sm shadow-green-500/30" />
+                  <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                  <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                  <span className="w-3 h-3 rounded-full bg-[#28c840]" />
                 </div>
                 <div className={`flex items-center gap-2 px-4 py-1 rounded-lg text-[10px] font-mono ${
-                  isDarkMode ? "bg-white/[0.04] text-slate-500 border border-white/[0.04]" : "bg-slate-100 text-slate-500 border border-slate-200/60"
+                  isDarkMode ? "bg-white/5 text-slate-400 border border-white/5" : "bg-slate-100 text-slate-500 border border-slate-200"
                 }`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   portal.skillbrix.com/dashboard
                 </div>
-                <div className={`text-[9px] font-bold tracking-widest uppercase font-mono ${isDarkMode ? "text-slate-600" : "text-slate-400"}`}>
+                <div className={`text-[9px] font-bold tracking-widest uppercase font-mono ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                   ⌘ DASHBOARD
                 </div>
               </div>
