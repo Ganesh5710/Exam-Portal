@@ -34,6 +34,7 @@ export const AdminLayout = () => {
     { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Students", path: "/admin/students", icon: Users },
     { name: "Departments", path: "/admin/departments", icon: Building },
+    { name: "Subjects", path: "/admin/subjects", icon: BookOpen },
     { name: "Questions Bank", path: "/admin/questions", icon: HelpCircle },
     { name: "AI Question Importer", path: "/admin/import", icon: UploadCloud },
     { name: "Exams Portal", path: "/admin/exams", icon: ClipboardList },

@@ -16,6 +16,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import LiveMonitor from "./pages/admin/LiveMonitor";
 import Students from "./pages/admin/Students";
 import Departments from "./pages/admin/Departments";
+import SubjectsManager from "./pages/admin/SubjectsManager";
 import Questions from "./pages/admin/Questions";
 import QuestionImport from "./pages/admin/QuestionImport";
 import ExamsPortal from "./pages/admin/ExamsPortal";
@@ -120,6 +121,7 @@ export const App = () => {
           {/* Admin module routes */}
           <Route path="students" element={<Students />} />
           <Route path="departments" element={<Departments />} />
+          <Route path="subjects" element={<SubjectsManager />} />
           <Route path="questions" element={<Questions />} />
           <Route path="import" element={<QuestionImport />} />
           <Route path="exams" element={<ExamsPortal />} />

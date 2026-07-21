@@ -26,6 +26,7 @@ const backup_routes_1 = __importDefault(require("./modules/backup/backup.routes"
 const settings_routes_1 = __importDefault(require("./modules/settings/settings.routes"));
 const import_routes_1 = __importDefault(require("./modules/import/import.routes"));
 const superadmin_routes_1 = __importDefault(require("./modules/superadmin/superadmin.routes"));
+const subjects_routes_1 = __importDefault(require("./modules/subjects/subject.routes"));
 const settings_controller_1 = require("./modules/settings/settings.controller");
 const autosave_job_1 = require("./modules/autosave/autosave.job");
 const seed_1 = require("./database/seed");
@@ -73,6 +74,7 @@ app.use('/api/v1/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
 app.use('/api/v1/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
 app.use('/api/v1/import', rateLimit_1.apiLimiter, import_routes_1.default);
 app.use('/api/v1/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
+app.use('/api/v1/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
 // Welcome and status page for the root route
 app.get('/', (req, res) => {
     res.status(200).json({

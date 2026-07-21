@@ -283,20 +283,32 @@ export const Results = () => {
         return;
       }
 
-      // Generate CSV formatted content
-      const headers = [
+      // Collect all distinct subject names across all submissions
+      const subjectSet = new Set();
+      allSubmissions.forEach((sub) => {
+        if (sub.answers && Array.isArray(sub.answers)) {
+          sub.answers.forEach((ans) => {
+            const subjName = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || null;
+            if (subjName) subjectSet.add(subjName);
+          });
+        }
+      });
+      const subjectList = Array.from(subjectSet);
+
+      // Generate CSV formatted content headers
+      const baseHeaders = [
         "Student Name",
         "Email",
         "Exam Title",
-        "Score",
+        "Total Score",
         "Max Score",
         "Result Status",
         "Percentage",
         "Grade",
-        "Violations Count",
-        "Status",
-        "Submitted At"
       ];
+      const subjectHeaders = subjectList.map((s) => `${s} Marks`);
+      const trailingHeaders = ["Violations Count", "Status", "Submitted At"];
+      const headers = [...baseHeaders, ...subjectHeaders, ...trailingHeaders];
 
       const rows = allSubmissions.map((sub) => {
         const studentName = `${sub.student?.firstName || ""} ${sub.student?.lastName || ""}`.trim();
@@ -304,7 +316,20 @@ export const Results = () => {
           ? sub.exam.examQuestions.reduce((sum, eq) => sum + (eq.question?.score ?? 0), 0)
           : (sub.exam?.passingMarks ?? 0);
 
-        return [
+        // Compute subject scores for this submission
+        const subjScores = {};
+        if (sub.answers && Array.isArray(sub.answers)) {
+          sub.answers.forEach((ans) => {
+            const subjName = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || "General";
+            if (!subjScores[subjName]) {
+              subjScores[subjName] = { obtained: 0, total: 0 };
+            }
+            subjScores[subjName].obtained += ans.scoreAwarded || 0;
+            subjScores[subjName].total += ans.question?.score || 1;
+          });
+        }
+
+        const baseRow = [
           studentName,
           sub.student?.email || "",
           sub.exam?.title || "",
@@ -313,10 +338,22 @@ export const Results = () => {
           sub.isPassed ? "PASS" : "FAIL",
           sub.percentage != null ? `${sub.percentage.toFixed(1)}%` : "0.0%",
           sub.grade || "",
+        ];
+
+        const subjectValues = subjectList.map((sName) => {
+          if (subjScores[sName]) {
+            return `${subjScores[sName].obtained}/${subjScores[sName].total}`;
+          }
+          return "N/A";
+        });
+
+        const trailingRow = [
           sub.violationsCount ?? 0,
           sub.status || "",
           sub.submitTime ? new Date(sub.submitTime).toLocaleString("en-IN") : ""
-        ].map((val) => `"${String(val).replace(/"/g, '""')}"`);
+        ];
+
+        return [...baseRow, ...subjectValues, ...trailingRow].map((val) => `"${String(val).replace(/"/g, '""')}"`);
       });
 
       const csvContent = [
@@ -328,11 +365,11 @@ export const Results = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `exam_results_export_${Date.now()}.csv`);
+      link.setAttribute("download", `exam_results_subjectwise_${Date.now()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Exam results exported to Excel (CSV) successfully!");
+      toast.success("Exam results exported to Excel (CSV) with Subject Breakdown!");
     } catch (err) {
       toast.error("Failed to export exam results.");
     }
@@ -568,6 +605,7 @@ export const Results = () => {
                     "Email",
                     "Exam",
                     "Score",
+                    "Subject Breakdown",
                     "Grade",
                     "Violations",
                     "Status",
@@ -636,6 +674,38 @@ export const Results = () => {
 
                     {/* Score */}
                     <td className="px-5 py-4">{getScoreDisplay(sub)}</td>
+
+                    {/* Subject Breakdown */}
+                    <td className="px-5 py-4">
+                      {(() => {
+                        const subjMap = {};
+                        if (sub.answers && Array.isArray(sub.answers)) {
+                          sub.answers.forEach((ans) => {
+                            const name = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || "General";
+                            if (!subjMap[name]) subjMap[name] = { obtained: 0, total: 0 };
+                            subjMap[name].obtained += ans.scoreAwarded || 0;
+                            subjMap[name].total += ans.question?.score || 1;
+                          });
+                        }
+                        const entries = Object.entries(subjMap);
+                        if (entries.length === 0) {
+                          return <span className="text-xs text-slate-500">—</span>;
+                        }
+                        return (
+                          <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                            {entries.map(([name, data]) => (
+                              <span
+                                key={name}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-500/10 border border-violet-500/20 text-violet-300"
+                              >
+                                <span className="text-slate-400">{name}:</span>
+                                <span className="text-white">{data.obtained}/{data.total}</span>
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </td>
 
                     {/* Grade */}
                     <td className="px-5 py-4">
