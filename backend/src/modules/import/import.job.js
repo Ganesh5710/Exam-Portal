@@ -128,7 +128,9 @@ Return ONLY a JSON array of question objects. Do not write markdown blocks or ex
         prompt: fullPrompt,
         mediaData,
     });
-    const parsed = JSON.parse(result.text);
+    let cleanText = result.text || '';
+    cleanText = cleanText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleanText);
     return Array.isArray(parsed) ? parsed : [parsed];
 };
 exports.parseQuestionsWithAI = parseQuestionsWithAI;
@@ -463,22 +465,27 @@ const parseStructuredFile = (filePath, ext) => {
 
     if (!Array.isArray(rows) || rows.length === 0) return null;
 
-    const firstRow = rows[0];
-    const hasQuestionCol = Object.keys(firstRow).some(k => {
-        const key = k.toLowerCase().replace(/[\s_-]/g, '');
-        return key.includes('question') || key.includes('content') || key.includes('text');
-    });
-
-    if (!hasQuestionCol) return null;
-
-    const parsedQuestions = rows.map(row => {
+    const parsedQuestions = rows.map((row, index) => {
         const getKey = (names) => {
-            const found = Object.keys(row).find(k => names.includes(k.toLowerCase().trim().replace(/[\s_-]/g, '')));
+            const found = Object.keys(row).find(k => {
+                const cleanKey = k.toLowerCase().trim().replace(/[\s_-]/g, '');
+                return names.some(n => cleanKey.includes(n));
+            });
             return found ? row[found] : null;
         };
 
-        const content = getKey(['question', 'content', 'questiontext', 'text'])?.toString();
-        if (!content) return null;
+        let content = getKey(['question', 'content', 'questiontext', 'text', 'problem', 'statement', 'prompt', 'description', 'title', 'item', 'details', 'qtext', 'qno'])?.toString();
+
+        // Fallback: Pick the longest string field in the row if no header matched
+        if (!content || !content.trim()) {
+            const values = Object.values(row).map(v => (v !== null && v !== undefined) ? v.toString().trim() : '').filter(Boolean);
+            const longest = values.reduce((max, cur) => cur.length > max.length ? cur : max, '');
+            if (longest.length > 5) {
+                content = longest;
+            }
+        }
+
+        if (!content || !content.trim()) return null;
 
         const typeVal = getKey(['type', 'questiontype'])?.toString()?.toUpperCase() || 'MCQ';
         const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
@@ -505,7 +512,7 @@ const parseStructuredFile = (filePath, ext) => {
         }
 
         let answers = [];
-        const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct']);
+        const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct', 'key']);
         if (answerField !== null && answerField !== undefined) {
             const ansStr = answerField.toString().trim();
             if (type === 'MCQ' && /^[A-J]$/i.test(ansStr) && options.length > 0) {
@@ -519,6 +526,17 @@ const parseStructuredFile = (filePath, ext) => {
                 answers = [ansStr];
             } else {
                 answers = ansStr.split(/[;|]/).map(a => a.trim());
+            }
+        }
+
+        // Fallback default answer if missing
+        if (answers.length === 0) {
+            if (options.length > 0) {
+                answers = [options[0]];
+            } else if (type === 'TRUE_FALSE') {
+                answers = ['True'];
+            } else {
+                answers = ['Option A / Answer Key'];
             }
         }
 
@@ -556,7 +574,7 @@ const parseStructuredFile = (filePath, ext) => {
         };
     }).filter(Boolean);
 
-    return parsedQuestions;
+    return parsedQuestions.length > 0 ? parsedQuestions : null;
 };
 
 // 3. Main processing function for jobs
