@@ -147,98 +147,178 @@ const deleteQuestion = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteQuestion = deleteQuestion;
+const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
 const bulkImportQuestions = async (req, res, next) => {
     const { questions } = req.body; // Array of Question records
     if (!Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ success: false, message: 'List of questions is required.' });
     }
+
     try {
         let imported = 0;
+
+        // 1. Build Department cache
         const deptCache = new Map();
         const allDepts = await db_1.prisma.department.findMany();
         allDepts.forEach(d => {
+            deptCache.set(d.id, d.id);
             deptCache.set(d.code.toUpperCase().trim(), d.id);
             deptCache.set(d.name.toLowerCase().trim(), d.id);
         });
 
+        // Ensure at least one default department exists
+        let defaultDeptId = allDepts[0]?.id;
+        if (!defaultDeptId) {
+            try {
+                const defDept = await db_1.prisma.department.create({
+                    data: { name: 'General', code: 'GENERAL', description: 'Default department for questions' }
+                });
+                defaultDeptId = defDept.id;
+                deptCache.set(defDept.id, defDept.id);
+                deptCache.set('GENERAL', defDept.id);
+            } catch (e) {
+                const existingDef = await db_1.prisma.department.findFirst();
+                defaultDeptId = existingDef?.id;
+            }
+        }
+
+        // 2. Build Subject cache
+        const subjCache = new Map();
+        const allSubjs = await db_1.prisma.subject.findMany();
+        allSubjs.forEach(s => {
+            subjCache.set(s.id, s.id);
+            subjCache.set(s.code.toUpperCase().trim(), s.id);
+            subjCache.set(s.name.toLowerCase().trim(), s.id);
+        });
+
         const toInsert = [];
+
         for (const record of questions) {
-            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department, subjectId } = record;
-            
-            let resolvedDeptId = departmentId;
-            if (!resolvedDeptId && (departmentCode || department)) {
-                const rawDept = departmentCode || department;
-                const deptKey = rawDept.toUpperCase().trim();
-                resolvedDeptId = deptCache.get(deptKey) || deptCache.get(rawDept.toLowerCase().trim());
-                if (!resolvedDeptId) {
+            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department, subjectId, subjectName, subjectCode, subject } = record;
+
+            if (!content || typeof content !== 'string' || content.trim().length === 0) {
+                continue;
+            }
+
+            // Resolve Department ID
+            let resolvedDeptId = null;
+            if (isUUID(departmentId) && deptCache.has(departmentId)) {
+                resolvedDeptId = departmentId;
+            } else {
+                const rawDept = (departmentCode || department || departmentId || '').toString().trim();
+                if (rawDept && deptCache.has(rawDept.toLowerCase())) {
+                    resolvedDeptId = deptCache.get(rawDept.toLowerCase());
+                } else if (rawDept && deptCache.has(rawDept.toUpperCase())) {
+                    resolvedDeptId = deptCache.get(rawDept.toUpperCase());
+                } else if (rawDept && rawDept !== 'auto' && rawDept !== 'null') {
                     try {
+                        const codeKey = rawDept.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'DEPT';
                         const newDept = await db_1.prisma.department.create({
-                            data: {
-                                name: rawDept,
-                                code: deptKey,
-                                description: 'Auto-created during bulk questions import'
-                            }
+                            data: { name: rawDept, code: `${codeKey}_${Date.now().toString().slice(-4)}`, description: 'Auto-created during question import' }
                         });
                         resolvedDeptId = newDept.id;
-                        deptCache.set(deptKey, newDept.id);
-                        deptCache.set(rawDept.toLowerCase().trim(), newDept.id);
+                        deptCache.set(newDept.id, newDept.id);
+                        deptCache.set(rawDept.toLowerCase(), newDept.id);
                     } catch (e) {
-                        const existing = await db_1.prisma.department.findFirst({
-                            where: { OR: [{ code: deptKey }, { name: rawDept }] }
-                        });
-                        if (existing) {
-                            resolvedDeptId = existing.id;
-                            deptCache.set(deptKey, existing.id);
-                            deptCache.set(rawDept.toLowerCase().trim(), existing.id);
+                        resolvedDeptId = defaultDeptId;
+                    }
+                } else {
+                    resolvedDeptId = defaultDeptId;
+                }
+            }
+
+            if (!resolvedDeptId) {
+                resolvedDeptId = defaultDeptId;
+            }
+
+            // Resolve Subject ID safely
+            let resolvedSubjId = null;
+            if (isUUID(subjectId) && subjCache.has(subjectId)) {
+                resolvedSubjId = subjectId;
+            } else {
+                const rawSubj = (subjectName || subjectCode || subject || subjectId || '').toString().trim();
+                if (rawSubj && rawSubj !== 'auto' && rawSubj !== 'null') {
+                    if (subjCache.has(rawSubj.toLowerCase())) {
+                        resolvedSubjId = subjCache.get(rawSubj.toLowerCase());
+                    } else if (subjCache.has(rawSubj.toUpperCase())) {
+                        resolvedSubjId = subjCache.get(rawSubj.toUpperCase());
+                    } else {
+                        try {
+                            const codeKey = rawSubj.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'SUBJ';
+                            const newSubj = await db_1.prisma.subject.create({
+                                data: {
+                                    name: rawSubj,
+                                    code: `${codeKey}_${Date.now().toString().slice(-4)}`,
+                                    departmentId: resolvedDeptId
+                                }
+                            });
+                            resolvedSubjId = newSubj.id;
+                            subjCache.set(newSubj.id, newSubj.id);
+                            subjCache.set(rawSubj.toLowerCase(), newSubj.id);
+                        } catch (e) {
+                            resolvedSubjId = null;
                         }
                     }
                 }
             }
 
-            if (!resolvedDeptId) {
-                const firstDept = await db_1.prisma.department.findFirst();
-                if (firstDept) {
-                    resolvedDeptId = firstDept.id;
-                } else {
-                    continue; 
-                }
+            // Format answers cleanly
+            let formattedAnswers = answers;
+            if (formattedAnswers === undefined || formattedAnswers === null) {
+                formattedAnswers = (options && options.length > 0) ? [options[0]] : ['N/A'];
             }
 
             toInsert.push({
-                type: type ? type.toUpperCase() : 'MCQ',
-                content,
-                options: options || null,
-                answers,
-                explanation: explanation || null,
-                score: parseFloat(score) || 1.0,
+                type: (type ? type.toString().toUpperCase() : 'MCQ'),
+                content: content.trim(),
+                options: Array.isArray(options) ? options : (options ? [options] : null),
+                answers: formattedAnswers,
+                explanation: explanation ? String(explanation) : null,
+                score: parseFloat(score) || 5.0,
                 negativeMarks: parseFloat(negativeMarks) || 0.0,
-                difficulty: difficulty ? difficulty.toUpperCase() : 'MEDIUM',
-                tags: tags || [],
+                difficulty: (difficulty ? difficulty.toString().toUpperCase() : 'MEDIUM'),
+                tags: Array.isArray(tags) ? tags : [],
                 departmentId: resolvedDeptId,
-                subjectId: subjectId || null
+                subjectId: resolvedSubjId
             });
         }
 
-        // Batch insert in chunks of 500
-        const chunkSize = 500;
+        if (toInsert.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid question records found to insert.' });
+        }
+
+        // Batch insert in chunks of 100 with fallback to individual insertion if a chunk fails
+        const chunkSize = 100;
         for (let i = 0; i < toInsert.length; i += chunkSize) {
             const chunk = toInsert.slice(i, i + chunkSize);
-            const result = await db_1.prisma.question.createMany({ data: chunk, skipDuplicates: true });
-            imported += result.count;
+            try {
+                const result = await db_1.prisma.question.createMany({ data: chunk, skipDuplicates: true });
+                imported += result.count;
+            } catch (chunkErr) {
+                // If batch createMany fails, attempt individual creates so good items are preserved
+                for (const item of chunk) {
+                    try {
+                        await db_1.prisma.question.create({ data: item });
+                        imported++;
+                    } catch (_) {}
+                }
+            }
         }
 
         await db_1.prisma.auditLog.create({
             data: {
                 userId: req.user?.id,
                 action: 'BULK_IMPORT_QUESTIONS',
-                target: `Imported: ${imported}`,
+                target: `Imported: ${imported} of ${toInsert.length} questions`,
                 ipAddress: req.ip
             }
         });
+
         return res.status(200).json({
             success: true,
-            message: `Bulk import complete. Imported ${imported} questions.`
+            message: `Bulk import complete. Imported ${imported} questions successfully.`,
+            data: { imported, total: toInsert.length }
         });
     }
     catch (error) {
