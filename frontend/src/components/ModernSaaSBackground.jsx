@@ -2,117 +2,113 @@ import React from "react";
 
 /**
  * ModernSaaSBackground
- *
- * Vercel/Linear-inspired enterprise SaaS background — pure CSS, zero WebGL.
- * Dramatically boosted glow intensities for visible, premium atmosphere.
+ * Hyper-sleek, Vercel/Linear-inspired SaaS background with vibrant cyan/purple/gold
+ * ambient glow orbs, crisp grid mesh texture, and zero WebGL crash risks.
  */
 export default function ModernSaaSBackground({ isDarkMode = true }) {
   if (!isDarkMode) {
     return (
-      <div className="fixed inset-0 -z-10 pointer-events-none">
+      <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-100" />
-        <svg className="absolute inset-0 w-full h-full opacity-[0.08]" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="dots-l" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="1" cy="1" r="0.8" fill="#94a3b8" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#dots-l)" />
-        </svg>
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] rounded-full opacity-40" style={{ background: "radial-gradient(ellipse at center, rgba(124,58,237,0.2), transparent 70%)", filter: "blur(80px)" }} />
-        <div className="absolute top-[10%] right-[10%] w-[600px] h-[400px] rounded-full opacity-30" style={{ background: "radial-gradient(ellipse at center, rgba(6,182,212,0.15), transparent 70%)", filter: "blur(80px)" }} />
+        <div 
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: "linear-gradient(rgba(148, 163, 184, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.25) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+            maskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, black 40%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 30%, black 40%, transparent 90%)",
+          }}
+        />
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-30 bg-purple-300 blur-[90px]" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-      {/* ── Base: Deep midnight ── */}
-      <div className="absolute inset-0 bg-[#080C14]" />
+    <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden select-none">
+      {/* Base Dark Atmosphere */}
+      <div className="absolute inset-0 bg-[#060810]" />
 
-      {/* ── Micro-dot texture ── */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="dots-d" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="0.7" fill="#475569" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#dots-d)" />
-      </svg>
-
-      {/* ── MASSIVE Hero Cyan Backlight ── */}
+      {/* Primary Vibrant Cyan Glow Orb (Hero Center) */}
       <div
-        className="absolute top-[-25%] left-1/2 -translate-x-1/2 w-[1400px] h-[900px] rounded-full"
+        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[550px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(0,240,255,0.25), rgba(0,240,255,0.08) 40%, transparent 70%)",
-          filter: "blur(120px)",
+          background: "radial-gradient(ellipse at center, rgba(0, 240, 255, 0.35) 0%, rgba(0, 240, 255, 0.1) 45%, transparent 75%)",
+          filter: "blur(70px)",
         }}
       />
 
-      {/* ── Violet core glow (behind hero text) ── */}
+      {/* Core Violet/Fuchsia Glow Orb (Directly behind Title) */}
       <div
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1000px] h-[700px] rounded-full"
+        className="absolute top-[5%] left-[45%] -translate-x-1/2 w-[750px] h-[450px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(139,92,246,0.22), transparent 65%)",
-          filter: "blur(100px)",
+          background: "radial-gradient(ellipse at center, rgba(168, 85, 247, 0.35) 0%, rgba(147, 51, 234, 0.12) 50%, transparent 75%)",
+          filter: "blur(75px)",
         }}
       />
 
-      {/* ── Gold accent glow (offset right) ── */}
+      {/* Warm Gold Accent Orb (Hero Top Right) */}
       <div
-        className="absolute top-[5%] left-[58%] -translate-x-1/2 w-[900px] h-[600px] rounded-full"
+        className="absolute top-[-5%] left-[62%] -translate-x-1/2 w-[600px] h-[400px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(255,215,0,0.12), transparent 65%)",
-          filter: "blur(120px)",
+          background: "radial-gradient(ellipse at center, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.08) 50%, transparent 75%)",
+          filter: "blur(65px)",
         }}
       />
 
-      {/* ── Left edge cyan flare ── */}
+      {/* Left Edge Electric Cyan Flare */}
       <div
-        className="absolute top-[15%] left-[-8%] w-[600px] h-[700px] rounded-full"
+        className="absolute top-[20%] left-[-10%] w-[550px] h-[650px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(0,240,255,0.10), transparent 70%)",
-          filter: "blur(90px)",
+          background: "radial-gradient(ellipse at center, rgba(0, 240, 255, 0.18) 0%, transparent 70%)",
+          filter: "blur(80px)",
         }}
       />
 
-      {/* ── Right edge fuchsia flare ── */}
+      {/* Right Edge Fuchsia Flare */}
       <div
-        className="absolute top-[30%] right-[-8%] w-[500px] h-[600px] rounded-full"
+        className="absolute top-[30%] right-[-10%] w-[500px] h-[600px] rounded-full"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(236,72,153,0.08), transparent 70%)",
-          filter: "blur(90px)",
+          background: "radial-gradient(ellipse at center, rgba(236, 72, 153, 0.16) 0%, transparent 70%)",
+          filter: "blur(80px)",
         }}
       />
 
-      {/* ── Bottom-center upward warm glow ── */}
+      {/* Crisp 40px High-Tech Grid Mesh */}
       <div
-        className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[1200px] h-[500px] rounded-full"
+        className="absolute inset-0 opacity-40"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(139,92,246,0.10), transparent 70%)",
-          filter: "blur(100px)",
+          backgroundImage: `
+            linear-gradient(to right, rgba(124, 92, 252, 0.18) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(124, 92, 252, 0.18) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+          maskImage: "radial-gradient(ellipse 85% 75% at 50% 35%, black 45%, transparent 95%)",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 75% at 50% 35%, black 45%, transparent 95%)",
         }}
       />
 
-      {/* ── Horizon accent line ── */}
-      <div className="absolute top-[36%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/15 to-transparent" />
-
-      {/* ── Soft grid overlay for depth ── */}
+      {/* Fine 20px Micro Grid Accent */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-25"
         style={{
-          backgroundImage: "linear-gradient(rgba(148,163,184,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.3) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-          maskImage: "radial-gradient(ellipse 80% 60% at 50% 35%, black 30%, transparent 80%)",
-          WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 35%, black 30%, transparent 80%)",
+          backgroundImage: `
+            radial-gradient(rgba(0, 240, 255, 0.4) 1px, transparent 1px)
+          `,
+          backgroundSize: "20px 20px",
+          maskImage: "radial-gradient(ellipse 80% 70% at 50% 35%, black 35%, transparent 90%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 35%, black 35%, transparent 90%)",
         }}
       />
 
-      {/* ── Bottom vignette fade ── */}
+      {/* Glowing Horizon Line */}
+      <div className="absolute top-[42%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+
+      {/* Soft Bottom Vignette Transition */}
       <div
         className="absolute inset-0"
         style={{
-          background: "linear-gradient(to bottom, transparent 55%, rgba(8,12,20,0.7) 80%, #080C14 100%)",
+          background: "linear-gradient(to bottom, transparent 40%, rgba(6, 8, 16, 0.6) 75%, #060810 100%)",
         }}
       />
     </div>
