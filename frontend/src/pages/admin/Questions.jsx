@@ -105,23 +105,23 @@ export const Questions = () => {
     if (aiPreviewQuestions.length === 0) return;
     setSubmitting(true);
     try {
-      for (const q of aiPreviewQuestions) {
-        const body = {
-          type: q.type,
-          content: q.content,
-          options: q.options,
-          answers: q.answers,
-          explanation: q.explanation,
-          score: Number(q.score) || 5.0,
-          negativeMarks: Number(q.negativeMarks) || 0.0,
-          difficulty: q.difficulty,
-          tags: q.tags || [],
-          departmentId: q.departmentId || q.subjectId,
-        };
-        await api.post("/questions", body);
-      }
+      const formatted = aiPreviewQuestions.map(q => ({
+        type: q.type,
+        content: q.content,
+        options: q.options,
+        answers: q.answers,
+        explanation: q.explanation,
+        score: Number(q.score) || 5.0,
+        negativeMarks: Number(q.negativeMarks) || 0.0,
+        difficulty: q.difficulty,
+        tags: q.tags || [],
+        departmentId: q.departmentId,
+        subjectId: q.subjectId,
+      }));
+
+      await api.post("/questions/import", { questions: formatted });
       toast.success(
-        "Successfully imported all AI generated questions into the bank!",
+        `Successfully imported all ${aiPreviewQuestions.length} AI generated questions into the bank!`,
       );
       setShowAIModal(false);
       setAiPreviewQuestions([]);

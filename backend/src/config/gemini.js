@@ -4,12 +4,10 @@ exports.callGeminiWithFallback = callGeminiWithFallback;
 const logger_1 = require("./logger");
 // All available Gemini model candidates, ordered by priority
 const GEMINI_MODELS = [
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
     'gemini-2.0-flash',
     'gemini-2.0-flash-lite',
-    'gemini-2.5-pro',
-    'gemini-3.5-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
 ];
 const MAX_RETRIES_PER_MODEL = 2;
 const BASE_RETRY_DELAY_MS = 3000; // 3 seconds

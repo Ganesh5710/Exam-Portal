@@ -164,7 +164,7 @@ const bulkImportQuestions = async (req, res, next) => {
 
         const toInsert = [];
         for (const record of questions) {
-            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department } = record;
+            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department, subjectId } = record;
             
             let resolvedDeptId = departmentId;
             if (!resolvedDeptId && (departmentCode || department)) {
@@ -206,16 +206,17 @@ const bulkImportQuestions = async (req, res, next) => {
             }
 
             toInsert.push({
-                type,
+                type: type ? type.toUpperCase() : 'MCQ',
                 content,
                 options: options || null,
                 answers,
                 explanation: explanation || null,
                 score: parseFloat(score) || 1.0,
                 negativeMarks: parseFloat(negativeMarks) || 0.0,
-                difficulty: difficulty || 'MEDIUM',
+                difficulty: difficulty ? difficulty.toUpperCase() : 'MEDIUM',
                 tags: tags || [],
-                departmentId: resolvedDeptId
+                departmentId: resolvedDeptId,
+                subjectId: subjectId || null
             });
         }
 
@@ -446,7 +447,7 @@ function generateQuestionsLocally(topic, type, count) {
     return result;
 }
 const generateAIQuestions = async (req, res, next) => {
-    const { topic, difficulty, type, count, departmentId } = req.body;
+    const { topic, difficulty, type, count, departmentId, subjectId } = req.body;
     if (!topic || !departmentId) {
         return res.status(400).json({ success: false, message: 'Topic and departmentId are required.' });
     }
@@ -490,10 +491,13 @@ Each question must also include:
 
 Return ONLY a JSON array of question objects. Do not wrap it in markdown code blocks or add any conversational text. Just return the raw JSON array.`;
         const result = await (0, gemini_1.callGeminiWithFallback)(geminiApiKey, { prompt });
-        const generatedQuestions = JSON.parse(result.text);
+        let cleanText = result.text || '';
+        cleanText = cleanText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const generatedQuestions = JSON.parse(cleanText);
         const enriched = (Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions]).map((q) => ({
             ...q,
-            departmentId
+            departmentId,
+            subjectId: subjectId || null
         }));
         return res.status(200).json({ success: true, data: enriched, model: result.model });
     }
@@ -502,7 +506,8 @@ Return ONLY a JSON array of question objects. Do not wrap it in markdown code bl
         const localQuestions = generateQuestionsLocally(topic, type, count || 3);
         const enriched = localQuestions.map((q) => ({
             ...q,
-            departmentId
+            departmentId,
+            subjectId: subjectId || null
         }));
         return res.status(200).json({
             success: true,
