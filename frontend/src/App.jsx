@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import AuthLayout from "./layouts/AuthLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import StudentLayout from "./layouts/StudentLayout";
+import SuperAdminLayout from "./layouts/SuperAdminLayout";
 
 // Page Imports
 import Login from "./pages/auth/Login";
@@ -26,10 +27,16 @@ import CompatibilityCheck from "./pages/student/CompatibilityCheck";
 import ExamTerminal from "./pages/student/ExamTerminal";
 import SubmissionConfirmation from "./pages/student/SubmissionConfirmation";
 
+// Super Admin Page Imports
+import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
+import InstitutionsManager from "./pages/superadmin/InstitutionsManager";
+import MasterAuditLogs from "./pages/superadmin/MasterAuditLogs";
+import AIUsageMetrics from "./pages/superadmin/AIUsageMetrics";
+
 // Route guards
 // Prevents unauthorized navigation by validating user roles and authentication status.
 // Redirects unauthenticated users to /login and handles role-based fallback pathways.
-const RequireAuth = ({ children, allowedRole }) => {
+const RequireAuth = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -45,14 +52,16 @@ const RequireAuth = ({ children, allowedRole }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Enforce role authorization parameters (e.g. STUDENT / ADMIN)
-  if (user.role !== allowedRole) {
-    return (
-      <Navigate
-        to={user.role === "ADMIN" ? "/admin/dashboard" : "/student/exams"}
-        replace
-      />
-    );
+  // Enforce role authorization parameters (e.g. STUDENT / ADMIN / SUPER_ADMIN)
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  if (!roles.includes(user.role)) {
+    const fallbackPath =
+      user.role === "SUPER_ADMIN"
+        ? "/superadmin/dashboard"
+        : user.role === "ADMIN"
+        ? "/admin/dashboard"
+        : "/student/exams";
+    return <Navigate to={fallbackPath} replace />;
   }
 
   return <>{children}</>;
@@ -80,11 +89,27 @@ export const App = () => {
           <Route path="/login" element={<Login />} />
         </Route>
 
+        {/* Super Admin Command Center Route Paths */}
+        <Route
+          path="/superadmin"
+          element={
+            <RequireAuth allowedRoles={["SUPER_ADMIN"]}>
+              <SuperAdminLayout />
+            </RequireAuth>
+          }
+        >
+          <Route path="dashboard" element={<SuperAdminDashboard />} />
+          <Route path="institutions" element={<InstitutionsManager />} />
+          <Route path="audit-logs" element={<MasterAuditLogs />} />
+          <Route path="ai-usage" element={<AIUsageMetrics />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+        </Route>
+
         {/* Admin Console Route Paths */}
         <Route
           path="/admin"
           element={
-            <RequireAuth allowedRole="ADMIN">
+            <RequireAuth allowedRoles={["ADMIN", "SUPER_ADMIN"]}>
               <AdminLayout />
             </RequireAuth>
           }
@@ -107,7 +132,7 @@ export const App = () => {
         <Route
           path="/student"
           element={
-            <RequireAuth allowedRole="STUDENT">
+            <RequireAuth allowedRoles={["STUDENT"]}>
               <StudentLayout />
             </RequireAuth>
           }
@@ -129,7 +154,7 @@ export const App = () => {
         <Route
           path="/student/exams/:id/terminal"
           element={
-            <RequireAuth allowedRole="STUDENT">
+            <RequireAuth allowedRoles={["STUDENT"]}>
               <ExamTerminal />
             </RequireAuth>
           }

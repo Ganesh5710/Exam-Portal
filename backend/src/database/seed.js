@@ -33,6 +33,24 @@ const seedDatabase = async () => {
             });
             logger_1.logger.info(`Seeded Admin User: ${adminEmail}`);
         }
+
+        const superAdminEmail = 'superadmin@skillbrix.com';
+        let superAdmin = await db_1.prisma.user.findUnique({ where: { email: superAdminEmail } });
+        if (!superAdmin) {
+            const superAdminHash = await bcryptjs_1.default.hash('SuperAdmin@123', 10);
+            superAdmin = await db_1.prisma.user.create({
+                data: {
+                    email: superAdminEmail,
+                    passwordHash: superAdminHash,
+                    firstName: 'Global',
+                    lastName: 'Super Admin',
+                    role: 'SUPER_ADMIN',
+                    status: 'ACTIVE',
+                    departmentId: null
+                }
+            });
+            logger_1.logger.info(`Seeded Super Admin User: ${superAdminEmail}`);
+        }
         logger_1.logger.info('Database Seeder: Done.');
     }
     catch (err) {
