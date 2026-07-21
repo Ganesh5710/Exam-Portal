@@ -802,7 +802,7 @@ export const Landing = () => {
 
   return (
     <div className={`min-h-screen transition-colors duration-500 selection:bg-violet-600/30 selection:text-violet-200 overflow-x-hidden relative font-sans ${
-      isDarkMode ? "bg-[#02000A] text-slate-100" : "bg-[#f8f9fc] text-slate-900"
+      isDarkMode ? "bg-[#04060E] text-slate-100" : "bg-[#f8f9fc] text-slate-900"
     }`}>
       
       {/* Global CSS style overrides for premium dashboard features */}
