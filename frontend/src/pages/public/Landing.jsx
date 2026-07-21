@@ -909,12 +909,12 @@ export const Landing = () => {
       {/* Cinematic 3D Abstract Geometric Tech Background Image Overlay */}
       <div 
         className={`fixed inset-0 pointer-events-none transition-all duration-700 -z-10 bg-cover bg-center bg-no-repeat ${
-          isDarkMode ? "opacity-35 mix-blend-screen" : "opacity-15 mix-blend-multiply"
+          isDarkMode ? "opacity-85 md:opacity-95" : "opacity-40"
         }`}
         style={{
           backgroundImage: `url('/tech_hero_bg.png')`,
-          maskImage: 'radial-gradient(ellipse 90% 90% at 50% 30%, #000 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 30%, #000 60%, transparent 100%)'
+          maskImage: 'radial-gradient(ellipse 95% 95% at 50% 35%, #000 75%, transparent 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 95% 95% at 50% 35%, #000 75%, transparent 100%)'
         }}
       />
 
