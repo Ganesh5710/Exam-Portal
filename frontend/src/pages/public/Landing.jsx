@@ -909,13 +909,7 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* Awwwards-Grade React Three Fiber + GLSL Noise Terrain Masterpiece Engine */}
-      <Master3DBackground isDarkMode={isDarkMode} />
-
-      {/* World-Class Three.js + GSAP + GLSL 3D WebGL Engine */}
-      <Hero3DBackground isDarkMode={isDarkMode} />
-
-      {/* Senior Creative Developer Grade WebGL 3D Perspective Canvas Background */}
+      {/* High-Performance 60fps GPU 3D Perspective Canvas Engine */}
       <BackgroundGrid isDarkMode={isDarkMode} />
 
       {/* Cinematic 3D Abstract Geometric Tech Background Image Overlay */}
