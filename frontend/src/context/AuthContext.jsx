@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userProfile));
 
     setUser(userProfile);
+    return userProfile;
   };
 
   const loginWithOtp = async (email, otp) => {

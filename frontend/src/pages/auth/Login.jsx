@@ -20,20 +20,16 @@ export const Login = () => {
 
     setLoading(true);
     try {
-      await login(email, password);
+      const userProfile = await login(email, password);
       toast.success("Login successful!");
 
-      // Check user role to redirect
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        const user = JSON.parse(userString);
-        if (user.role === "SUPER_ADMIN") {
-          navigate("/superadmin/dashboard");
-        } else if (user.role === "ADMIN") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/student/exams");
-        }
+      const role = userProfile?.role || JSON.parse(localStorage.getItem("user") || "{}").role;
+      if (role === "SUPER_ADMIN") {
+        navigate("/superadmin/dashboard", { replace: true });
+      } else if (role === "ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/student/exams", { replace: true });
       }
     } catch (err) {
       const msg =
