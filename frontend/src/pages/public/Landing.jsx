@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import BackgroundGrid from "../../components/BackgroundGrid";
-import Hero3DBackground from "../../components/Hero3DBackground";
-import Master3DBackground from "../../components/Master3DBackground";
+import QuantumGrid from "../../components/QuantumGrid";
 import { 
   Shield, 
   ArrowRight, 
@@ -909,41 +907,8 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* High-Performance 60fps GPU 3D Perspective Canvas Engine */}
-      <BackgroundGrid isDarkMode={isDarkMode} />
-
-      {/* Cinematic 3D Abstract Geometric Tech Background Image Overlay */}
-      <div 
-        className={`fixed inset-0 pointer-events-none transition-all duration-700 -z-10 bg-cover bg-center bg-no-repeat ${
-          isDarkMode ? "opacity-85 md:opacity-95" : "opacity-40"
-        }`}
-        style={{
-          backgroundImage: `url('/tech_hero_bg.png')`,
-          maskImage: 'radial-gradient(ellipse 95% 95% at 50% 35%, #000 75%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 95% 95% at 50% 35%, #000 75%, transparent 100%)'
-        }}
-      />
-
-      {/* Checkered Grid (Checks) Background Pattern */}
-      <div className={`fixed inset-0 pointer-events-none transition-opacity duration-500 -z-10 ${
-        isDarkMode 
-          ? "bg-[linear-gradient(to_right,rgba(124,92,252,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,252,0.15)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-70"
-          : "bg-[linear-gradient(to_right,rgba(148,163,184,0.35)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.35)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-80"
-      }`} />
-
-      {/* Secondary Fine Checks Detail */}
-      <div className={`fixed inset-0 pointer-events-none transition-opacity duration-500 -z-10 ${
-        isDarkMode 
-          ? "bg-[radial-gradient(rgba(124,92,252,0.25)_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"
-          : "bg-[radial-gradient(rgba(100,116,139,0.3)_1px,transparent_1px)] bg-[size:32px_32px] opacity-50"
-      }`} />
-      
-      {/* Background Neon Glow Orbs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 transition-opacity duration-500" style={{ opacity: isDarkMode ? 0.85 : 0.35 }}>
-        <div className="absolute w-[800px] h-[600px] rounded-full blur-[130px] blob-violet top-[-100px] left-[15%]" />
-        <div className="absolute w-[700px] h-[500px] rounded-full blur-[140px] blob-fuchsia top-[20%] right-[10%]" />
-        <div className="absolute w-[900px] h-[600px] rounded-full blur-[150px] blob-cyan bottom-[10%] left-[20%]" />
-      </div>
+      {/* Quantum Core Telemetry Grid — Single high-performance Canvas engine */}
+      <QuantumGrid isDarkMode={isDarkMode} />
 
       {/* Navigation Header */}
       {/* Clean glassmorphic floating capsule navbar */}
