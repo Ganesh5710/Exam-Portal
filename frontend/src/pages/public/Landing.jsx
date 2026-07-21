@@ -1444,7 +1444,7 @@ export const Landing = () => {
       )}
 
       {/* ── ASSESSMENT COMMAND CENTER (ULTRA PREMIUM FEATURE) ── */}
-      <section className="py-24 px-6 transition-colors duration-500 relative z-10">
+      <section className="pt-16 pb-8 px-6 transition-colors duration-500 relative z-10">
         <div className="w-full max-w-7xl mx-auto h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent mb-16" />
         <div className="absolute inset-0 bg-gradient-to-r from-violet-600/5 via-transparent to-cyan-500/5 pointer-events-none" />
         
@@ -1734,6 +1734,21 @@ export const Landing = () => {
                       </div>
                     </div>
 
+                    {/* Live Command Telemetry Status Ribbon */}
+                    <div className={`pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-[9px] font-mono ${
+                      isDarkMode ? "border-white/5 text-slate-400" : "border-slate-100 text-slate-500"
+                    }`}>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>WS WebSocket Node: Mumbai-01</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-violet-400">Ping: 12ms</span>
+                        <span>•</span>
+                        <span className="text-emerald-400">Encrypted AES-256</span>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
@@ -1744,10 +1759,10 @@ export const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-6 transition-colors duration-500">
-        <div className="w-full max-w-7xl mx-auto h-px bg-gradient-to-r from-transparent via-fuchsia-500/20 to-transparent mb-16" />
+      <section className="pt-8 pb-16 px-6 transition-colors duration-500">
+        <div className="w-full max-w-7xl mx-auto h-px bg-gradient-to-r from-transparent via-fuchsia-500/20 to-transparent mb-10" />
         <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-16">
+          <div className="text-center max-w-xl mx-auto mb-12">
             <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Educator Feedback</div>
             <h2 className={`text-3xl md:text-5xl font-black transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               Trusted in classrooms and admission cells
