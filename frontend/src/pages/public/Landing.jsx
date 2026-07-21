@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import QuantumGrid from "../../components/QuantumGrid";
+import ModernSaaSBackground from "../../components/ModernSaaSBackground";
 import { 
   Shield, 
   ArrowRight, 
@@ -907,8 +907,8 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* Quantum Core Telemetry Grid — Single high-performance Canvas engine */}
-      <QuantumGrid isDarkMode={isDarkMode} />
+      {/* Vercel/Linear-inspired pure CSS background */}
+      <ModernSaaSBackground isDarkMode={isDarkMode} />
 
       {/* Navigation Header */}
       {/* Clean glassmorphic floating capsule navbar */}
