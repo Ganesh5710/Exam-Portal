@@ -1,933 +1,770 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import api from "../../services/api";
-import {
-  UploadCloud,
-  Loader2,
-  CheckCircle,
-  AlertTriangle,
-  Trash2,
-  Edit2,
-  X,
-  ArrowRight,
-  AlertCircle,
-  ArrowLeft,
-  Settings,
-} from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  Upload,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Trash2,
+  Edit3,
+  Save,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  RefreshCw,
+  ArrowLeft,
+  Sparkles,
+  BookOpen,
+  Tag,
+  Award,
+} from "lucide-react";
 
+/* ─────────────────────────────── helpers ─────────────────────────── */
+const TYPES = ["MCQ", "MULTI_CORRECT", "TRUE_FALSE", "FILL_BLANK", "DESCRIPTIVE", "CODING"];
+const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
+const TYPE_COLORS = {
+  MCQ: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+  MULTI_CORRECT: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+  TRUE_FALSE: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+  FILL_BLANK: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  DESCRIPTIVE: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+  CODING: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+};
+const DIFF_COLORS = {
+  EASY: "text-emerald-400",
+  MEDIUM: "text-yellow-400",
+  HARD: "text-red-400",
+};
+
+/* ─────────────────────────────── main component ─────────────────── */
 export const QuestionImport = () => {
-  const [subjects, setSubjects] = useState([]);
-  const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  /* --- state --- */
+  const [step, setStep] = useState("upload"); // upload | extracting | preview | done
   const [file, setFile] = useState(null);
-  // Job Tracking states
-  const [jobId, setJobId] = useState(null);
-  const [jobStatus, setJobStatus] = useState("IDLE"); // IDLE, PENDING, PROCESSING, PREVIEW_READY, COMPLETED, FAILED, CANCELLED
-  const [progress, setProgress] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
-  const [processed, setProcessed] = useState(0);
-  const [failed, setFailed] = useState(0);
-  const [duplicates, setDuplicates] = useState(0);
-  const [errorMessage, setErrorMessage] = useState(null);
-  // Questions preview states
-  const [parsedQuestions, setParsedQuestions] = useState([]);
-  const [selectedQuestions, setSelectedQuestions] = useState({});
-  const [duplicateActions, setDuplicateActions] = useState({});
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editFormData, setEditFormData] = useState(null);
-  const [existingQuestionContents, setExistingQuestionContents] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [subjectId, setSubjectId] = useState("auto");
+  const [questions, setQuestions] = useState([]);
+  const [selected, setSelected] = useState({});          // idx → bool
+  const [editIdx, setEditIdx] = useState(null);
+  const [editQ, setEditQ] = useState(null);
+  const [expanded, setExpanded] = useState({});          // idx → bool
+  const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState({ saved: 0, skipped: 0, failed: 0 });
+  const fileRef = useRef(null);
 
-  // 1. Fetch Subjects & existing Questions for duplicate check
-  // Fetch available course modules / department codes from back-end api
-  const fetchSubjects = async () => {
-    try {
-      const res = await api.get("/departments");
-      const list = res.data.data || [];
-      setSubjects(list);
-      // Fallback selection targeting first item or autodetect
-      if (list.length > 0) {
-        setSelectedSubjectId(list[0].id);
-      } else {
-        setSelectedSubjectId("auto-detect");
-      }
-    } catch {
-      setSelectedSubjectId("auto-detect");
-    }
-  };
-
-  const fetchExistingQuestions = useCallback(async () => {
-    if (!selectedSubjectId) return;
-    try {
-      const res = await api.get(`/questions?subjectId=${selectedSubjectId}`);
-      const contents = (res.data.data || []).map((q) =>
-        q.content.trim().toLowerCase(),
-      );
-      setExistingQuestionContents(contents);
-    } catch {
-      // Ignore fallback
-    }
-  }, [selectedSubjectId]);
-
+  /* --- load subjects on mount --- */
   useEffect(() => {
-    fetchSubjects();
+    api.get("/subjects").then((r) => {
+      const list = r.data?.data || [];
+      setSubjects(list);
+    }).catch(() => {
+      // fallback: try departments endpoint
+      api.get("/departments").then((r) => {
+        setSubjects(r.data?.data || []);
+      }).catch(() => {});
+    });
   }, []);
 
-  useEffect(() => {
-    fetchExistingQuestions();
-  }, [fetchExistingQuestions]);
-
-  // 2. Drag & Drop File handler
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+  /* ─── STEP 1 : File Selection ─── */
+  const onFileDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer?.files?.[0] || e.target?.files?.[0];
+    if (f) setFile(f);
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) {
-      toast.error("Please select a file to import.");
-      return;
-    }
-    if (!selectedSubjectId) {
-      toast.error("Please select a Subject.");
-      return;
-    }
+  /* ─── STEP 2 : Extract via direct API ─── */
+  const handleExtract = async () => {
+    if (!file) return toast.error("Please choose a file first.");
+    setStep("extracting");
 
     const formData = new FormData();
     formData.append("file", file);
+    if (subjectId !== "auto") formData.append("subjectId", subjectId);
 
-    setSubmitting(true);
-    setErrorMessage(null);
     try {
-      const res = await api.post("/import/upload", formData, {
+      // Call the new synchronous extract endpoint
+      const res = await api.post("/import/extract", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000, // 2 minutes
       });
-      setJobId(res.data.data.jobId);
-      setJobStatus("PENDING");
-      setProgress(0);
-      toast.success("Document uploaded. Starting background extraction...");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to upload document.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  // 3. Poll Background progress status
-  useEffect(() => {
-    if (
-      !jobId ||
-      ["COMPLETED", "FAILED", "CANCELLED", "PREVIEW_READY"].includes(jobStatus)
-    )
-      return;
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await api.get(`/import/status/${jobId}`);
-        const job = res.data.data;
-        setJobStatus(job.status);
-        setProgress(job.progress);
-        setTotalItems(job.totalItems);
-        setProcessed(job.processed);
-        setFailed(job.failed);
-        setDuplicates(job.duplicates);
-        setErrorMessage(job.errorMessage);
-
-        if (job.status === "PREVIEW_READY") {
-          // Pre-populate parsed questions and run duplicate detection checks
-          const questionsList = job.resultData || [];
-          const enriched = questionsList.map((q) => {
-            const isDup = existingQuestionContents.includes(
-              q.content.trim().toLowerCase(),
-            );
-            return {
-              ...q,
-              isPossibleDuplicate: isDup,
-            };
-          });
-
-          setParsedQuestions(enriched);
-          // Auto-select all questions, and setup default actions for duplicates
-          const initialSelection = {};
-          const initialDupActions = {};
-          enriched.forEach((q, idx) => {
-            initialSelection[idx] = true;
-            if (q.isPossibleDuplicate) {
-              initialDupActions[q.content] = "SKIP"; // default action is to skip duplicate
-            }
-          });
-
-          setSelectedQuestions(initialSelection);
-          setDuplicateActions(initialDupActions);
-          clearInterval(interval);
-          toast.success("AI Question extraction completed! Please review.");
-        } else if (job.status === "FAILED") {
-          clearInterval(interval);
-          toast.error(`Import failed: ${job.errorMessage}`);
-        }
-      } catch (err) {
-        clearInterval(interval);
+      const extracted = res.data?.data?.questions || [];
+      if (extracted.length === 0) {
+        toast.error("No questions could be extracted. Try a different file or format.");
+        setStep("upload");
+        return;
       }
-    }, 1200);
 
-    return () => clearInterval(interval);
-  }, [jobId, jobStatus, existingQuestionContents]);
-
-  // 4. Cancel active Import Job
-  const handleCancelJob = async () => {
-    if (!jobId) return;
-    try {
-      await api.post(`/import/cancel/${jobId}`);
-      setJobStatus("CANCELLED");
-      toast.success("Extraction processing cancelled.");
-    } catch {
-      toast.error("Failed to cancel job.");
-    }
-  };
-
-  // 5. In-place Edit Modals
-  const openEditModal = (idx) => {
-    setEditingIndex(idx);
-    setEditFormData({ ...parsedQuestions[idx] });
-  };
-
-  const saveEdit = () => {
-    if (editingIndex === null || !editFormData) return;
-    const newList = [...parsedQuestions];
-    newList[editingIndex] = editFormData;
-    setParsedQuestions(newList);
-    setEditingIndex(null);
-    setEditFormData(null);
-    toast.success("Question updated locally.");
-  };
-
-  const deleteQuestion = (idx) => {
-    setParsedQuestions((prev) => prev.filter((_, i) => i !== idx));
-    toast.success("Question removed from the preview list.");
-  };
-
-  // 6. Submit final approved questions list
-  const handleFinalImport = async () => {
-    if (!jobId) return;
-    // Filter only selected questions
-    const finalQuestions = parsedQuestions.filter(
-      (_, idx) => selectedQuestions[idx],
-    );
-    if (finalQuestions.length === 0) {
-      toast.error("Please select at least one question to import.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await api.post(`/import/approve/${jobId}`, {
-        departmentId: selectedSubjectId,
-        questions: finalQuestions,
-        duplicateActions,
-      });
-
-      setJobStatus("COMPLETED");
-      toast.success(
-        res.data.message || "Import operation completed successfully!",
-      );
+      // Mark all selected by default
+      const selMap = {};
+      extracted.forEach((_, i) => (selMap[i] = true));
+      setQuestions(extracted);
+      setSelected(selMap);
+      setStep("preview");
+      toast.success(`✅ ${extracted.length} questions extracted! Review before saving.`);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to complete import.");
-    } finally {
-      setSubmitting(false);
+      const msg = err.response?.data?.message || err.message || "Extraction failed.";
+      toast.error(`Extraction error: ${msg}`);
+      setStep("upload");
     }
   };
 
+  /* ─── STEP 3 : Edit helpers ─── */
+  const openEdit = (idx) => {
+    setEditIdx(idx);
+    setEditQ(JSON.parse(JSON.stringify(questions[idx]))); // deep clone
+  };
+  const cancelEdit = () => { setEditIdx(null); setEditQ(null); };
+  const saveEdit = () => {
+    if (!editQ) return;
+    setQuestions((prev) => prev.map((q, i) => (i === editIdx ? editQ : q)));
+    setEditIdx(null);
+    setEditQ(null);
+    toast.success("Question updated.");
+  };
+  const removeQ = (idx) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== idx));
+    setSelected((prev) => {
+      const n = {};
+      Object.keys(prev).forEach((k) => { if (Number(k) !== idx) n[Number(k) > idx ? Number(k) - 1 : k] = prev[k]; });
+      return n;
+    });
+    toast.success("Question removed.");
+  };
+  const toggleSelect = (idx) => setSelected((p) => ({ ...p, [idx]: !p[idx] }));
+  const toggleExpand = (idx) => setExpanded((p) => ({ ...p, [idx]: !p[idx] }));
+  const selectAll = () => { const m = {}; questions.forEach((_, i) => (m[i] = true)); setSelected(m); };
+  const deselectAll = () => setSelected({});
+
+  /* ─── STEP 4 : Save to Question Bank ─── */
+  const handleSave = async () => {
+    const toSave = questions.filter((_, i) => selected[i]);
+    if (toSave.length === 0) return toast.error("Select at least one question.");
+
+    setSaving(true);
+    try {
+      const payload = toSave.map((q) => ({
+        type: q.type || "MCQ",
+        content: q.content,
+        options: Array.isArray(q.options) ? q.options.filter(Boolean) : [],
+        answers: q.answers,
+        explanation: q.explanation || "",
+        difficulty: q.difficulty || "MEDIUM",
+        score: parseFloat(q.score) || 5,
+        negativeMarks: parseFloat(q.negativeMarks) || 0,
+        tags: Array.isArray(q.tags) ? q.tags : [],
+        subjectId: subjectId !== "auto" ? subjectId : (q.subjectId || null),
+        departmentId: q.departmentId || null,
+        topic: q.topic || "",
+      }));
+
+      const res = await api.post("/questions/import", { questions: payload });
+      const savedCount = res.data?.data?.length || payload.length;
+      setStats({ saved: savedCount, skipped: toSave.length - savedCount, failed: 0 });
+      setStep("done");
+      toast.success(`🎉 ${savedCount} questions saved to Question Bank!`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save questions.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetAll = () => {
+    setStep("upload");
+    setFile(null);
+    setQuestions([]);
+    setSelected({});
+    setExpanded({});
+    setEditIdx(null);
+    setEditQ(null);
+    setStats({ saved: 0, skipped: 0, failed: 0 });
+    setSubjectId("auto");
+  };
+
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════════════ */
   return (
-    <div className="space-y-8 min-h-screen bg-slate-950 text-slate-100 p-2">
-      {/* Header */}
-      <div className="flex justify-between items-center border-b border-slate-900 pb-4">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-8">
+
+      {/* ── Page Header ── */}
+      <div className="flex items-start justify-between border-b border-slate-800 pb-5">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
+            <Sparkles size={28} className="text-violet-400" />
             AI Question Importer
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase">
-              Enterprise
-            </span>
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Upload files to automatically extract and import questions using
-            Gemini AI & OCR.
+            Upload Excel, Word, PDF, CSV, or TXT — AI extracts all questions automatically.
           </p>
         </div>
+        {step !== "upload" && (
+          <button
+            onClick={resetAll}
+            className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all"
+          >
+            <ArrowLeft size={13} /> Start Over
+          </button>
+        )}
       </div>
 
-      {/* ═══════════════ UPLOAD FILE PANEL ═══════════════ */}
-      {jobStatus === "IDLE" && (
-        <form
-          onSubmit={handleUpload}
-          className="glass-card max-w-2xl mx-auto p-8 rounded-2xl border border-slate-800 space-y-6 bg-slate-900/40"
-        >
+      {/* ── Progress Bar ── */}
+      <div className="flex items-center gap-0 text-xs select-none">
+        {[
+          { id: "upload", label: "1. Upload File" },
+          { id: "extracting", label: "2. AI Extraction" },
+          { id: "preview", label: "3. Review" },
+          { id: "done", label: "4. Saved" },
+        ].map((s, i) => {
+          const steps = ["upload", "extracting", "preview", "done"];
+          const current = steps.indexOf(step);
+          const sIdx = steps.indexOf(s.id);
+          const active = sIdx === current;
+          const done = sIdx < current;
+          return (
+            <React.Fragment key={s.id}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition-all
+                ${active ? "bg-violet-600/30 text-violet-300 border border-violet-500/40" :
+                  done ? "text-emerald-400" : "text-slate-600"}`}>
+                {done ? <CheckCircle2 size={13} /> : null}
+                {s.label}
+              </div>
+              {i < 3 && <div className={`h-px w-6 md:w-12 ${done ? "bg-emerald-600" : "bg-slate-800"}`} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* ════════════════════════════════════════════════════
+          STEP 1 : UPLOAD
+      ════════════════════════════════════════════════════ */}
+      {step === "upload" && (
+        <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* Subject selector */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-300">
-              Target Department Module
+              Target Subject (optional)
             </label>
             <select
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-850 p-3 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-white"
-              required
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 transition-all"
             >
-              <option value="auto-detect">Auto-Detect Department (from file)</option>
-              {subjects.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name} ({sub.code})
+              <option value="auto">Auto-detect from file</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} {s.code ? `(${s.code})` : ""}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="border-2 border-dashed border-slate-800 hover:border-emerald-500/60 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 relative bg-slate-950/40">
+          {/* Drag-and-drop zone */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onFileDrop}
+            onClick={() => fileRef.current?.click()}
+            className={`relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200
+              ${dragOver ? "border-violet-500 bg-violet-950/20" :
+                file ? "border-emerald-500/60 bg-emerald-950/10" : "border-slate-700 hover:border-slate-500 bg-slate-900/30"}`}
+          >
             <input
+              ref={fileRef}
               type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.doc,.txt,.md,.csv,.xlsx,.xls,.png,.jpg,.jpeg"
-              className="absolute inset-0 opacity-0 cursor-pointer"
+              accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.md,.png,.jpg,.jpeg"
+              className="hidden"
+              onChange={onFileDrop}
             />
 
-            <UploadCloud className="mx-auto text-slate-600 mb-3" size={40} />
             {file ? (
-              <div className="space-y-1">
-                <p className="text-sm text-slate-200 font-semibold">
-                  {file.name}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {(file.size / (1024 * 1024)).toFixed(2)} MB
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <p className="text-sm text-slate-300 font-medium">
-                  Drag and drop file, or click to browse
-                </p>
-                <p className="text-xs text-slate-600">
-                  Supports PDF (including Scanned PDF OCR), Word, Excel, CSV,
-                  Images (JPEG/PNG), MD & TXT
-                </p>
-              </div>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting || !file}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold flex justify-center items-center gap-2 transition-all disabled:opacity-40 disabled:hover:bg-emerald-600"
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Uploading document file...
-              </>
-            ) : (
-              <>
-                <ArrowRight size={16} />
-                Upload & Process with AI
-              </>
-            )}
-          </button>
-        </form>
-      )}
-
-      {/* ═══════════════ POLLING PROGRESS PANEL ═══════════════ */}
-      {(jobStatus === "PENDING" || jobStatus === "PROCESSING") && (
-        <div className="glass-card max-w-xl mx-auto p-8 rounded-2xl border border-slate-800 space-y-6 text-center bg-slate-900/40">
-          <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-            <Loader2
-              className="text-emerald-400 animate-spin absolute"
-              size={80}
-            />
-            <span className="font-mono text-sm font-bold text-emerald-400">
-              {progress}%
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-bold text-lg">
-              AI Document Analysis in Progress
-            </h3>
-            <p className="text-xs text-slate-400">
-              {progress < 25
-                ? "Uploading and reading document file..."
-                : progress < 50
-                  ? "Loading pages & executing OCR..."
-                  : progress < 85
-                    ? "Parsing layout and extracting questions via Gemini AI..."
-                    : "Validating questions content and metadata structures..."}
-            </p>
-            <p className="text-[10px] text-slate-500 animate-pulse mt-1">
-              Please do not refresh the browser.
-            </p>
-          </div>
-
-          <button
-            onClick={handleCancelJob}
-            className="px-4 py-2 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-xs font-semibold rounded-lg transition-all"
-          >
-            Cancel Ingestion
-          </button>
-        </div>
-      )}
-
-      {/* ═══════════════ PREVIEW QUESTIONS REVIEW PANEL ═══════════════ */}
-      {jobStatus === "PREVIEW_READY" && parsedQuestions.length > 0 && (
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/30 border border-slate-850 p-5 rounded-xl">
-            <div>
-              <h3 className="text-lg font-bold text-white">
-                Ingestion Review Hub
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Review the extracted items, resolve duplicates, and approve
-                questions for bank insertion.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setJobStatus("IDLE")}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold border border-slate-800 hover:bg-slate-900 rounded-lg text-slate-300"
-              >
-                <ArrowLeft size={14} /> Back
-              </button>
-              <button
-                onClick={handleFinalImport}
-                disabled={submitting}
-                className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white shadow-lg shadow-emerald-600/20 transition-all"
-              >
-                {submitting ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <CheckCircle size={15} />
-                )}
-                Import Checked (
-                {Object.values(selectedQuestions).filter(Boolean).length})
-              </button>
-            </div>
-          </div>
-
-          {/* List layout */}
-          <div className="space-y-4">
-            {parsedQuestions.map((q, idx) => {
-              const hasWarnings =
-                q.validationWarnings && q.validationWarnings.length > 0;
-              const isSelected = selectedQuestions[idx] || false;
-              const isDup = q.isPossibleDuplicate;
-
-              return (
-                <div
-                  key={idx}
-                  className={`glass-card p-6 rounded-xl border transition-all duration-200 flex gap-4 items-start
-                    ${isSelected ? "bg-slate-900/20" : "opacity-50"}
-                    ${isDup ? "border-orange-500/30 bg-orange-950/5" : hasWarnings ? "border-amber-500/20" : "border-slate-850"}
-                  `}
+              <div className="space-y-2">
+                <FileText size={44} className="mx-auto text-emerald-400" />
+                <p className="font-semibold text-emerald-300 text-base">{file.name}</p>
+                <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                  className="text-xs text-slate-500 hover:text-red-400 underline mt-1"
                 >
-                  {/* Select Checkbox */}
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={(e) =>
-                      setSelectedQuestions((prev) => ({
-                        ...prev,
-                        [idx]: e.target.checked,
-                      }))
-                    }
-                    className="mt-1.5 accent-emerald-500 w-4.5 h-4.5 cursor-pointer rounded"
-                  />
-
-                  {/* Body Content */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-slate-950 text-slate-400 font-mono">
-                          #{idx + 1}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-violet-400">
-                          {q.type}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                          {q.difficulty}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-500">
-                          Suggested: {q.score} Points
-                        </span>
-                      </div>
-
-                      {/* Warnings and Duplicates */}
-                      <div className="flex gap-2">
-                        {isDup && (
-                          <span className="flex items-center gap-1 text-[10px] bg-orange-500/10 border border-orange-500/20 text-orange-400 font-bold px-2 py-0.5 rounded">
-                            <AlertCircle size={10} /> Duplicate in Bank
-                          </span>
-                        )}
-                        {hasWarnings && (
-                          <span className="flex items-center gap-1 text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold px-2 py-0.5 rounded">
-                            <AlertTriangle size={10} /> Validation Warnings
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Question Content string */}
-                    <p className="text-sm font-semibold text-slate-100 font-mono leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-900">
-                      {q.content}
-                    </p>
-
-                    {/* Choice options for MCQ */}
-                    {q.options && q.options.length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-3">
-                        {q.options.map((opt, oIdx) => (
-                          <div
-                            key={oIdx}
-                            className="text-xs text-slate-400 flex gap-2 font-mono"
-                          >
-                            <span className="font-bold text-slate-500">
-                              {String.fromCharCode(65 + oIdx)}.
-                            </span>
-                            <span>{opt}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Correct Answers */}
-                    <div className="text-xs space-y-1">
-                      <p className="text-slate-400 font-mono">
-                        <strong className="text-emerald-400 font-semibold uppercase tracking-wider text-[10px]">
-                          Answer key:
-                        </strong>{" "}
-                        {Array.isArray(q.answers)
-                          ? q.answers.join(", ")
-                          : typeof q.answers === "object"
-                            ? "Coding testcases object"
-                            : String(q.answers)}
-                      </p>
-                      {q.explanation && (
-                        <p className="text-slate-500 text-[11px] leading-relaxed">
-                          <strong className="text-slate-400">
-                            Explanation:
-                          </strong>{" "}
-                          {q.explanation}
-                        </p>
-                      )}
-                      {q.topic && (
-                        <p className="text-[10px] text-slate-500">
-                          <strong className="text-slate-600">
-                            Tags / Topic:
-                          </strong>{" "}
-                          {q.tags.join(", ") || "none"} | {q.topic}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Validation Warnings List */}
-                    {hasWarnings && (
-                      <div className="bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg text-[10px] text-amber-400 space-y-1">
-                        <p className="font-bold flex items-center gap-1">
-                          <AlertTriangle size={11} /> Validate alerts:
-                        </p>
-                        <ul className="list-disc pl-4 space-y-0.5">
-                          {q.validationWarnings?.map((w, i) => (
-                            <li key={i}>{w}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Duplicate Action selector */}
-                    {isDup && (
-                      <div className="flex items-center gap-3 bg-orange-950/15 border border-orange-500/10 p-3 rounded-lg text-xs">
-                        <span className="font-bold text-orange-400 flex items-center gap-1.5">
-                          <Settings size={14} /> Duplicate action choice:
-                        </span>
-                        <select
-                          value={duplicateActions[q.content] || "SKIP"}
-                          onChange={(e) =>
-                            setDuplicateActions((prev) => ({
-                              ...prev,
-                              [q.content]: e.target.value,
-                            }))
-                          }
-                          className="bg-slate-950 border border-slate-800 px-2.5 py-1 text-slate-200 text-xs rounded focus:outline-none focus:border-orange-500"
-                        >
-                          <option value="SKIP">Skip import (ignore)</option>
-                          <option value="REPLACE">
-                            Overwrite existing question
-                          </option>
-                          <option value="UPDATE">Update fields only</option>
-                          <option value="KEEP_BOTH">
-                            Keep both (import as duplicate)
-                          </option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions Column */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => openEditModal(idx)}
-                      className="p-2 hover:bg-slate-850 border border-slate-850 hover:text-emerald-400 rounded-lg text-slate-400 transition-all"
-                      title="Edit Question details"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => deleteQuestion(idx)}
-                      className="p-2 hover:bg-slate-850 border border-slate-850 hover:text-red-400 rounded-lg text-slate-400 transition-all"
-                      title="Remove question"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  Remove file
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Upload size={44} className="mx-auto text-slate-600" />
+                <div>
+                  <p className="font-medium text-slate-300">Drop your file here, or click to browse</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Supports: PDF, Word (.docx), Excel (.xlsx/.csv), TXT, Images (JPG/PNG)
+                  </p>
                 </div>
-              );
-            })}
+              </div>
+            )}
+          </div>
+
+          {/* Supported formats info */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { ext: "XLSX / CSV", desc: "Structured question sheet" },
+              { ext: "PDF / DOCX", desc: "Text or scanned document" },
+              { ext: "TXT / MD", desc: "Plain text question list" },
+              { ext: "JPG / PNG", desc: "Photo of printed paper" },
+            ].map((f) => (
+              <div key={f.ext} className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 text-center">
+                <p className="text-xs font-bold text-violet-400">{f.ext}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleExtract}
+            disabled={!file}
+            className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-600/20"
+          >
+            <Sparkles size={18} />
+            Extract Questions with AI
+          </button>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          STEP 2 : EXTRACTING (loading)
+      ════════════════════════════════════════════════════ */}
+      {step === "extracting" && (
+        <div className="max-w-md mx-auto text-center space-y-6 py-16">
+          <div className="relative w-24 h-24 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-violet-600/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-violet-500 animate-spin" />
+            <Sparkles size={36} className="absolute inset-0 m-auto text-violet-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">AI is reading your file…</h3>
+            <p className="text-slate-400 text-sm mt-1">Extracting all questions. Please wait — this may take up to 60 seconds for large files.</p>
+          </div>
+          <div className="flex flex-col gap-1.5 text-xs text-slate-500">
+            <p className="animate-pulse">📄 Parsing document structure…</p>
+            <p className="animate-pulse delay-300">🧠 Sending to Gemini AI…</p>
+            <p className="animate-pulse delay-500">✅ Formatting question data…</p>
           </div>
         </div>
       )}
 
-      {/* ═══════════════ FINAL IMPORT COMPLETED SCREEN ═══════════════ */}
-      {jobStatus === "COMPLETED" && (
-        <div className="glass-card max-w-xl mx-auto p-8 rounded-2xl border border-slate-800 space-y-6 text-center bg-slate-900/40">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={36} />
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-bold text-xl">Import Action Completed</h3>
-            <p className="text-sm text-slate-400">
-              Questions have been added to your bank with audit logging details.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 border border-slate-800 bg-slate-950/50 p-4 rounded-xl text-center">
+      {/* ════════════════════════════════════════════════════
+          STEP 3 : PREVIEW & REVIEW
+      ════════════════════════════════════════════════════ */}
+      {step === "preview" && questions.length > 0 && (
+        <div className="space-y-5">
+          {/* Preview toolbar */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/50 border border-slate-800 rounded-xl p-4">
             <div>
-              <p className="text-xl font-bold text-emerald-400">{processed}</p>
-              <p className="text-[10px] uppercase text-slate-500 mt-1 font-semibold">
-                Processed
+              <p className="font-bold text-white text-base">
+                <Eye size={16} className="inline mr-2 text-violet-400" />
+                Review Extracted Questions
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {questions.length} questions found &nbsp;·&nbsp; {selectedCount} selected for import
               </p>
             </div>
-            <div>
-              <p className="text-xl font-bold text-orange-400">{duplicates}</p>
-              <p className="text-[10px] uppercase text-slate-500 mt-1 font-semibold">
-                Duplicates
-              </p>
-            </div>
-            <div>
-              <p className="text-xl font-bold text-red-400">{failed}</p>
-              <p className="text-[10px] uppercase text-slate-500 mt-1 font-semibold">
-                Failed
-              </p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={selectAll} className="text-xs px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:border-slate-500">
+                Select All
+              </button>
+              <button onClick={deselectAll} className="text-xs px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:border-slate-500">
+                Deselect All
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || selectedCount === 0}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold disabled:opacity-50 transition-all shadow-md shadow-emerald-600/20"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                Save {selectedCount} Question{selectedCount !== 1 ? "s" : ""}
+              </button>
             </div>
           </div>
 
-          <div className="flex gap-3 justify-center pt-2">
+          {/* Question cards */}
+          <div className="space-y-3">
+            {questions.map((q, idx) => (
+              <QuestionCard
+                key={idx}
+                q={q}
+                idx={idx}
+                selected={!!selected[idx]}
+                expanded={!!expanded[idx]}
+                onToggleSelect={() => toggleSelect(idx)}
+                onToggleExpand={() => toggleExpand(idx)}
+                onEdit={() => openEdit(idx)}
+                onRemove={() => removeQ(idx)}
+              />
+            ))}
+          </div>
+
+          {/* Bottom save bar */}
+          <div className="sticky bottom-4 flex justify-end">
             <button
-              onClick={() => setJobStatus("IDLE")}
-              className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+              onClick={handleSave}
+              disabled={saving || selectedCount === 0}
+              className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-lg shadow-emerald-600/25"
             >
-              Import another file
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {saving ? "Saving…" : `Save ${selectedCount} Questions to Bank`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════
+          STEP 4 : DONE
+      ════════════════════════════════════════════════════ */}
+      {step === "done" && (
+        <div className="max-w-md mx-auto text-center space-y-6 py-8">
+          <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <CheckCircle2 size={40} className="text-emerald-400" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-white">Import Complete! 🎉</h3>
+            <p className="text-slate-400 text-sm mt-1">Questions have been added to your Question Bank.</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 border border-slate-800 bg-slate-900/50 rounded-xl p-5">
+            <div>
+              <p className="text-2xl font-bold text-emerald-400">{stats.saved}</p>
+              <p className="text-[11px] uppercase text-slate-500 mt-1 font-semibold">Saved</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-yellow-400">{stats.skipped}</p>
+              <p className="text-[11px] uppercase text-slate-500 mt-1 font-semibold">Skipped</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-400">{stats.failed}</p>
+              <p className="text-[11px] uppercase text-slate-500 mt-1 font-semibold">Failed</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={resetAll}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm font-medium"
+            >
+              <RefreshCw size={14} /> Import Another File
             </button>
             <button
               onClick={() => (window.location.href = "/admin/questions")}
-              className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold"
             >
-              Open Questions Bank
+              <BookOpen size={14} /> View Question Bank
             </button>
           </div>
         </div>
       )}
 
-      {/* ═══════════════ ERROR / FAIL PANEL ═══════════════ */}
-      {jobStatus === "FAILED" && (
-        <div className="glass-card max-w-xl mx-auto p-8 rounded-2xl border border-red-500/20 bg-red-950/5 space-y-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle size={36} />
-          </div>
+      {/* ── Edit Modal ── */}
+      {editIdx !== null && editQ && (
+        <EditModal
+          q={editQ}
+          setQ={setEditQ}
+          onSave={saveEdit}
+          onClose={cancelEdit}
+        />
+      )}
+    </div>
+  );
+};
 
-          <div className="space-y-2">
-            <h3 className="font-bold text-xl text-red-400">
-              AI Processing Error
-            </h3>
-            <p className="text-sm text-slate-400">
-              An unexpected error occurred during extraction.
-            </p>
-            {errorMessage && (
-              <p className="text-xs font-mono bg-slate-950 border border-slate-850 p-3 rounded text-red-300 select-all leading-normal text-left max-h-[150px] overflow-y-auto">
-                {errorMessage}
-              </p>
-            )}
-          </div>
+/* ─────────────────────────────── QuestionCard sub-component ─────── */
+const QuestionCard = ({ q, idx, selected, expanded, onToggleSelect, onToggleExpand, onEdit, onRemove }) => {
+  const typeClass = TYPE_COLORS[q.type] || "bg-slate-700 text-slate-300 border-slate-600";
+  const diffClass = DIFF_COLORS[q.difficulty] || "text-slate-400";
 
-          <button
-            onClick={() => setJobStatus("IDLE")}
-            className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
-          >
-            Try Again
+  return (
+    <div className={`rounded-xl border transition-all duration-150
+      ${selected ? "border-slate-700 bg-slate-900/40" : "border-slate-800/50 bg-slate-900/20 opacity-60"}`}>
+
+      {/* Card Header */}
+      <div className="flex items-start gap-3 p-4">
+        {/* Checkbox */}
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="mt-1 w-4 h-4 accent-violet-500 cursor-pointer rounded"
+        />
+
+        {/* Content preview */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${typeClass}`}>{q.type}</span>
+            <span className={`text-[10px] font-bold ${diffClass}`}>{q.difficulty}</span>
+            <span className="text-[10px] text-slate-500 font-mono">#{idx + 1}</span>
+            {q.score && <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Award size={9} /> {q.score}pts</span>}
+            {q.topic && <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Tag size={9} /> {q.topic}</span>}
+          </div>
+          <p className="text-sm text-slate-200 leading-relaxed line-clamp-2">{q.content}</p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button onClick={onToggleExpand} className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-all" title="Expand">
+            {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
+          <button onClick={onEdit} className="p-1.5 rounded-lg text-slate-500 hover:text-violet-400 hover:bg-slate-800 transition-all" title="Edit">
+            <Edit3 size={15} />
+          </button>
+          <button onClick={onRemove} className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-all" title="Remove">
+            <Trash2 size={15} />
           </button>
         </div>
-      )}
+      </div>
 
-      {/* ═══════════════ EDIT ITEM MODAL ═══════════════ */}
-      {editingIndex !== null && editFormData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setEditingIndex(null)}
-          />
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5 text-left">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Edit2 size={16} /> Edit Extracted Question
-              </h3>
-              <button
-                onClick={() => setEditingIndex(null)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Type
-                  </label>
-                  <select
-                    value={editFormData.type}
-                    onChange={(e) =>
-                      setEditFormData({ ...editFormData, type: e.target.value })
-                    }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                  >
-                    <option value="MCQ">MCQ</option>
-                    <option value="MULTI_CORRECT">Multiple Correct</option>
-                    <option value="TRUE_FALSE">True / False</option>
-                    <option value="FILL_BLANK">Fill Blank</option>
-                    <option value="DESCRIPTIVE">Descriptive</option>
-                    <option value="CODING">Coding</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Difficulty
-                  </label>
-                  <select
-                    value={editFormData.difficulty}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        difficulty: e.target.value,
-                      })
-                    }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                  >
-                    <option value="EASY">Easy</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HARD">Hard</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Question Content
-                </label>
-                <textarea
-                  value={editFormData.content}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      content: e.target.value,
-                    })
-                  }
-                  rows={4}
-                  className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white focus:outline-none"
-                  required
-                />
-              </div>
-
-              {/* Options for MCQ / Multi Correct */}
-              {(editFormData.type === "MCQ" ||
-                editFormData.type === "MULTI_CORRECT") && (
-                <div className="space-y-3 p-3 bg-slate-950 border border-slate-850 rounded-lg">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Choice Options
-                  </span>
-                  <div className="space-y-2">
-                    {(editFormData.options || ["", "", "", ""]).map(
-                      (opt, i) => (
-                        <div key={i} className="flex gap-2 items-center">
-                          <span className="text-xs font-mono font-bold text-slate-500">
-                            {String.fromCharCode(65 + i)}
-                          </span>
-                          <input
-                            type="text"
-                            value={opt}
-                            onChange={(e) => {
-                              const newOptions = [
-                                ...(editFormData.options || ["", "", "", ""]),
-                              ];
-                              newOptions[i] = e.target.value;
-                              setEditFormData({
-                                ...editFormData,
-                                options: newOptions,
-                              });
-                            }}
-                            className="flex-1 p-2 bg-slate-900 border border-slate-800 rounded text-xs text-white"
-                            placeholder={`Option ${i + 1}`}
-                            required
-                          />
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Answers keys */}
-              {editFormData.type !== "CODING" && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Correct Answer
-                  </label>
-                  {editFormData.type === "MCQ" ? (
-                    <select
-                      value={
-                        Array.isArray(editFormData.answers)
-                          ? editFormData.answers[0]
-                          : String(editFormData.answers)
-                      }
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          answers: [e.target.value],
-                        })
-                      }
-                      className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                    >
-                      <option value="">Select Correct Option</option>
-                      {(editFormData.options || []).map((opt, idx) =>
-                        opt ? (
-                          <option key={idx} value={opt}>
-                            {opt}
-                          </option>
-                        ) : null,
-                      )}
-                    </select>
-                  ) : editFormData.type === "TRUE_FALSE" ? (
-                    <select
-                      value={String(editFormData.answers)}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          answers: e.target.value,
-                        })
-                      }
-                      className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                    >
-                      <option value="True">True</option>
-                      <option value="False">False</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={
-                        Array.isArray(editFormData.answers)
-                          ? editFormData.answers.join(", ")
-                          : String(editFormData.answers)
-                      }
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          answers: e.target.value
-                            .split(",")
-                            .map((s) => s.trim()),
-                        })
-                      }
-                      className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                    />
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Score Points
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={editFormData.score}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        score: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Negative Marks
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={editFormData.negativeMarks}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        negativeMarks: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Explanation
-                </label>
-                <textarea
-                  value={editFormData.explanation || ""}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      explanation: e.target.value,
-                    })
-                  }
-                  rows={2}
-                  className="w-full p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-sm text-white focus:outline-none"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setEditingIndex(null)}
-                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveEdit}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
+      {/* Expanded Detail */}
+      {expanded && (
+        <div className="px-4 pb-4 space-y-3 border-t border-slate-800 pt-3 ml-7">
+          {/* Full question text */}
+          <div className="bg-slate-950/60 rounded-lg p-3 border border-slate-800">
+            <p className="text-sm text-slate-100 leading-relaxed">{q.content}</p>
           </div>
+
+          {/* Options */}
+          {Array.isArray(q.options) && q.options.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {q.options.map((opt, oi) => {
+                const isCorrect = Array.isArray(q.answers)
+                  ? q.answers.includes(opt)
+                  : q.answers === opt;
+                return (
+                  <div
+                    key={oi}
+                    className={`flex items-start gap-2 text-xs rounded-lg px-3 py-2 border
+                      ${isCorrect ? "bg-emerald-950/30 border-emerald-600/30 text-emerald-300" : "bg-slate-900/50 border-slate-800 text-slate-400"}`}
+                  >
+                    <span className="font-bold shrink-0">{String.fromCharCode(65 + oi)}.</span>
+                    <span>{opt}</span>
+                    {isCorrect && <CheckCircle2 size={11} className="ml-auto shrink-0 text-emerald-400" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Answer for non-MCQ */}
+          {(!q.options || q.options.length === 0) && q.answers !== undefined && (
+            <div className="bg-emerald-950/20 border border-emerald-600/20 rounded-lg px-3 py-2">
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Answer: </span>
+              <span className="text-xs text-emerald-300">
+                {Array.isArray(q.answers) ? q.answers.join(", ") : String(q.answers)}
+              </span>
+            </div>
+          )}
+
+          {/* Explanation */}
+          {q.explanation && (
+            <div className="bg-slate-900/50 border border-slate-800 rounded-lg px-3 py-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Explanation: </span>
+              <span className="text-xs text-slate-400">{q.explanation}</span>
+            </div>
+          )}
+
+          {/* Tags */}
+          {Array.isArray(q.tags) && q.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {q.tags.map((t, ti) => (
+                <span key={ti} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">{t}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
+
+/* ─────────────────────────────── EditModal sub-component ──────────── */
+const EditModal = ({ q, setQ, onSave, onClose }) => {
+  const update = (field, val) => setQ((prev) => ({ ...prev, [field]: val }));
+  const updateOption = (i, val) => {
+    const opts = [...(q.options || ["", "", "", ""])];
+    opts[i] = val;
+    update("options", opts);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 flex justify-between items-center px-6 py-4 z-10">
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <Edit3 size={16} className="text-violet-400" /> Edit Question
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-all">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Type + Difficulty row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Type</label>
+              <select
+                value={q.type || "MCQ"}
+                onChange={(e) => update("type", e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+              >
+                {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Difficulty</label>
+              <select
+                value={q.difficulty || "MEDIUM"}
+                onChange={(e) => update("difficulty", e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+              >
+                {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Score + NegMark row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Score (points)</label>
+              <input
+                type="number" min="0" step="0.5"
+                value={q.score ?? 5}
+                onChange={(e) => update("score", parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Negative Marks</label>
+              <input
+                type="number" min="0" step="0.25"
+                value={q.negativeMarks ?? 0}
+                onChange={(e) => update("negativeMarks", parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+              />
+            </div>
+          </div>
+
+          {/* Question content */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Question Content</label>
+            <textarea
+              value={q.content || ""}
+              onChange={(e) => update("content", e.target.value)}
+              rows={4}
+              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 resize-y"
+            />
+          </div>
+
+          {/* Options (for MCQ / MULTI_CORRECT) */}
+          {(q.type === "MCQ" || q.type === "MULTI_CORRECT") && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Answer Options</label>
+              <div className="space-y-2">
+                {(q.options?.length ? q.options : ["", "", "", ""]).map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 w-5">{String.fromCharCode(65 + i)}.</span>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => updateOption(i, e.target.value)}
+                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                      className="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Correct Answer */}
+          {q.type !== "CODING" && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                Correct Answer {q.type === "MCQ" ? "(select from options)" : ""}
+              </label>
+              {q.type === "MCQ" ? (
+                <select
+                  value={Array.isArray(q.answers) ? q.answers[0] : q.answers || ""}
+                  onChange={(e) => update("answers", [e.target.value])}
+                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+                >
+                  <option value="">-- Select correct option --</option>
+                  {(q.options || []).filter(Boolean).map((opt, i) => (
+                    <option key={i} value={opt}>{String.fromCharCode(65 + i)}. {opt}</option>
+                  ))}
+                </select>
+              ) : q.type === "TRUE_FALSE" ? (
+                <select
+                  value={Array.isArray(q.answers) ? q.answers[0] : String(q.answers)}
+                  onChange={(e) => update("answers", e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+                >
+                  <option value="True">True</option>
+                  <option value="False">False</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={Array.isArray(q.answers) ? q.answers.join(", ") : String(q.answers || "")}
+                  onChange={(e) => update("answers", e.target.value.split(",").map((s) => s.trim()))}
+                  placeholder="Enter answer(s), comma-separated"
+                  className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+                />
+              )}
+            </div>
+          )}
+
+          {/* Explanation */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Explanation (optional)</label>
+            <textarea
+              value={q.explanation || ""}
+              onChange={(e) => update("explanation", e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 resize-y"
+              placeholder="Step-by-step explanation..."
+            />
+          </div>
+
+          {/* Topic */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Topic / Tags</label>
+            <input
+              type="text"
+              value={q.topic || ""}
+              onChange={(e) => update("topic", e.target.value)}
+              placeholder="e.g. Calculus, Kinematics, Organic Chemistry..."
+              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
+            />
+          </div>
+        </div>
+
+        {/* Modal footer */}
+        <div className="sticky bottom-0 bg-slate-900 border-t border-slate-800 flex justify-end gap-3 px-6 py-4">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-700 rounded-lg hover:bg-slate-800 transition-all">
+            Cancel
+          </button>
+          <button onClick={onSave} className="px-5 py-2 text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-all flex items-center gap-2">
+            <Save size={14} /> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default QuestionImport;

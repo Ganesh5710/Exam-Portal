@@ -576,6 +576,7 @@ const parseStructuredFile = (filePath, ext) => {
 
     return parsedQuestions.length > 0 ? parsedQuestions : null;
 };
+exports.parseStructuredFile = parseStructuredFile;
 
 // 3. Main processing function for jobs
 const processImportJob = async (jobId, filePath, mimeType) => {
