@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import BackgroundGrid from "../../components/BackgroundGrid";
 import Hero3DBackground from "../../components/Hero3DBackground";
+import Master3DBackground from "../../components/Master3DBackground";
 import { 
   Shield, 
   ArrowRight, 
@@ -907,6 +908,9 @@ export const Landing = () => {
           50% { transform: translateY(-14px) translateZ(65px); }
         }
       `}</style>
+
+      {/* Awwwards-Grade React Three Fiber + GLSL Noise Terrain Masterpiece Engine */}
+      <Master3DBackground isDarkMode={isDarkMode} />
 
       {/* World-Class Three.js + GSAP + GLSL 3D WebGL Engine */}
       <Hero3DBackground isDarkMode={isDarkMode} />
