@@ -39,32 +39,58 @@ const path_1 = __importDefault(require("path"));
 const logger_1 = require("../../config/logger");
 const gemini_1 = require("../../config/gemini");
 // 1. Text extraction helpers
-const extractTextFromFile = async (filePath, mimeType) => {
-    if (mimeType === 'text/plain' || mimeType === 'text/markdown' || filePath.endsWith('.md') || filePath.endsWith('.txt')) {
-        return fs_1.default.readFileSync(filePath, 'utf8');
+const extractTextFromFile = async (filePath, mimeType = '') => {
+    const lowerPath = filePath.toLowerCase();
+    const lowerMime = (mimeType || '').toLowerCase();
+
+    // 1. Try Excel / CSV / Spreadsheet
+    if (lowerPath.endsWith('.xlsx') || lowerPath.endsWith('.xls') || lowerPath.endsWith('.csv') || lowerPath.endsWith('.tsv') || lowerMime.includes('spreadsheet') || lowerMime.includes('excel') || lowerMime.includes('csv')) {
+        try {
+            const workbook = xlsx.readFile(filePath);
+            let text = '';
+            for (const name of workbook.SheetNames) {
+                const sheet = workbook.Sheets[name];
+                text += `\n--- Sheet: ${name} ---\n`;
+                text += xlsx.utils.sheet_to_csv(sheet);
+            }
+            if (text.trim()) return text;
+        } catch (e) {}
     }
-    else if (mimeType === 'text/csv' || filePath.endsWith('.csv')) {
-        return fs_1.default.readFileSync(filePath, 'utf8');
+
+    // 2. Try Word (.docx / .doc)
+    if (lowerPath.endsWith('.docx') || lowerPath.endsWith('.doc') || lowerMime.includes('word')) {
+        try {
+            const result = await mammoth_1.default.extractRawText({ path: filePath });
+            if (result.value && result.value.trim()) return result.value;
+        } catch (e) {}
     }
-    else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filePath.endsWith('.docx')) {
-        const result = await mammoth_1.default.extractRawText({ path: filePath });
-        return result.value || '';
+
+    // 3. Try PDF (.pdf)
+    if (lowerPath.endsWith('.pdf') || lowerMime.includes('pdf')) {
+        try {
+            const dataBuffer = fs_1.default.readFileSync(filePath);
+            const parsed = await pdf_parse_1.default(dataBuffer);
+            if (parsed.text && parsed.text.trim()) return parsed.text;
+        } catch (e) {}
     }
-    else if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || filePath.endsWith('.xlsx') || filePath.endsWith('.xls')) {
+
+    // 4. Try Plain Text / Markdown / JSON
+    try {
+        const text = fs_1.default.readFileSync(filePath, 'utf8');
+        if (text && text.trim()) return text;
+    } catch (e) {}
+
+    // 5. Ultimate Fallback: Try xlsx.readFile anyway
+    try {
         const workbook = xlsx.readFile(filePath);
         let text = '';
         for (const name of workbook.SheetNames) {
             const sheet = workbook.Sheets[name];
-            text += `\n--- Sheet: ${name} ---\n`;
             text += xlsx.utils.sheet_to_csv(sheet);
         }
-        return text;
-    }
-    else if (mimeType === 'application/pdf' || filePath.endsWith('.pdf')) {
-        const dataBuffer = fs_1.default.readFileSync(filePath);
-        const parsed = await pdf_parse_1.default(dataBuffer);
-        return parsed.text || '';
-    }
+        if (text.trim()) return text;
+    } catch (e) {}
+
     return '';
 };
 exports.extractTextFromFile = extractTextFromFile;

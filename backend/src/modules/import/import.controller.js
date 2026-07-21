@@ -125,16 +125,19 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
             }
             const parsed = JSON.parse(text);
             questions = Array.isArray(parsed) ? parsed : [parsed];
-        } catch (aiErr) {
-            logger_1.logger.warn(`[extract] AI parse failed: ${aiErr.message}. Trying local regex fallback.`);
-            if (documentText.trim()) {
+        // Fallback local parsing if AI returned no questions
+        if (questions.length === 0) {
+            if (!documentText || !documentText.trim()) {
+                documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
+            }
+            if (documentText && documentText.trim()) {
                 questions = import_job_1.parseQuestionsLocally(documentText);
             }
         }
 
         // Validate & normalise each question
         questions = questions
-            .filter(q => q && typeof q.content === 'string' && q.content.trim().length > 3)
+            .filter(q => q && typeof q.content === 'string' && q.content.trim().length > 2)
             .map(q => {
                 const validTypes = ['MCQ','MULTI_CORRECT','TRUE_FALSE','FILL_BLANK','DESCRIPTIVE','CODING'];
                 const validDiffs = ['EASY','MEDIUM','HARD'];
@@ -156,7 +159,7 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
         logger_1.logger.info(`[extract] AI extraction: ${questions.length} questions`);
 
         if (questions.length === 0) {
-            return res.status(422).json({ success: false, message: 'No questions could be extracted from this file. Please try a different format or ensure the file contains properly formatted questions.' });
+            return res.status(422).json({ success: false, message: 'File was uploaded but no readable questions or text could be extracted. Please check your file content or try an Excel (.xlsx) / Word (.docx) file.' });
         }
 
         return res.status(200).json({
