@@ -48,12 +48,12 @@ app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: false // Allow loading local uploads files on client
 }));
 app.use((0, cors_1.default)({
-    origin: (origin, callback) => {
-        callback(null, true);
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     credentials: true
 }));
+app.options('*', (0, cors_1.default)());
 app.use(express_1.default.json({ limit: '50mb' }));
 app.use(express_1.default.urlencoded({ limit: '50mb', extended: true }));
 // Local media folder static route
