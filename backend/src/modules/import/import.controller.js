@@ -61,11 +61,11 @@ const extractQuestions = async (req, res, next) => {
             documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
         }
 
-        // Build the AI prompt - check env var first, then DB settings as fallback
+        // Build the AI prompt - check env var first, then DB systemSettings as fallback
         let geminiApiKey = process.env.GEMINI_API_KEY;
         if (!geminiApiKey) {
             try {
-                const setting = await db_1.prisma.setting.findFirst({
+                const setting = await db_1.prisma.systemSettings.findUnique({
                     where: { key: 'GEMINI_API_KEY' }
                 });
                 if (setting?.value) geminiApiKey = setting.value;

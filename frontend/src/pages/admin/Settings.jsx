@@ -24,6 +24,7 @@ export const Settings = () => {
     SMTP_PASS: "",
     SESSION_TIMEOUT: "60",
     MAINTENANCE_MODE: "false",
+    GEMINI_API_KEY: "",
   });
 
   const [backups, setBackups] = useState([]);
@@ -296,6 +297,30 @@ export const Settings = () => {
                 >
                   {settings.MAINTENANCE_MODE === "true" ? "Active" : "Disabled"}
                 </button>
+              </div>
+            </div>
+
+            {/* ── AI Configuration (Gemini API Key) ── */}
+            <div className="space-y-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm font-semibold mb-2">
+                <span className="text-violet-400">✦</span> AI Configuration (Gemini)
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Gemini API Key
+                </label>
+                <input
+                  type="password"
+                  value={settings.GEMINI_API_KEY || ""}
+                  onChange={(e) => handleUpdateSetting("GEMINI_API_KEY", e.target.value)}
+                  placeholder="AIza..."
+                  className="w-full bg-background border border-border text-foreground rounded-lg p-3 text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-mono"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Required for AI Question Importer. Get your free key at{" "}
+                  <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-violet-400 underline">aistudio.google.com</a>.
+                  Setting it here stores it in the database — no Render redeploy needed.
+                </p>
               </div>
             </div>
 
