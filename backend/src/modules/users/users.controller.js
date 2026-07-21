@@ -387,7 +387,14 @@ const importStudentsFile = async (req, res, next) => {
             const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
             const password = getKey(['password'])?.toString() || 'user@123';
 
-            return { email, firstName, lastName, departmentCode, password };
+            const subjects = [
+                getKey(['subject1', 'subj1', 'subjectone']),
+                getKey(['subject2', 'subj2', 'subjecttwo']),
+                getKey(['subject3', 'subj3', 'subjectthree']),
+                getKey(['subject', 'subjects'])
+            ].filter(Boolean).map(s => s.toString().trim());
+
+            return { email, firstName, lastName, departmentCode, password, subjects };
         }).filter(r => r.email && r.email.toString().includes('@'));
 
         if (normalizedStudents.length === 0) {
@@ -406,14 +413,23 @@ const importStudentsFile = async (req, res, next) => {
         const deptNameMap = new Map(departments.map(d => [d.name.toLowerCase().trim(), d.id]));
 
         const missingDepts = new Set();
+        const missingSubjects = new Set();
+
         for (const record of normalizedStudents) {
-            const { departmentCode } = record;
+            const { departmentCode, subjects } = record;
             if (departmentCode && departmentCode.trim()) {
                 const codeUpper = departmentCode.toUpperCase().trim();
                 const nameLower = departmentCode.toLowerCase().trim();
                 if (!deptMap.has(codeUpper) && !deptNameMap.has(nameLower)) {
                     missingDepts.add(departmentCode.trim());
                 }
+            }
+            if (Array.isArray(subjects)) {
+                subjects.forEach(subName => {
+                    if (subName && subName.trim()) {
+                        missingSubjects.add(subName.trim());
+                    }
+                });
             }
         }
 
@@ -442,6 +458,33 @@ const importStudentsFile = async (req, res, next) => {
                     deptMap.set(codeUpper, existing.id);
                     deptNameMap.set(deptName.toLowerCase(), existing.id);
                 }
+            }
+        }
+
+        // Auto-create missing subjects extracted from student records
+        for (const subName of missingSubjects) {
+            const cleanName = subName.trim();
+            const subCode = cleanName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8) || 'SUBJ';
+            try {
+                const existingSub = await db_1.prisma.subject.findFirst({
+                    where: {
+                        OR: [
+                            { name: { equals: cleanName, mode: 'insensitive' } },
+                            { code: subCode }
+                        ]
+                    }
+                });
+                if (!existingSub) {
+                    await db_1.prisma.subject.create({
+                        data: {
+                            name: cleanName,
+                            code: subCode,
+                            description: `Automatically created during student data import`
+                        }
+                    });
+                }
+            } catch (err) {
+                // ignore duplicate code errors
             }
         }
 

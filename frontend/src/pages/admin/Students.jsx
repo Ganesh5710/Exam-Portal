@@ -252,10 +252,9 @@ export const Students = () => {
     }
   };
 
-  // Generates and triggers a mock browser download of a template CSV file for bulk student import
+  // Generates and triggers a browser download of a template CSV file for bulk student import
   const downloadTemplate = () => {
-    // Define headers (email, firstName, lastName, departmentCode, password) and mock entries
-    const csvContent = "data:text/csv;charset=utf-8,email,firstName,lastName,departmentCode,password\r\nstudent1@gmail.com,Ganesh,Bathula,CSE,user@123\r\nstudent2@gmail.com,John,Doe,CSE,user@123\r\n";
+    const csvContent = "data:text/csv;charset=utf-8,Student ID,Student Name,Email,Department,Subject 1,Subject 2,Subject 3,Password\r\nJEE1001,Aarav Sharma,aarav.sharma@example.com,JEE Mains,Mathematics,Physics,Chemistry,User@123\r\nJEE1002,Vivaan Verma,vivaan.verma@example.com,JEE Mains,Mathematics,Physics,Chemistry,User@123\r\n";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);

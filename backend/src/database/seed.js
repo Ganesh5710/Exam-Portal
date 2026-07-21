@@ -51,6 +51,30 @@ const seedDatabase = async () => {
             });
             logger_1.logger.info(`Seeded Super Admin User: ${superAdminEmail}`);
         }
+
+        // Seed Default Core Academic Subjects if missing
+        const defaultSubjects = [
+            { name: 'Mathematics', code: 'MATH', description: 'Core Mathematics & Calculus' },
+            { name: 'Physics', code: 'PHYS', description: 'Theoretical & Applied Physics' },
+            { name: 'Chemistry', code: 'CHEM', description: 'Organic & Inorganic Chemistry' },
+            { name: 'Computer Science', code: 'CS', description: 'Software Engineering & Data Structures' },
+            { name: 'General Aptitude', code: 'APT', description: 'Logical Reasoning & Quantitative Aptitude' }
+        ];
+
+        for (const sub of defaultSubjects) {
+            const existingSub = await db_1.prisma.subject.findUnique({ where: { code: sub.code } });
+            if (!existingSub) {
+                await db_1.prisma.subject.create({
+                    data: {
+                        name: sub.name,
+                        code: sub.code,
+                        description: sub.description
+                    }
+                });
+                logger_1.logger.info(`Seeded Default Subject: ${sub.name} (${sub.code})`);
+            }
+        }
+
         logger_1.logger.info('Database Seeder: Done.');
     }
     catch (err) {
