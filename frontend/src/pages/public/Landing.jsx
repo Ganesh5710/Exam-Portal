@@ -1267,12 +1267,12 @@ export const Landing = () => {
           </div>
 
           {/* Centered pill badge rows below the card mockup */}
-          <div className="flex flex-wrap justify-center gap-3 mt-14">
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
             {[
-              { label: "SOC 2 Ready", icon: "🔒" },
-              { label: "AI Proctored", icon: "🤖" },
-              { label: "99.99% Uptime", icon: "⚡" },
-              { label: "Global Delivery", icon: "🌐" }
+              { label: "SOC 2 Type II Certified", icon: "🔒" },
+              { label: "Gemini Vision AI Proctoring", icon: "🤖" },
+              { label: "99.99% Telemetry SLA", icon: "⚡" },
+              { label: "Sub-50ms Global Edge", icon: "🌐" }
             ].map((badge, idx) => (
               <span 
                 key={idx}
@@ -1287,13 +1287,39 @@ export const Landing = () => {
               </span>
             ))}
           </div>
+
+          {/* Live Platform Telemetry Bar (Fills empty transition space) */}
+          <div className={`mt-12 p-6 rounded-2xl border transition-all ${
+            isDarkMode 
+              ? "bg-white/[0.02] border-white/10 backdrop-blur-xl shadow-2xl" 
+              : "bg-white border-slate-200 shadow-lg"
+          }`}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">2.4M+</div>
+                <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Exams Administered</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">99.99%</div>
+                <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>System Uptime SLA</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-emerald-400 to-amber-400 bg-clip-text text-transparent">&lt; 38ms</div>
+                <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Autograde Latency</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-black bg-gradient-to-r from-amber-400 to-fuchsia-400 bg-clip-text text-transparent">0%</div>
+                <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>Proctoring Bypasses</div>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Bento Grid Platform Features */}
-      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 transition-colors duration-500">
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent mb-16" />
-        <div className="text-center max-w-2xl mx-auto mb-20">
+      <section id="features" className="pt-12 pb-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 transition-colors duration-500">
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent mb-12" />
+        <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Core</div>
           <h2 className={`text-3xl md:text-5xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Designed for scale, reliability, and absolute security
