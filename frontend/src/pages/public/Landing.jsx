@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
+import BackgroundGrid from "../../components/BackgroundGrid";
 import { 
   Shield, 
   ArrowRight, 
@@ -905,6 +906,9 @@ export const Landing = () => {
           50% { transform: translateY(-14px) translateZ(65px); }
         }
       `}</style>
+
+      {/* Senior Creative Developer Grade WebGL 3D Perspective Canvas Background */}
+      <BackgroundGrid isDarkMode={isDarkMode} />
 
       {/* Cinematic 3D Abstract Geometric Tech Background Image Overlay */}
       <div 
