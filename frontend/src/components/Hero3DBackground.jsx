@@ -23,8 +23,8 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
     // 1. Scene Setup
     const scene = new THREE.Scene();
     const bgColor = isDarkMode ? new THREE.Color("#090D16") : new THREE.Color("#F8FAFC");
-    scene.background = bgColor;
-    scene.fog = new THREE.FogExp2(bgColor, 0.018);
+    // Keep scene transparent so elements blend cleanly
+    scene.fog = new THREE.FogExp2(bgColor, 0.012);
 
     // 2. Camera Setup
     const camera = new THREE.PerspectiveCamera(
@@ -33,7 +33,7 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
       0.1,
       1000
     );
-    camera.position.set(0, 8, 28);
+    camera.position.set(0, 6, 22);
     camera.lookAt(0, 2, 0);
 
     // 3. WebGL Renderer Setup
@@ -45,7 +45,7 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.4;
     container.appendChild(renderer.domElement);
 
     // 4. Custom GLSL Cyber-Grid Shader Material
@@ -60,7 +60,7 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
         vec3 pos = position;
         
         // Subtle 3D wave displacement along horizontal grid
-        float elevation = sin(pos.x * 0.15 + uTime * uWaveSpeed) * cos(pos.y * 0.15 + uTime * uWaveSpeed) * 0.6;
+        float elevation = sin(pos.x * 0.18 + uTime * uWaveSpeed) * cos(pos.y * 0.18 + uTime * uWaveSpeed) * 0.8;
         pos.z += elevation;
         vElevation = elevation;
 
@@ -82,29 +82,29 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
 
       void main() {
         // Grid pattern calculations
-        vec2 grid = abs(fract(vUv * 40.0 - 0.5) - 0.5) / fwidth(vUv * 40.0);
+        vec2 grid = abs(fract(vUv * 36.0 - 0.5) - 0.5) / fwidth(vUv * 36.0);
         float line = min(grid.x, grid.y);
         float gridAlpha = 1.0 - min(line, 1.0);
 
-        // Gold grid lines every 5th division
-        vec2 goldGrid = abs(fract(vUv * 8.0 - 0.5) - 0.5) / fwidth(vUv * 8.0);
+        // Gold grid lines every 6th division
+        vec2 goldGrid = abs(fract(vUv * 6.0 - 0.5) - 0.5) / fwidth(vUv * 6.0);
         float goldLine = min(goldGrid.x, goldGrid.y);
         float goldAlpha = 1.0 - min(goldLine, 1.0);
 
         // Mix Cyan and Gold glowing colors
-        vec3 strokeColor = mix(uColorCyan, uColorGold, goldAlpha * 0.7);
+        vec3 strokeColor = mix(uColorCyan, uColorGold, goldAlpha * 0.8);
 
-        // Distance fog fade towards horizon (vUv.y -> 1.0)
+        // Distance fog fade towards horizon
         float distanceFade = smoothstep(1.0, 0.0, vUv.y);
         
         // Dynamic pulse wave travelling forward
-        float pulse = sin(vUv.y * 50.0 - uTime * 3.0) * 0.5 + 0.5;
-        pulse = pow(pulse, 4.0);
+        float pulse = sin(vUv.y * 40.0 - uTime * 3.5) * 0.5 + 0.5;
+        pulse = pow(pulse, 3.0);
 
-        vec3 finalColor = mix(uBgColor, strokeColor, (gridAlpha + goldAlpha * 1.5) * distanceFade);
-        finalColor += uColorCyan * pulse * distanceFade * 0.35;
+        vec3 finalColor = strokeColor * (gridAlpha * 1.5 + goldAlpha * 2.0);
+        finalColor += uColorCyan * pulse * distanceFade * 0.8;
 
-        float alpha = (gridAlpha * 0.6 + goldAlpha * 0.9 + pulse * 0.3) * distanceFade;
+        float alpha = (gridAlpha * 0.7 + goldAlpha * 0.95 + pulse * 0.5) * distanceFade;
 
         gl_FragColor = vec4(finalColor, alpha);
       }
@@ -136,12 +136,12 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
     scene.add(nodesGroup);
 
     const nodeGeometries = [
-      new THREE.IcosahedronGeometry(0.8, 0),
-      new THREE.OctahedronGeometry(0.7, 0),
-      new THREE.TetrahedronGeometry(0.6, 0),
+      new THREE.IcosahedronGeometry(1.4, 0),
+      new THREE.OctahedronGeometry(1.2, 0),
+      new THREE.TetrahedronGeometry(1.0, 0),
     ];
 
-    const nodeCount = 14;
+    const nodeCount = 18;
     const nodeMeshes = [];
 
     for (let i = 0; i < nodeCount; i++) {
@@ -152,7 +152,7 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
         color: isGold ? "#FFD700" : "#00F0FF",
         wireframe: true,
         transparent: true,
-        opacity: isDarkMode ? 0.65 : 0.45,
+        opacity: isDarkMode ? 0.85 : 0.6,
       });
 
       const mesh = new THREE.Mesh(geom, mat);
@@ -195,20 +195,15 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
     // 6. Interactive Mouse Parallax & GSAP Smooth Inertia
     let mouseX = 0;
     let mouseY = 0;
-    let targetCameraX = 0;
-    let targetCameraY = 8;
 
     const handleMouseMove = (e) => {
       mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
       mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
 
-      targetCameraX = mouseX * 4;
-      targetCameraY = 8 - mouseY * 2.5;
-
       // GSAP Smooth Camera Tilt Transition
       gsap.to(camera.position, {
-        x: targetCameraX,
-        y: targetCameraY,
+        x: mouseX * 5,
+        y: 6 - mouseY * 3,
         duration: 1.2,
         ease: "power2.out",
       });
@@ -236,7 +231,7 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
       gridMaterial.uniforms.uTime.value = elapsedTime;
 
       // Gentle continuous Group Swaying
-      nodesGroup.rotation.y = Math.sin(elapsedTime * 0.15) * 0.1;
+      nodesGroup.rotation.y = Math.sin(elapsedTime * 0.15) * 0.12;
 
       // Camera lookAt center
       camera.lookAt(0, 2, 0);
@@ -263,15 +258,15 @@ export const Hero3DBackground = ({ isDarkMode = true, className = "" }) => {
   return (
     <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden ${className}`}>
       {/* Three.js Canvas Container */}
-      <div ref={mountRef} className="absolute inset-0" />
+      <div ref={mountRef} className="absolute inset-0 z-0" />
 
-      {/* Non-Intrusive Center Hero Vignette (Ensures 100% Text Legibility) */}
+      {/* Subtle Soft Center Vignette */}
       <div
         className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-700"
         style={{
           background: isDarkMode
-            ? "radial-gradient(ellipse 75% 75% at 50% 45%, rgba(9, 13, 22, 0.45) 0%, rgba(9, 13, 22, 0.85) 65%, rgba(4, 6, 10, 0.98) 100%)"
-            : "radial-gradient(ellipse 75% 75% at 50% 45%, rgba(248, 250, 252, 0.35) 0%, rgba(248, 250, 252, 0.8) 65%, rgba(226, 232, 240, 0.95) 100%)",
+            ? "radial-gradient(circle at 50% 40%, transparent 20%, rgba(9, 13, 22, 0.4) 70%, rgba(4, 6, 10, 0.75) 100%)"
+            : "radial-gradient(circle at 50% 40%, transparent 20%, rgba(248, 250, 252, 0.3) 70%, rgba(226, 232, 240, 0.6) 100%)",
         }}
       />
     </div>
