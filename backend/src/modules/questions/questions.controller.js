@@ -13,21 +13,29 @@ const getQuestions = async (req, res, next) => {
     const type = req.query.type || undefined;
     const difficulty = req.query.difficulty || undefined;
     const departmentId = req.query.departmentId || '';
+    const subjectId = req.query.subjectId || '';
     try {
-        const where = {
-            content: { contains: search }
-        };
+        const where = {};
+        if (search && search.trim() !== '') {
+            where.content = { contains: search.trim(), mode: 'insensitive' };
+        }
         if (type)
             where.type = type;
         if (difficulty)
             where.difficulty = difficulty;
         if (departmentId)
             where.departmentId = departmentId;
+        if (subjectId)
+            where.subjectId = subjectId;
+
         const questions = await db_1.prisma.question.findMany({
             where,
             include: {
                 department: {
-                    select: { name: true, code: true }
+                    select: { id: true, name: true, code: true }
+                },
+                subject: {
+                    select: { id: true, name: true, code: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -40,7 +48,7 @@ const getQuestions = async (req, res, next) => {
 };
 exports.getQuestions = getQuestions;
 const createQuestion = async (req, res, next) => {
-    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId, subjectId } = req.body;
     try {
         if (type) type = type.toUpperCase();
         if (difficulty) difficulty = difficulty.toUpperCase();
@@ -56,7 +64,8 @@ const createQuestion = async (req, res, next) => {
                 difficulty,
                 tags: tags || [],
                 fileUrl: fileUrl || null,
-                departmentId
+                departmentId,
+                subjectId: subjectId || null
             }
         });
         await db_1.prisma.auditLog.create({
@@ -76,7 +85,7 @@ const createQuestion = async (req, res, next) => {
 exports.createQuestion = createQuestion;
 const updateQuestion = async (req, res, next) => {
     const { id } = req.params;
-    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId } = req.body;
+    let { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, fileUrl, departmentId, subjectId } = req.body;
     try {
         if (type) type = type.toUpperCase();
         if (difficulty) difficulty = difficulty.toUpperCase();
@@ -97,7 +106,8 @@ const updateQuestion = async (req, res, next) => {
                 difficulty: difficulty || existing.difficulty,
                 tags: tags || existing.tags,
                 fileUrl: fileUrl !== undefined ? fileUrl : existing.fileUrl,
-                departmentId: departmentId || existing.departmentId
+                departmentId: departmentId || existing.departmentId,
+                subjectId: subjectId !== undefined ? (subjectId || null) : existing.subjectId
             }
         });
         await db_1.prisma.auditLog.create({
