@@ -61,11 +61,22 @@ const extractQuestions = async (req, res, next) => {
             documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
         }
 
-        // Build the AI prompt
-        const geminiApiKey = process.env.GEMINI_API_KEY;
+        // Build the AI prompt - check env var first, then DB settings as fallback
+        let geminiApiKey = process.env.GEMINI_API_KEY;
+        if (!geminiApiKey) {
+            try {
+                const setting = await db_1.prisma.setting.findFirst({
+                    where: { key: 'GEMINI_API_KEY' }
+                });
+                if (setting?.value) geminiApiKey = setting.value;
+            } catch (_) {}
+        }
         if (!geminiApiKey) {
             cleanup();
-            return res.status(500).json({ success: false, message: 'GEMINI_API_KEY is not configured on the server.' });
+            return res.status(500).json({
+                success: false,
+                message: 'GEMINI_API_KEY is not set. Please add it in Render → Environment Variables as GEMINI_API_KEY, or in Admin → Settings.'
+            });
         }
 
         const prompt = `You are an expert exam ingestion tool. Analyze the provided document carefully and extract ALL questions from it.

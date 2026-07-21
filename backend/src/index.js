@@ -1,4 +1,7 @@
 "use strict";
+// ⚠️ Load environment variables FIRST — before any other imports
+require('dotenv').config();
+
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
