@@ -906,11 +906,23 @@ export const Landing = () => {
         }
       `}</style>
 
+      {/* Cinematic 3D Abstract Geometric Tech Background Image Overlay */}
+      <div 
+        className={`fixed inset-0 pointer-events-none transition-all duration-700 -z-10 bg-cover bg-center bg-no-repeat ${
+          isDarkMode ? "opacity-35 mix-blend-screen" : "opacity-15 mix-blend-multiply"
+        }`}
+        style={{
+          backgroundImage: `url('/tech_hero_bg.png')`,
+          maskImage: 'radial-gradient(ellipse 90% 90% at 50% 30%, #000 60%, transparent 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at 50% 30%, #000 60%, transparent 100%)'
+        }}
+      />
+
       {/* Checkered Grid (Checks) Background Pattern */}
       <div className={`fixed inset-0 pointer-events-none transition-opacity duration-500 -z-10 ${
         isDarkMode 
-          ? "bg-[linear-gradient(to_right,rgba(124,92,252,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,252,0.12)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-80"
-          : "bg-[linear-gradient(to_right,rgba(148,163,184,0.35)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.35)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-90"
+          ? "bg-[linear-gradient(to_right,rgba(124,92,252,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,252,0.15)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-70"
+          : "bg-[linear-gradient(to_right,rgba(148,163,184,0.35)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.35)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-80"
       }`} />
 
       {/* Secondary Fine Checks Detail */}
