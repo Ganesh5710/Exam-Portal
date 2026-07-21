@@ -125,6 +125,10 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
             }
             const parsed = JSON.parse(text);
             questions = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (aiErr) {
+            logger_1.logger.warn(`[extract] AI parse failed: ${aiErr.message}. Trying local fallback.`);
+        }
+
         // Fallback local parsing if AI returned no questions
         if (questions.length === 0) {
             if (!documentText || !documentText.trim()) {
