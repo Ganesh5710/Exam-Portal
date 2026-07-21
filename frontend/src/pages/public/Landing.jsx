@@ -906,15 +906,22 @@ export const Landing = () => {
         }
       `}</style>
 
-      {/* Grid Pattern */}
-      <div className={`absolute inset-0 bg-[size:5rem_5rem] pointer-events-none transition-opacity duration-500 -z-10 ${
+      {/* Checkered Grid (Checks) Background Pattern */}
+      <div className={`fixed inset-0 pointer-events-none transition-opacity duration-500 -z-10 ${
         isDarkMode 
-          ? "bg-[linear-gradient(to_right,#2a1f4d_1px,transparent_1px),linear-gradient(to_bottom,#2a1f4d_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.22]"
-          : "bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.6]"
+          ? "bg-[linear-gradient(to_right,rgba(124,92,252,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(124,92,252,0.12)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-80"
+          : "bg-[linear-gradient(to_right,rgba(148,163,184,0.35)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.35)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_70%,transparent_100%)] opacity-90"
+      }`} />
+
+      {/* Secondary Fine Checks Detail */}
+      <div className={`fixed inset-0 pointer-events-none transition-opacity duration-500 -z-10 ${
+        isDarkMode 
+          ? "bg-[radial-gradient(rgba(124,92,252,0.25)_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"
+          : "bg-[radial-gradient(rgba(100,116,139,0.3)_1px,transparent_1px)] bg-[size:32px_32px] opacity-50"
       }`} />
       
-      {/* Background Neon Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 transition-opacity duration-500" style={{ opacity: isDarkMode ? 1 : 0.45 }}>
+      {/* Background Neon Glow Orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10 transition-opacity duration-500" style={{ opacity: isDarkMode ? 0.85 : 0.35 }}>
         <div className="absolute w-[800px] h-[600px] rounded-full blur-[130px] blob-violet top-[-100px] left-[15%]" />
         <div className="absolute w-[700px] h-[500px] rounded-full blur-[140px] blob-fuchsia top-[20%] right-[10%]" />
         <div className="absolute w-[900px] h-[600px] rounded-full blur-[150px] blob-cyan bottom-[10%] left-[20%]" />
