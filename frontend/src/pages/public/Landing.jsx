@@ -1205,11 +1205,11 @@ export const Landing = () => {
 
             {/* ── FOUR FLOATING 3D CARDS OVERLAYS ── */}
             {/* Top Left Card: Integrity Signal */}
-            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow ${
+            <div className={`absolute hidden xl:block w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow ${
               isDarkMode 
                 ? "bg-[#0d0a1f]/95 border border-violet-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(124,92,252,0.15)]" 
                 : "bg-white/98 border border-violet-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(124,92,252,0.08)]"
-            }`} style={{ backdropFilter: 'blur(24px)', left: '-220px', top: '40px' }}>
+            }`} style={{ backdropFilter: 'blur(24px)', left: '-60px', top: '40px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-violet-400" : "text-violet-600"}`}>Integrity Signal</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-md shadow-emerald-400/50" />
@@ -1222,11 +1222,11 @@ export const Landing = () => {
             </div>
 
             {/* Bottom Left Card: Peak Throughput */}
-            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-medium ${
+            <div className={`absolute hidden xl:block w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-medium ${
               isDarkMode 
                 ? "bg-[#0d0a1f]/95 border border-fuchsia-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(236,72,153,0.15)]" 
                 : "bg-white/98 border border-fuchsia-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(236,72,153,0.08)]"
-            }`} style={{ backdropFilter: 'blur(24px)', left: '-200px', bottom: '60px' }}>
+            }`} style={{ backdropFilter: 'blur(24px)', left: '-40px', bottom: '60px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-fuchsia-400" : "text-fuchsia-600"}`}>Peak Throughput</span>
                 <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse shadow-md shadow-fuchsia-400/50" />
@@ -1239,11 +1239,11 @@ export const Landing = () => {
             </div>
 
             {/* Top Right Card: Completion Pulse */}
-            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow-delay ${
+            <div className={`absolute hidden xl:block w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-slow-delay ${
               isDarkMode 
                 ? "bg-[#0d0a1f]/95 border border-cyan-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(6,182,212,0.15)]" 
                 : "bg-white/98 border border-cyan-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(6,182,212,0.08)]"
-            }`} style={{ backdropFilter: 'blur(24px)', right: '-220px', top: '60px' }}>
+            }`} style={{ backdropFilter: 'blur(24px)', right: '-60px', top: '60px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-cyan-400" : "text-cyan-600"}`}>Completion Pulse</span>
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-md shadow-cyan-400/50" />
@@ -1260,11 +1260,11 @@ export const Landing = () => {
             </div>
 
             {/* Bottom Right Card: Review Velocity */}
-            <div className={`absolute w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-fast ${
+            <div className={`absolute hidden xl:block w-52 p-4 rounded-2xl shadow-2xl transition-all duration-500 float-fast ${
               isDarkMode 
                 ? "bg-[#0d0a1f]/95 border border-emerald-500/25 text-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),0_0_30px_-5px_rgba(16,185,129,0.15)]" 
                 : "bg-white/98 border border-emerald-100 text-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(16,185,129,0.08)]"
-            }`} style={{ backdropFilter: 'blur(24px)', right: '-200px', bottom: '40px' }}>
+            }`} style={{ backdropFilter: 'blur(24px)', right: '-40px', bottom: '40px' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-[9px] font-black uppercase tracking-wider ${isDarkMode ? "text-emerald-400" : "text-emerald-600"}`}>Review Velocity</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shadow-md shadow-emerald-400/50" />
@@ -1307,9 +1307,8 @@ export const Landing = () => {
       </header>
 
       {/* Bento Grid Platform Features */}
-      <section id="features" className={`py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 border-t transition-colors duration-500 ${
-        isDarkMode ? "border-white/[0.04]" : "border-slate-200"
-      }`}>
+      <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-20 transition-colors duration-500">
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent mb-16" />
         <div className="text-center max-w-2xl mx-auto mb-20">
           <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Enterprise Core</div>
           <h2 className={`text-3xl md:text-5xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -1435,9 +1434,8 @@ export const Landing = () => {
       )}
 
       {/* ── ASSESSMENT COMMAND CENTER (ULTRA PREMIUM FEATURE) ── */}
-      <section className={`py-24 border-t px-6 transition-colors duration-500 relative z-10 ${
-        isDarkMode ? "border-white/[0.04] bg-[#02000A]" : "border-slate-200 bg-[#f8f9fc]"
-      }`}>
+      <section className="py-24 px-6 transition-colors duration-500 relative z-10">
+        <div className="w-full max-w-7xl mx-auto h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent mb-16" />
         <div className="absolute inset-0 bg-gradient-to-r from-violet-600/5 via-transparent to-cyan-500/5 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto">
@@ -1736,7 +1734,8 @@ export const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className={`py-24 border-t px-6 transition-colors duration-500 ${isDarkMode ? "border-white/[0.04] bg-slate-950/20" : "border-slate-200 bg-slate-100/10"}`}>
+      <section className="py-24 px-6 transition-colors duration-500">
+        <div className="w-full max-w-7xl mx-auto h-px bg-gradient-to-r from-transparent via-fuchsia-500/20 to-transparent mb-16" />
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-xl mx-auto mb-16">
             <div className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-3">Educator Feedback</div>
