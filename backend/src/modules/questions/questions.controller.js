@@ -147,6 +147,8 @@ const deleteQuestion = async (req, res, next) => {
         next(error);
     }
 };
+exports.deleteQuestion = deleteQuestion;
+
 const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
 const bulkImportQuestions = async (req, res, next) => {
