@@ -41,19 +41,6 @@ export const Login = () => {
     }
   };
 
-  const setDemoCredentials = (role) => {
-    if (role === "SUPER_ADMIN") {
-      setEmail("superadmin@skillbrix.com");
-      setPassword("SuperAdmin@123");
-    } else if (role === "ADMIN") {
-      setEmail("Skillbrix@admin.in");
-      setPassword("Admin@123");
-    } else {
-      setEmail("student@gmail.com");
-      setPassword("user@123");
-    }
-  };
-
   return (
     <div className="glass-card p-8 rounded-2xl shadow-2xl border border-white/10 w-full max-w-md mx-auto animate-fade-in">
       {/* Brand Icon */}
@@ -65,36 +52,6 @@ export const Login = () => {
           Skill<span className="bg-gradient-to-r from-amber-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">brix</span>
         </h2>
         <p className="text-sm text-slate-400">Enterprise Assessment Portal</p>
-      </div>
-
-      {/* Quick Demo Login Shortcuts */}
-      <div className="mb-6 space-y-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block text-center">
-          Quick Demo Credentials:
-        </span>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => setDemoCredentials("SUPER_ADMIN")}
-            className="px-2 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold transition-all text-center"
-          >
-            👑 SuperAdmin
-          </button>
-          <button
-            type="button"
-            onClick={() => setDemoCredentials("ADMIN")}
-            className="px-2 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-xs font-bold transition-all text-center"
-          >
-            👨‍💼 Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => setDemoCredentials("STUDENT")}
-            className="px-2 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold transition-all text-center"
-          >
-            🎓 Student
-          </button>
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -111,7 +68,7 @@ export const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. superadmin@skillbrix.com"
+              placeholder="e.g. user@organization.com"
               className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
               required
             />
