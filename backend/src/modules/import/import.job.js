@@ -494,9 +494,9 @@ const parseStructuredFile = (filePath, ext) => {
     const parsedQuestions = rows.map((row, index) => {
         const getKey = (names, exactOnly = false) => {
             const found = Object.keys(row).find(k => {
-                const cleanKey = k.toLowerCase().trim().replace(/[\s_-]/g, '');
+                const cleanKey = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
                 return names.some(n => {
-                    const cleanN = n.toLowerCase().trim().replace(/[\s_-]/g, '');
+                    const cleanN = n.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
                     if (exactOnly || cleanN.length <= 2) {
                         return cleanKey === cleanN;
                     }
@@ -523,24 +523,21 @@ const parseStructuredFile = (filePath, ext) => {
         const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
 
         let options = [];
-        const optionsField = getKey(['options', 'choices']);
+        const optionsField = getKey(['options', 'choices', 'optionlist', 'choicelist']);
         if (optionsField) {
-            options = optionsField.toString().split(/[;|]/).map(o => o.trim());
+            options = optionsField.toString().split(/[;\n|]/).map(o => o.trim()).filter(Boolean);
         } else {
-            for (let idx = 1; idx <= 10; idx++) {
-                const optVal = getKey([`option${idx}`, `choice${idx}`, `opt${idx}`]);
-                if (optVal !== null && optVal !== undefined) {
-                    options.push(optVal.toString().trim());
+            const optA = getKey(['optiona', 'option1', 'choicea', 'choice1', 'opta', 'opt1', 'a']);
+            const optB = getKey(['optionb', 'option2', 'choiceb', 'choice2', 'optb', 'opt2', 'b']);
+            const optC = getKey(['optionc', 'option3', 'choicec', 'choice3', 'optc', 'opt3', 'c']);
+            const optD = getKey(['optiond', 'option4', 'choiced', 'choice4', 'optd', 'opt4', 'd']);
+            const optE = getKey(['optione', 'option5', 'choicee', 'choice5', 'opte', 'opt5', 'e']);
+
+            [optA, optB, optC, optD, optE].forEach(val => {
+                if (val !== null && val !== undefined && String(val).trim().length > 0) {
+                    options.push(String(val).trim());
                 }
-            }
-            if (options.length === 0) {
-                ['a', 'b', 'c', 'd'].forEach(letter => {
-                    const optVal = getKey([letter]);
-                    if (optVal !== null && optVal !== undefined) {
-                        options.push(optVal.toString().trim());
-                    }
-                });
-            }
+            });
         }
 
         let answers = [];
