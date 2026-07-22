@@ -124,7 +124,7 @@ const fixCorruptQuestionOptions = async () => {
                 targetSubjId = physSubj?.id;
             }
             // Check Chemistry regex
-            else if (/\b(atomic|carbon|element|noble gas|periodic|acid|base|ph|reaction|compound|molecule|bond|electron|proton|neutron|valency|isotope|solution|molarity|oxidation|catalyst|polymer|organic|inorganic|alkane|alkene|alkyne|alcohol|hydrocarbon|sodium|potassium|calcium|iron|copper|hydrogen|oxygen|nitrogen|helium|argon|chlorine|fluorine)\b/i.test(c)) {
+            else if (/\b(atomic|carbon|element|noble gas|periodic|acid|base|ph|reaction|compound|molecule|bond|electron|proton|neutron|valency|isotope|solution|molarity|oxidation|catalyst|polymer|organic|inorganic|alkane|alkene|alkyne|alcohol|hydrocarbon|sodium|potassium|calcium|iron|copper|hydrogen|oxygen|nitrogen|helium|argon|chlorine|fluorine|vinegar|bauxite|baking soda|alkali|quick lime|filament|vitamin|laughing gas|methane)\b/i.test(c)) {
                 targetSubjId = chemSubj?.id;
             }
             // Check Mathematics regex
