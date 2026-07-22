@@ -678,6 +678,32 @@ export const Results = () => {
                     {/* Subject Breakdown */}
                     <td className="px-5 py-4">
                       {(() => {
+                        const sec = sub.sectionScores;
+                        if (sec && (sec.Physics !== undefined || sec.Chemistry !== undefined || sec.Mathematics !== undefined)) {
+                          return (
+                            <div className="flex flex-wrap gap-1.5 max-w-[260px]">
+                              {sec.Physics !== undefined && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/10 border border-sky-500/20 text-sky-300">
+                                  <span className="text-slate-400">Physics:</span>
+                                  <span className="text-white">{sec.Physics}</span>
+                                </span>
+                              )}
+                              {sec.Chemistry !== undefined && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                                  <span className="text-slate-400">Chemistry:</span>
+                                  <span className="text-white">{sec.Chemistry}</span>
+                                </span>
+                              )}
+                              {sec.Mathematics !== undefined && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                                  <span className="text-slate-400">Math:</span>
+                                  <span className="text-white">{sec.Mathematics}</span>
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+
                         const subjMap = {};
                         if (sub.answers && Array.isArray(sub.answers)) {
                           sub.answers.forEach((ans) => {
@@ -692,11 +718,11 @@ export const Results = () => {
                           return <span className="text-xs text-slate-500">—</span>;
                         }
                         return (
-                          <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                          <div className="flex flex-wrap gap-1.5 max-w-[260px]">
                             {entries.map(([name, data]) => (
                               <span
                                 key={name}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-500/10 border border-violet-500/20 text-violet-300"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-violet-500/10 border border-violet-500/20 text-violet-300"
                               >
                                 <span className="text-slate-400">{name}:</span>
                                 <span className="text-white">{data.obtained}/{data.total}</span>

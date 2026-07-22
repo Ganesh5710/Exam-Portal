@@ -499,7 +499,13 @@ const getSubmissions = async (req, res, next) => {
                             }
                         }
                     },
-                    answers: true
+                    answers: {
+                        include: {
+                            question: {
+                                include: { subject: true }
+                            }
+                        }
+                    }
                 },
                 orderBy: { submitTime: 'desc' },
                 skip,
