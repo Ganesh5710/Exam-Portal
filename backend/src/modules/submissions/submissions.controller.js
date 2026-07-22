@@ -11,11 +11,17 @@ const saveAnswers = async (req, res, next) => {
     const { examId, answers } = req.body; // answers is an array of { questionId, studentAnswer }
     const studentId = req.user?.id || '';
     try {
-        const assignment = await db_1.prisma.examAssignment.findUnique({
+        let assignment = await db_1.prisma.examAssignment.findUnique({
             where: { examId_studentId: { examId, studentId } }
         });
-        if (!assignment || assignment.status !== 'STARTED') {
-            return res.status(403).json({ success: false, message: 'Exam has not been started or already submitted.' });
+        if (!assignment || assignment.status === 'BLOCKED') {
+            return res.status(403).json({ success: false, message: 'Exam access is blocked or unassigned.' });
+        }
+        if (assignment.status === 'ASSIGNED') {
+            assignment = await db_1.prisma.examAssignment.update({
+                where: { id: assignment.id },
+                data: { status: 'STARTED', startTime: new Date() }
+            });
         }
         // Initialize or get submission
         let submission = await db_1.prisma.submission.findUnique({
@@ -31,24 +37,27 @@ const saveAnswers = async (req, res, next) => {
             });
         }
         // Save individual answers
-        for (const ans of answers) {
-            const { questionId, studentAnswer } = ans;
-            await db_1.prisma.answer.upsert({
-                where: {
-                    submissionId_questionId: {
+        if (Array.isArray(answers)) {
+            for (const ans of answers) {
+                const { questionId, studentAnswer } = ans;
+                if (!questionId) continue;
+                await db_1.prisma.answer.upsert({
+                    where: {
+                        submissionId_questionId: {
+                            submissionId: submission.id,
+                            questionId
+                        }
+                    },
+                    create: {
                         submissionId: submission.id,
-                        questionId
+                        questionId,
+                        studentAnswer
+                    },
+                    update: {
+                        studentAnswer
                     }
-                },
-                create: {
-                    submissionId: submission.id,
-                    questionId,
-                    studentAnswer
-                },
-                update: {
-                    studentAnswer
-                }
-            });
+                });
+            }
         }
         return res.status(200).json({ success: true, message: 'Answers saved successfully.' });
     }
@@ -65,8 +74,27 @@ const submitExam = async (req, res, next) => {
             where: { examId_studentId: { examId, studentId } },
             include: { exam: { include: { examQuestions: { include: { question: true } } } } }
         });
-        if (!assignment || assignment.status !== 'STARTED') {
-            return res.status(400).json({ success: false, message: 'Exam is not in a submittable state.' });
+        if (!assignment) {
+            return res.status(404).json({ success: false, message: 'Exam assignment not found.' });
+        }
+        if (assignment.status === 'SUBMITTED' || assignment.status === 'COMPLETED') {
+            const submission = await db_1.prisma.submission.findUnique({
+                where: { examId_studentId: { examId, studentId } }
+            });
+            return res.status(200).json({
+                success: true,
+                message: 'Exam already submitted.',
+                data: submission ? {
+                    totalScore: submission.totalScore,
+                    percentage: submission.percentage,
+                    isPassed: submission.isPassed,
+                    grade: submission.grade,
+                    status: submission.status
+                } : null
+            });
+        }
+        if (assignment.status === 'BLOCKED') {
+            return res.status(403).json({ success: false, message: 'Exam access blocked by proctor.' });
         }
         // Update assignment status
         await db_1.prisma.examAssignment.update({

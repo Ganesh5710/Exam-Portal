@@ -33,6 +33,7 @@ const subjects_routes_1 = __importDefault(require("./modules/subjects/subject.ro
 const settings_controller_1 = require("./modules/settings/settings.controller");
 const autosave_job_1 = require("./modules/autosave/autosave.job");
 const seed_1 = require("./database/seed");
+const fix_1 = require("./database/fixCorruptQuestionOptions");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 // Init Socket.io
@@ -105,5 +106,6 @@ server.listen(PORT, async () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);
     await (0, seed_1.seedDatabase)();
     await (0, settings_controller_1.seedDefaultSettings)();
+    await (0, fix_1.fixCorruptQuestionOptions)();
 });
 exports.default = server;

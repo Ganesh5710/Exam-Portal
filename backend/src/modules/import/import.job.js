@@ -492,10 +492,16 @@ const parseStructuredFile = (filePath, ext) => {
     if (!Array.isArray(rows) || rows.length === 0) return null;
 
     const parsedQuestions = rows.map((row, index) => {
-        const getKey = (names) => {
+        const getKey = (names, exactOnly = false) => {
             const found = Object.keys(row).find(k => {
                 const cleanKey = k.toLowerCase().trim().replace(/[\s_-]/g, '');
-                return names.some(n => cleanKey.includes(n));
+                return names.some(n => {
+                    const cleanN = n.toLowerCase().trim().replace(/[\s_-]/g, '');
+                    if (exactOnly || cleanN.length <= 2) {
+                        return cleanKey === cleanN;
+                    }
+                    return cleanKey === cleanN || cleanKey.includes(cleanN);
+                });
             });
             return found ? row[found] : null;
         };
