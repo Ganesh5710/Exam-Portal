@@ -314,6 +314,7 @@ const submitExam = async (req, res, next) => {
             Physics: sectionBreakdown['Physics']?.score || 0,
             Chemistry: sectionBreakdown['Chemistry']?.score || 0,
             Mathematics: sectionBreakdown['Mathematics']?.score || 0,
+            Descriptive: sectionBreakdown['Descriptive']?.score || 0,
             totalCombined: totalScore,
             details: sectionBreakdown
         };

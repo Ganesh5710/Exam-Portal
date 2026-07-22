@@ -143,6 +143,14 @@ export const SubmissionConfirmation = () => {
                     {submission.sectionScores?.Mathematics ?? 0}
                   </span>
                 </div>
+                {submission.sectionScores?.Descriptive !== undefined && (
+                  <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <span className="text-slate-400 block text-[11px]">Section 4: Descriptive</span>
+                    <span className="font-bold text-purple-400 text-sm">
+                      {submission.sectionScores?.Descriptive ?? 0}
+                    </span>
+                  </div>
+                )}
                 <div className="bg-violet-950/40 p-3 rounded-lg border border-violet-500/30">
                   <span className="text-violet-300 block text-[11px]">Total Combined Score</span>
                   <span className="font-bold text-violet-400 text-sm">

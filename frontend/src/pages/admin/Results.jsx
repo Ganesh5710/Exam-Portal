@@ -700,6 +700,12 @@ export const Results = () => {
                                   <span className="text-white">{sec.Mathematics}</span>
                                 </span>
                               )}
+                              {sec.Descriptive !== undefined && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                                  <span className="text-slate-400">Descriptive:</span>
+                                  <span className="text-white">{sec.Descriptive}</span>
+                                </span>
+                              )}
                             </div>
                           );
                         }
