@@ -156,6 +156,8 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
                     negativeMarks: parseFloat(q.negativeMarks) || 0,
                     tags: Array.isArray(q.tags) ? q.tags.map(String) : [],
                     topic: typeof q.topic === 'string' ? q.topic : '',
+                    subjectName: typeof q.subjectName === 'string' ? q.subjectName : (typeof q.subject === 'string' ? q.subject : ''),
+                    subjectCode: typeof q.subjectCode === 'string' ? q.subjectCode : (typeof q.subjectName === 'string' ? q.subjectName : ''),
                 };
             });
 

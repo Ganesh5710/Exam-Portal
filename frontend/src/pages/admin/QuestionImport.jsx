@@ -159,6 +159,8 @@ export const QuestionImport = () => {
         negativeMarks: parseFloat(q.negativeMarks) || 0,
         tags: Array.isArray(q.tags) ? q.tags : [],
         subjectId: subjectId !== "auto" ? subjectId : (q.subjectId || null),
+        subjectName: q.subjectName || q.subjectCode || q.subject || null,
+        subjectCode: q.subjectCode || q.subjectName || null,
         departmentId: q.departmentId || null,
         topic: q.topic || "",
       }));
