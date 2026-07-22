@@ -37,6 +37,19 @@ const FIXES_MAP = {
 
 const fixCorruptQuestionOptions = async () => {
     try {
+        // 1. Delete any orphan questions where content is just a number (e.g. "1", "2", "3")
+        try {
+            await prisma.question.deleteMany({
+                where: {
+                    OR: [
+                        { content: { in: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] } },
+                        { content: "" }
+                    ]
+                }
+            });
+        } catch (_) {}
+
+        // 2. Fix corrupt options
         const questions = await prisma.question.findMany();
         let fixedCount = 0;
 
@@ -45,7 +58,6 @@ const fixCorruptQuestionOptions = async () => {
 
             const cleanContent = (q.content || "").toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            // Check if any option is a subject keyword or generic placeholder "Option A/B/C/D"
             const hasCorruptOption = q.options.some(opt => {
                 if (typeof opt !== "string") return true;
                 const cleanOpt = opt.toLowerCase().trim();
@@ -56,7 +68,6 @@ const fixCorruptQuestionOptions = async () => {
                 let newOptions = [...q.options];
                 let newAnswers = q.answers;
 
-                // Check specific lookup map
                 const matchedKey = Object.keys(FIXES_MAP).find(k => {
                     const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
                     return cleanContent.includes(cleanK);
@@ -66,7 +77,6 @@ const fixCorruptQuestionOptions = async () => {
                     newOptions = FIXES_MAP[matchedKey].options;
                     newAnswers = FIXES_MAP[matchedKey].answers;
                 } else {
-                    // Filter out subject keywords and fill with fallback choices
                     const validOptions = q.options.filter(opt => {
                         if (typeof opt !== "string") return false;
                         const cleanOpt = opt.toLowerCase().trim();

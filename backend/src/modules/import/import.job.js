@@ -506,18 +506,27 @@ const parseStructuredFile = (filePath, ext) => {
             return found ? row[found] : null;
         };
 
-        let content = getKey(['question', 'content', 'questiontext', 'text', 'problem', 'statement', 'prompt', 'description', 'title', 'item', 'details', 'qtext', 'qno'])?.toString();
+        // 1. Extract Question Content (strictly exclude question numbers Q.No / S.No)
+        let content = getKey(['questiontext', 'questioncontent', 'questionstatement', 'questionprompt', 'question', 'content', 'problem', 'statement', 'prompt', 'qtext', 'details', 'item'])?.toString();
 
-        // Fallback: Pick the longest string field in the row if no header matched
-        if (!content || !content.trim()) {
-            const values = Object.values(row).map(v => (v !== null && v !== undefined) ? v.toString().trim() : '').filter(Boolean);
-            const longest = values.reduce((max, cur) => cur.length > max.length ? cur : max, '');
-            if (longest.length > 5) {
-                content = longest;
+        // If content is missing or is just a Question Number (e.g. "1", "2", "Q1"), find the real question text column
+        if (!content || !content.trim() || /^\s*(?:Q\.?\s*N?O?\.?\s*)?\d+\s*$/i.test(content) || content.trim().length <= 3) {
+            const excludeKeys = new Set(['qno', 'qnum', 'questionno', 'sno', 'slno', 'no', 'id', 'qid', 'type', 'questiontype', 'score', 'marks', 'negativemarks', 'difficulty', 'subject', 'department', 'topic']);
+            const candidateValues = Object.entries(row)
+                .filter(([k, v]) => {
+                    const cleanK = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                    return !excludeKeys.has(cleanK) && v !== null && v !== undefined && String(v).trim().length > 0;
+                })
+                .map(([_, v]) => String(v).trim());
+
+            // Pick longest text value that is not a pure number
+            const textCandidates = candidateValues.filter(v => !/^\d+$/.test(v));
+            if (textCandidates.length > 0) {
+                content = textCandidates.reduce((max, cur) => cur.length > max.length ? cur : max, '');
             }
         }
 
-        if (!content || !content.trim()) return null;
+        if (!content || !content.trim() || /^\d+$/.test(content.trim())) return null;
 
         const typeVal = getKey(['type', 'questiontype'])?.toString()?.toUpperCase() || 'MCQ';
         const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
