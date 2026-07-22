@@ -469,148 +469,155 @@ function parseQuestionsLocally(text) {
 }
 
 const parseStructuredFile = (filePath, ext) => {
-    let rows = [];
+    let sheetEntries = [];
     if (ext === '.json') {
         try {
             const fileData = fs_1.default.readFileSync(filePath, 'utf8');
             const parsed = JSON.parse(fileData);
-            rows = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+            const rows = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+            sheetEntries.push({ sheetName: 'General', rows });
         } catch (e) {
             return null;
         }
     } else {
         try {
             const workbook = xlsx.readFile(filePath);
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            rows = xlsx.utils.sheet_to_json(sheet);
+            for (const sName of workbook.SheetNames) {
+                const sheet = workbook.Sheets[sName];
+                const rows = xlsx.utils.sheet_to_json(sheet);
+                if (Array.isArray(rows) && rows.length > 0) {
+                    sheetEntries.push({ sheetName: sName, rows });
+                }
+            }
         } catch (e) {
             return null;
         }
     }
 
-    if (!Array.isArray(rows) || rows.length === 0) return null;
+    if (sheetEntries.length === 0) return null;
 
-    const parsedQuestions = rows.map((row, index) => {
-        const getKey = (names, exactOnly = false) => {
-            const found = Object.keys(row).find(k => {
-                const cleanKey = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-                return names.some(n => {
-                    const cleanN = n.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-                    if (exactOnly || cleanN.length <= 2) {
-                        return cleanKey === cleanN;
-                    }
-                    return cleanKey === cleanN || cleanKey.includes(cleanN);
+    const parsedQuestions = [];
+
+    for (const entry of sheetEntries) {
+        const { sheetName, rows } = entry;
+        for (const row of rows) {
+            const getKey = (names, exactOnly = false) => {
+                const found = Object.keys(row).find(k => {
+                    const cleanKey = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                    return names.some(n => {
+                        const cleanN = n.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                        if (exactOnly || cleanN.length <= 2) {
+                            return cleanKey === cleanN;
+                        }
+                        return cleanKey === cleanN || cleanKey.includes(cleanN);
+                    });
                 });
-            });
-            return found ? row[found] : null;
-        };
+                return found ? row[found] : null;
+            };
 
-        // 1. Extract Question Content (strictly exclude question numbers Q.No / S.No)
-        let content = getKey(['questiontext', 'questioncontent', 'questionstatement', 'questionprompt', 'question', 'content', 'problem', 'statement', 'prompt', 'qtext', 'details', 'item'])?.toString();
+            // 1. Extract Question Content (strictly exclude question numbers Q.No / S.No)
+            let content = getKey(['questiontext', 'questioncontent', 'questionstatement', 'questionprompt', 'question', 'content', 'problem', 'statement', 'prompt', 'qtext', 'details', 'item'])?.toString();
 
-        // If content is missing or is just a Question Number (e.g. "1", "2", "Q1"), find the real question text column
-        if (!content || !content.trim() || /^\s*(?:Q\.?\s*N?O?\.?\s*)?\d+\s*$/i.test(content) || content.trim().length <= 3) {
-            const excludeKeys = new Set(['qno', 'qnum', 'questionno', 'sno', 'slno', 'no', 'id', 'qid', 'type', 'questiontype', 'score', 'marks', 'negativemarks', 'difficulty', 'subject', 'department', 'topic']);
-            const candidateValues = Object.entries(row)
-                .filter(([k, v]) => {
-                    const cleanK = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-                    return !excludeKeys.has(cleanK) && v !== null && v !== undefined && String(v).trim().length > 0;
-                })
-                .map(([_, v]) => String(v).trim());
+            if (!content || !content.trim() || /^\s*(?:Q\.?\s*N?O?\.?\s*)?\d+\s*$/i.test(content) || content.trim().length <= 3) {
+                const excludeKeys = new Set(['qno', 'qnum', 'questionno', 'sno', 'slno', 'no', 'id', 'qid', 'type', 'questiontype', 'score', 'marks', 'negativemarks', 'difficulty', 'subject', 'department', 'topic']);
+                const candidateValues = Object.entries(row)
+                    .filter(([k, v]) => {
+                        const cleanK = k.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                        return !excludeKeys.has(cleanK) && v !== null && v !== undefined && String(v).trim().length > 0;
+                    })
+                    .map(([_, v]) => String(v).trim());
 
-            // Pick longest text value that is not a pure number
-            const textCandidates = candidateValues.filter(v => !/^\d+$/.test(v));
-            if (textCandidates.length > 0) {
-                content = textCandidates.reduce((max, cur) => cur.length > max.length ? cur : max, '');
-            }
-        }
-
-        if (!content || !content.trim() || /^\d+$/.test(content.trim())) return null;
-
-        const typeVal = getKey(['type', 'questiontype'])?.toString()?.toUpperCase() || 'MCQ';
-        const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
-
-        let options = [];
-        const optionsField = getKey(['options', 'choices', 'optionlist', 'choicelist']);
-        if (optionsField) {
-            options = optionsField.toString().split(/[;\n|]/).map(o => o.trim()).filter(Boolean);
-        } else {
-            const optA = getKey(['optiona', 'option1', 'choicea', 'choice1', 'opta', 'opt1', 'a']);
-            const optB = getKey(['optionb', 'option2', 'choiceb', 'choice2', 'optb', 'opt2', 'b']);
-            const optC = getKey(['optionc', 'option3', 'choicec', 'choice3', 'optc', 'opt3', 'c']);
-            const optD = getKey(['optiond', 'option4', 'choiced', 'choice4', 'optd', 'opt4', 'd']);
-            const optE = getKey(['optione', 'option5', 'choicee', 'choice5', 'opte', 'opt5', 'e']);
-
-            [optA, optB, optC, optD, optE].forEach(val => {
-                if (val !== null && val !== undefined && String(val).trim().length > 0) {
-                    options.push(String(val).trim());
+                const textCandidates = candidateValues.filter(v => !/^\d+$/.test(v));
+                if (textCandidates.length > 0) {
+                    content = textCandidates.reduce((max, cur) => cur.length > max.length ? cur : max, '');
                 }
-            });
-        }
+            }
 
-        let answers = [];
-        const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct', 'key']);
-        if (answerField !== null && answerField !== undefined) {
-            const ansStr = answerField.toString().trim();
-            if (type === 'MCQ' && /^[A-J]$/i.test(ansStr) && options.length > 0) {
-                const idx = ansStr.toUpperCase().charCodeAt(0) - 65;
-                if (options[idx]) {
-                    answers = [options[idx]];
-                } else {
+            if (!content || !content.trim() || /^\d+$/.test(content.trim())) continue;
+
+            const typeVal = getKey(['type', 'questiontype'])?.toString()?.toUpperCase() || 'MCQ';
+            const type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(typeVal) ? typeVal : 'MCQ';
+
+            let options = [];
+            const optionsField = getKey(['options', 'choices', 'optionlist', 'choicelist']);
+            if (optionsField) {
+                options = optionsField.toString().split(/[;\n|]/).map(o => o.trim()).filter(Boolean);
+            } else {
+                const optA = getKey(['optiona', 'option1', 'choicea', 'choice1', 'opta', 'opt1', 'a']);
+                const optB = getKey(['optionb', 'option2', 'choiceb', 'choice2', 'optb', 'opt2', 'b']);
+                const optC = getKey(['optionc', 'option3', 'choicec', 'choice3', 'optc', 'opt3', 'c']);
+                const optD = getKey(['optiond', 'option4', 'choiced', 'choice4', 'optd', 'opt4', 'd']);
+                const optE = getKey(['optione', 'option5', 'choicee', 'choice5', 'opte', 'opt5', 'e']);
+
+                [optA, optB, optC, optD, optE].forEach(val => {
+                    if (val !== null && val !== undefined && String(val).trim().length > 0) {
+                        options.push(String(val).trim());
+                    }
+                });
+            }
+
+            let answers = [];
+            const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct', 'key']);
+            if (answerField !== null && answerField !== undefined) {
+                const ansStr = answerField.toString().trim();
+                if (type === 'MCQ' && /^[A-J]$/i.test(ansStr) && options.length > 0) {
+                    const idx = ansStr.toUpperCase().charCodeAt(0) - 65;
+                    if (options[idx]) {
+                        answers = [options[idx]];
+                    } else {
+                        answers = [ansStr];
+                    }
+                } else if (type === 'MCQ' || type === 'TRUE_FALSE') {
                     answers = [ansStr];
+                } else {
+                    answers = ansStr.split(/[;|]/).map(a => a.trim());
                 }
-            } else if (type === 'MCQ' || type === 'TRUE_FALSE') {
-                answers = [ansStr];
-            } else {
-                answers = ansStr.split(/[;|]/).map(a => a.trim());
             }
-        }
 
-        // Fallback default answer if missing
-        if (answers.length === 0) {
-            if (options.length > 0) {
-                answers = [options[0]];
-            } else if (type === 'TRUE_FALSE') {
-                answers = ['True'];
-            } else {
-                answers = ['Option A / Answer Key'];
+            if (answers.length === 0) {
+                if (options.length > 0) {
+                    answers = [options[0]];
+                } else if (type === 'TRUE_FALSE') {
+                    answers = ['True'];
+                } else {
+                    answers = ['Option A / Answer Key'];
+                }
             }
+
+            const difficultyVal = getKey(['difficulty'])?.toString()?.toUpperCase() || 'MEDIUM';
+            const difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(difficultyVal) ? difficultyVal : 'MEDIUM';
+            const score = parseFloat(getKey(['score', 'marks', 'points'])) || 5.0;
+            const negativeMarks = parseFloat(getKey(['negativemarks', 'negative', 'penalty'])) || 0.0;
+            const explanation = getKey(['explanation', 'explanationtext'])?.toString() || '';
+
+            let tags = [];
+            const tagsField = getKey(['tags', 'tag']);
+            if (tagsField) {
+                tags = tagsField.toString().split(/[;,|]/).map(t => t.trim());
+            }
+
+            const rawSubj = getKey(['subjectname', 'subject', 'subjectcode', 'section', 'course'])?.toString() || '';
+            const subjectName = rawSubj || (['Sheet1', 'Sheet 1', 'Questions'].includes(sheetName) ? '' : sheetName);
+            const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
+            const topic = getKey(['topic', 'subjecttopic'])?.toString() || 'General';
+
+            parsedQuestions.push({
+                type,
+                content,
+                options,
+                answers,
+                difficulty,
+                score,
+                negativeMarks,
+                explanation,
+                tags,
+                subjectCode: subjectName,
+                subjectName,
+                departmentCode,
+                topic
+            });
         }
-
-        const difficultyVal = getKey(['difficulty'])?.toString()?.toUpperCase() || 'MEDIUM';
-        const difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(difficultyVal) ? difficultyVal : 'MEDIUM';
-        const score = parseFloat(getKey(['score', 'marks', 'points'])) || 5.0;
-        const negativeMarks = parseFloat(getKey(['negativemarks', 'negative', 'penalty'])) || 0.0;
-        const explanation = getKey(['explanation', 'explanationtext'])?.toString() || '';
-        
-        let tags = [];
-        const tagsField = getKey(['tags', 'tag']);
-        if (tagsField) {
-            tags = tagsField.toString().split(/[;,|]/).map(t => t.trim());
-        }
-
-        const subjectCode = getKey(['subjectcode', 'subject', 'course'])?.toString() || '';
-        const subjectName = getKey(['subjectname', 'subject_name', 'coursename'])?.toString() || '';
-        const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
-        const topic = getKey(['topic', 'subjecttopic'])?.toString() || 'General';
-
-        return {
-            type,
-            content,
-            options,
-            answers,
-            difficulty,
-            score,
-            negativeMarks,
-            explanation,
-            tags,
-            subjectCode,
-            subjectName,
-            departmentCode,
-            topic
-        };
-    }).filter(Boolean);
+    }
 
     return parsedQuestions.length > 0 ? parsedQuestions : null;
 };

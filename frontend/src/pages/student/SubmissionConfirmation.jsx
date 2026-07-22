@@ -92,30 +92,21 @@ export const SubmissionConfirmation = () => {
 
         {isPublished && submission && (
           <>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
-              <span className="text-muted-foreground">Score</span>
-              <span className="font-bold text-white">
-                {submission.totalScore}{" "}
-                <span className="text-slate-500 text-xs font-normal">
-                  / {submission.maxPossibleScore}
-                </span>
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
-              <span className="text-muted-foreground">Percentage</span>
+            <div className="flex justify-between items-center py-1 border-b border-slate-800">
+              <span className="text-muted-foreground">Overall Percentage</span>
               <span className="font-semibold text-white">
                 {submission.percentage !== null
                   ? `${submission.percentage.toFixed(1)}%`
                   : "—"}
               </span>
             </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+            <div className="flex justify-between items-center py-1 border-b border-slate-800">
               <span className="text-muted-foreground">Grade</span>
               <span className="font-bold text-violet-400">
                 {submission.grade || "—"}
               </span>
             </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800 last:border-0">
+            <div className="flex justify-between items-center py-1 border-b border-slate-800">
               <span className="text-muted-foreground">Result Status</span>
               <span
                 className={`font-bold px-2 py-0.5 rounded text-xs ${
@@ -126,6 +117,40 @@ export const SubmissionConfirmation = () => {
               >
                 {submission.isPassed ? "PASSED" : "FAILED"}
               </span>
+            </div>
+
+            {/* Subject-Wise Marks Breakdown */}
+            <div className="pt-4 border-t border-slate-800 space-y-2.5">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">
+                Subject-Wise Section Breakdown
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <span className="text-slate-400 block text-[11px]">Section 1: Physics</span>
+                  <span className="font-bold text-sky-400 text-sm">
+                    {submission.sectionScores?.Physics ?? 0}
+                  </span>
+                </div>
+                <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <span className="text-slate-400 block text-[11px]">Section 2: Chemistry</span>
+                  <span className="font-bold text-emerald-400 text-sm">
+                    {submission.sectionScores?.Chemistry ?? 0}
+                  </span>
+                </div>
+                <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <span className="text-slate-400 block text-[11px]">Section 3: Mathematics</span>
+                  <span className="font-bold text-amber-400 text-sm">
+                    {submission.sectionScores?.Mathematics ?? 0}
+                  </span>
+                </div>
+                <div className="bg-violet-950/40 p-3 rounded-lg border border-violet-500/30">
+                  <span className="text-violet-300 block text-[11px]">Total Combined Score</span>
+                  <span className="font-bold text-violet-400 text-sm">
+                    {submission.sectionScores?.totalCombined ?? submission.totalScore}{" "}
+                    <span className="text-slate-500 text-[10px]">/ {submission.maxPossibleScore}</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </>
         )}

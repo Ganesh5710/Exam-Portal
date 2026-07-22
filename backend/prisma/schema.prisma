@@ -231,6 +231,7 @@ model Submission {
   startTime       DateTime         @default(now())
   submitTime      DateTime?
   answers         Answer[]
+  sectionScores   Json?            // Stores breakdown: { Physics: { score, maxScore }, Chemistry: { ... }, Mathematics: { ... } }
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

@@ -70,13 +70,28 @@ const submitExam = async (req, res, next) => {
     const { examId, tabSwitchCount, exitFullscreenCount } = req.body;
     const studentId = req.user?.id || '';
     try {
+        // Include linked subjects for questions
         const assignment = await db_1.prisma.examAssignment.findUnique({
             where: { examId_studentId: { examId, studentId } },
-            include: { exam: { include: { examQuestions: { include: { question: true } } } } }
+            include: {
+                exam: {
+                    include: {
+                        examQuestions: {
+                            include: {
+                                question: {
+                                    include: { subject: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
+
         if (!assignment) {
             return res.status(404).json({ success: false, message: 'Exam assignment not found.' });
         }
+
         if (assignment.status === 'SUBMITTED' || assignment.status === 'COMPLETED') {
             const submission = await db_1.prisma.submission.findUnique({
                 where: { examId_studentId: { examId, studentId } }
@@ -89,13 +104,16 @@ const submitExam = async (req, res, next) => {
                     percentage: submission.percentage,
                     isPassed: submission.isPassed,
                     grade: submission.grade,
+                    sectionScores: submission.sectionScores,
                     status: submission.status
                 } : null
             });
         }
+
         if (assignment.status === 'BLOCKED') {
             return res.status(403).json({ success: false, message: 'Exam access blocked by proctor.' });
         }
+
         // Update assignment status
         await db_1.prisma.examAssignment.update({
             where: { id: assignment.id },
@@ -106,19 +124,23 @@ const submitExam = async (req, res, next) => {
                 exitFullscreenCount: exitFullscreenCount || 0
             }
         });
+
         // Fetch submission
         let submission = await db_1.prisma.submission.findUnique({
             where: { examId_studentId: { examId, studentId } },
             include: { answers: true }
         });
+
         if (!submission) {
             submission = await db_1.prisma.submission.create({
                 data: { examId, studentId, status: 'PENDING' },
                 include: { answers: true }
             });
         }
+
         // ── Helper: normalize answer text for comparison ─────────────────────
         const norm = (v) => String(v ?? '').trim().toLowerCase();
+
         // ── Extract correct answers as a string array ─────────────────────────
         const getCorrectArray = (rawAnswers) => {
             if (Array.isArray(rawAnswers))
@@ -126,12 +148,12 @@ const submitExam = async (req, res, next) => {
             if (typeof rawAnswers === 'string')
                 return [norm(rawAnswers)];
             if (rawAnswers && typeof rawAnswers === 'object') {
-                // e.g. { answer: "A" } or { correct: "B" }
                 const v = rawAnswers.answer ?? rawAnswers.correct ?? rawAnswers.key ?? null;
                 return v !== null ? [norm(v)] : [];
             }
             return [];
         };
+
         // ── Helper: normalize student response string ──────────────────────────
         const extractResponseVal = (resp) => {
             if (!resp) return '';
@@ -147,13 +169,23 @@ const submitExam = async (req, res, next) => {
         const examQuestions = assignment.exam.examQuestions.map(eq => eq.question);
         let totalScore = 0;
         let autoGradingComplete = true;
+        const sectionBreakdown = {};
+
         for (const question of examQuestions) {
+            const subjectName = question.subject?.name || 'General';
+            if (!sectionBreakdown[subjectName]) {
+                sectionBreakdown[subjectName] = { score: 0, maxScore: 0, correctCount: 0, totalQuestions: 0 };
+            }
+            sectionBreakdown[subjectName].totalQuestions += 1;
+            sectionBreakdown[subjectName].maxScore += question.score;
+
             const savedAns = submission.answers.find(a => a.questionId === question.id);
             const studentResponse = savedAns?.studentAnswer;
             let isCorrect = false;
             let scoreAwarded = 0;
+
             if (!studentResponse) {
-                // Unanswered — skip, score stays 0
+                // Unanswered — skip
             }
             else if (question.type === 'MCQ') {
                 const correctList = getCorrectArray(question.answers);
@@ -180,15 +212,12 @@ const submitExam = async (req, res, next) => {
                     : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
             }
             else if (question.type === 'MULTI_CORRECT') {
-                // answers stored as array of correct option texts
                 const correctSet = new Set(getCorrectArray(question.answers));
                 const selectedOpts = Array.isArray(studentResponse.selectedOptions)
                     ? studentResponse.selectedOptions.map(norm)
                     : [];
-                // Exact set match required
                 isCorrect = correctSet.size === selectedOpts.length &&
                     selectedOpts.every(o => correctSet.has(o));
-                // Partial credit: score proportional to correct selections
                 if (!isCorrect && correctSet.size > 0) {
                     const correctCount = selectedOpts.filter(o => correctSet.has(o)).length;
                     const wrongCount = selectedOpts.filter(o => !correctSet.has(o)).length;
@@ -223,22 +252,33 @@ const submitExam = async (req, res, next) => {
                 }
             }
             else {
-                // DESCRIPTIVE — requires manual grading
                 autoGradingComplete = false;
                 continue;
             }
+
             if (savedAns) {
                 await db_1.prisma.answer.update({
                     where: { id: savedAns.id },
                     data: { isCorrect, scoreAwarded }
                 });
                 totalScore += scoreAwarded;
+                sectionBreakdown[subjectName].score += scoreAwarded;
+                if (isCorrect) sectionBreakdown[subjectName].correctCount += 1;
             }
         }
+
+        // ── Format section scores ─────────────────────────────────────────────
+        const sectionScores = {
+            Physics: sectionBreakdown['Physics']?.score || 0,
+            Chemistry: sectionBreakdown['Chemistry']?.score || 0,
+            Mathematics: sectionBreakdown['Mathematics']?.score || 0,
+            totalCombined: totalScore,
+            details: sectionBreakdown
+        };
+
         // ── Calculate percentage & grade ───────────────────────────────────────
         const maxPossibleScore = examQuestions.reduce((acc, q) => acc + q.score, 0);
         const percentage = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
-        // passingMarks is stored as a raw score threshold (e.g. 40 out of 100)
         const isPassed = totalScore >= assignment.exam.passingMarks;
         let grade = 'F';
         if (percentage >= 90)
@@ -251,6 +291,7 @@ const submitExam = async (req, res, next) => {
             grade = 'C';
         else if (percentage >= 40)
             grade = 'D';
+
         await db_1.prisma.submission.update({
             where: { id: submission.id },
             data: {
@@ -258,6 +299,7 @@ const submitExam = async (req, res, next) => {
                 percentage,
                 isPassed,
                 grade,
+                sectionScores,
                 status: autoGradingComplete ? 'COMPLETED' : 'PENDING',
                 violationsCount: (tabSwitchCount || 0) + (exitFullscreenCount || 0),
                 submitTime: new Date()
@@ -583,6 +625,7 @@ const getMySubmission = async (req, res, next) => {
                 percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
                 grade: submission.status === 'PUBLISHED' ? submission.grade : null,
                 isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+                sectionScores: submission.status === 'PUBLISHED' ? submission.sectionScores : null,
                 maxPossibleScore
             }
         });
