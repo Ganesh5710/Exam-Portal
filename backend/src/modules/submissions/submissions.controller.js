@@ -132,6 +132,17 @@ const submitExam = async (req, res, next) => {
             }
             return [];
         };
+        // ── Helper: normalize student response string ──────────────────────────
+        const extractResponseVal = (resp) => {
+            if (!resp) return '';
+            if (typeof resp === 'string') return norm(resp);
+            if (typeof resp === 'object') {
+                const v = resp.selectedOption ?? resp.value ?? resp.answer ?? null;
+                if (v !== null) return norm(v);
+            }
+            return norm(resp);
+        };
+
         // Start auto-evaluation
         const examQuestions = assignment.exam.examQuestions.map(eq => eq.question);
         let totalScore = 0;
@@ -145,9 +156,8 @@ const submitExam = async (req, res, next) => {
                 // Unanswered — skip, score stays 0
             }
             else if (question.type === 'MCQ') {
-                // answers stored as ["correct text"] or "correct text"
                 const correctList = getCorrectArray(question.answers);
-                const studentChoice = norm(studentResponse.selectedOption);
+                const studentChoice = extractResponseVal(studentResponse);
                 isCorrect = correctList.length > 0 && correctList.includes(studentChoice);
                 scoreAwarded = isCorrect
                     ? question.score
@@ -155,7 +165,7 @@ const submitExam = async (req, res, next) => {
             }
             else if (question.type === 'TRUE_FALSE') {
                 const correctList = getCorrectArray(question.answers);
-                const studentVal = norm(studentResponse.value);
+                const studentVal = extractResponseVal(studentResponse);
                 isCorrect = correctList.includes(studentVal);
                 scoreAwarded = isCorrect
                     ? question.score
@@ -163,7 +173,7 @@ const submitExam = async (req, res, next) => {
             }
             else if (question.type === 'FILL_BLANK') {
                 const correctList = getCorrectArray(question.answers);
-                const studentVal = norm(studentResponse.value);
+                const studentVal = extractResponseVal(studentResponse);
                 isCorrect = correctList.includes(studentVal);
                 scoreAwarded = isCorrect
                     ? question.score
