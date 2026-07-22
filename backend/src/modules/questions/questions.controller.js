@@ -240,26 +240,45 @@ const bulkImportQuestions = async (req, res, next) => {
                 resolvedSubjId = subjectId;
             } else {
                 const rawSubj = (subjectName || subjectCode || subject || subjectId || '').toString().trim();
-                if (rawSubj && rawSubj !== 'auto' && rawSubj !== 'null') {
-                    if (subjCache.has(rawSubj.toLowerCase())) {
-                        resolvedSubjId = subjCache.get(rawSubj.toLowerCase());
-                    } else if (subjCache.has(rawSubj.toUpperCase())) {
-                        resolvedSubjId = subjCache.get(rawSubj.toUpperCase());
+                if (rawSubj && rawSubj.toLowerCase() !== 'auto' && rawSubj.toLowerCase() !== 'null') {
+                    const cleanRaw = rawSubj.toLowerCase();
+                    const cleanUpper = rawSubj.toUpperCase();
+
+                    if (subjCache.has(cleanRaw)) {
+                        resolvedSubjId = subjCache.get(cleanRaw);
+                    } else if (subjCache.has(cleanUpper)) {
+                        resolvedSubjId = subjCache.get(cleanUpper);
                     } else {
-                        try {
-                            const codeKey = rawSubj.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'SUBJ';
-                            const newSubj = await db_1.prisma.subject.create({
-                                data: {
-                                    name: rawSubj,
-                                    code: `${codeKey}_${Date.now().toString().slice(-4)}`,
-                                    departmentId: resolvedDeptId
-                                }
-                            });
-                            resolvedSubjId = newSubj.id;
-                            subjCache.set(newSubj.id, newSubj.id);
-                            subjCache.set(rawSubj.toLowerCase(), newSubj.id);
-                        } catch (e) {
-                            resolvedSubjId = null;
+                        // Fuzzy / Alias match (e.g. Mathematics -> Math, Physics -> PHYS, Chemistry -> CHEM)
+                        const matchedSubj = allSubjs.find(s => {
+                            const sName = s.name.toLowerCase();
+                            const sCode = s.code.toLowerCase();
+                            return sName === cleanRaw || sCode === cleanRaw ||
+                                   (cleanRaw.startsWith('math') && (sName.startsWith('math') || sCode.startsWith('math'))) ||
+                                   (cleanRaw.startsWith('phys') && (sName.startsWith('phys') || sCode.startsWith('phys'))) ||
+                                   (cleanRaw.startsWith('chem') && (sName.startsWith('chem') || sCode.startsWith('chem')));
+                        });
+
+                        if (matchedSubj) {
+                            resolvedSubjId = matchedSubj.id;
+                            subjCache.set(cleanRaw, matchedSubj.id);
+                        } else {
+                            try {
+                                const codeKey = cleanUpper.replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'SUBJ';
+                                const newSubj = await db_1.prisma.subject.create({
+                                    data: {
+                                        name: rawSubj,
+                                        code: `${codeKey}_${Date.now().toString().slice(-4)}`,
+                                        departmentId: resolvedDeptId
+                                    }
+                                });
+                                resolvedSubjId = newSubj.id;
+                                allSubjs.push(newSubj);
+                                subjCache.set(newSubj.id, newSubj.id);
+                                subjCache.set(cleanRaw, newSubj.id);
+                            } catch (e) {
+                                resolvedSubjId = null;
+                            }
                         }
                     }
                 }

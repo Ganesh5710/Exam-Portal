@@ -292,6 +292,46 @@ const approveImport = async (req, res, next) => {
             return resolvedId;
         };
 
+        const subjCache = new Map();
+        const allSubjs = await db_1.prisma.subject.findMany();
+        allSubjs.forEach(s => {
+            subjCache.set(s.code.toUpperCase().trim(), s.id);
+            subjCache.set(s.name.toLowerCase().trim(), s.id);
+        });
+
+        const resolveSubjId = async (q, deptId) => {
+            const rawSubj = (q.subjectName || q.subjectCode || q.subject || '').toString().trim();
+            if (!rawSubj || rawSubj.toLowerCase() === 'auto' || rawSubj.toLowerCase() === 'null') return null;
+            const cleanRaw = rawSubj.toLowerCase();
+            const cleanUpper = rawSubj.toUpperCase();
+
+            if (subjCache.has(cleanRaw)) return subjCache.get(cleanRaw);
+            if (subjCache.has(cleanUpper)) return subjCache.get(cleanUpper);
+
+            const matchedSubj = allSubjs.find(s => {
+                const sName = s.name.toLowerCase();
+                const sCode = s.code.toLowerCase();
+                return sName === cleanRaw || sCode === cleanRaw ||
+                       (cleanRaw.startsWith('math') && (sName.startsWith('math') || sCode.startsWith('math'))) ||
+                       (cleanRaw.startsWith('phys') && (sName.startsWith('phys') || sCode.startsWith('phys'))) ||
+                       (cleanRaw.startsWith('chem') && (sName.startsWith('chem') || sCode.startsWith('chem')));
+            });
+
+            if (matchedSubj) return matchedSubj.id;
+
+            try {
+                const codeKey = cleanUpper.replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'SUBJ';
+                const ns = await db_1.prisma.subject.create({
+                    data: { name: rawSubj, code: `${codeKey}_${Date.now().toString().slice(-4)}`, departmentId: deptId }
+                });
+                allSubjs.push(ns);
+                subjCache.set(cleanRaw, ns.id);
+                return ns.id;
+            } catch (_) {
+                return null;
+            }
+        };
+
         let processedCount = 0, duplicatesCount = 0, failedCount = 0;
         const toInsert = [];
 
@@ -299,17 +339,18 @@ const approveImport = async (req, res, next) => {
             try {
                 const deptId = await resolveDeptId(q);
                 if (!deptId) { failedCount++; continue; }
+                const subjId = await resolveSubjId(q, deptId);
                 const existing = await db_1.prisma.question.findFirst({ where: { departmentId: deptId, content: q.content } });
                 if (existing) {
                     const action = duplicateActions?.[q.content] || 'SKIP';
                     if (action !== 'SKIP') {
-                        await db_1.prisma.question.update({ where: { id: existing.id }, data: { options: q.options || null, answers: q.answers, explanation: q.explanation || null, score: parseFloat(q.score) || 5, difficulty: q.difficulty || 'MEDIUM', tags: q.tags || [] } });
+                        await db_1.prisma.question.update({ where: { id: existing.id }, data: { options: q.options || null, answers: q.answers, explanation: q.explanation || null, score: parseFloat(q.score) || 5, difficulty: q.difficulty || 'MEDIUM', tags: q.tags || [], subjectId: subjId || existing.subjectId } });
                         processedCount++;
                     } else {
                         duplicatesCount++;
                     }
                 } else {
-                    toInsert.push({ type: q.type, content: q.content, options: q.options || null, answers: q.answers, explanation: q.explanation || null, score: parseFloat(q.score) || 5, negativeMarks: parseFloat(q.negativeMarks) || 0, difficulty: q.difficulty || 'MEDIUM', tags: q.tags || [], departmentId: deptId });
+                    toInsert.push({ type: q.type, content: q.content, options: q.options || null, answers: q.answers, explanation: q.explanation || null, score: parseFloat(q.score) || 5, negativeMarks: parseFloat(q.negativeMarks) || 0, difficulty: q.difficulty || 'MEDIUM', tags: q.tags || [], departmentId: deptId, subjectId: subjId });
                 }
             } catch (_) { failedCount++; }
         }

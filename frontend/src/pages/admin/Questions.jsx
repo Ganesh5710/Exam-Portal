@@ -685,6 +685,9 @@ export const Questions = () => {
                     Department
                   </th>
                   <th className="text-left text-xs font-semibold text-slate-400 uppercase px-6 py-4">
+                    Subject
+                  </th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase px-6 py-4">
                     Difficulty
                   </th>
                   <th className="text-left text-xs font-semibold text-slate-400 uppercase px-6 py-4">
@@ -725,6 +728,11 @@ export const Questions = () => {
                     </td>
                     <td className="px-6 py-4 text-slate-300">
                       {q.department?.name || "Unknown"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">
+                        {q.subject?.name || (q.tags && q.tags[0]) || "General"}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
