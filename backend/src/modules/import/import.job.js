@@ -557,20 +557,34 @@ const parseStructuredFile = (filePath, ext) => {
             }
 
             let answers = [];
-            const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct', 'key']);
+            const answerField = getKey(['answer', 'answers', 'correctanswer', 'correct', 'key', 'correctoption']);
             if (answerField !== null && answerField !== undefined) {
                 const ansStr = answerField.toString().trim();
-                if (type === 'MCQ' && /^[A-J]$/i.test(ansStr) && options.length > 0) {
-                    const idx = ansStr.toUpperCase().charCodeAt(0) - 65;
-                    if (options[idx]) {
-                        answers = [options[idx]];
-                    } else {
+                const cleanAns = ansStr.replace(/^(?:option|choice)\s*/i, '').replace(/[^a-j0-9]/gi, '').toUpperCase();
+
+                if (type === 'MCQ' && options.length > 0) {
+                    if (/^[A-E]$/.test(cleanAns)) {
+                        const idx = cleanAns.charCodeAt(0) - 65;
+                        if (options[idx] !== undefined) {
+                            answers = [options[idx]];
+                        }
+                    } else if (/^[1-5]$/.test(cleanAns)) {
+                        const idx = parseInt(cleanAns, 10) - 1;
+                        if (options[idx] !== undefined) {
+                            answers = [options[idx]];
+                        }
+                    }
+                    if (answers.length === 0 && options.includes(ansStr)) {
                         answers = [ansStr];
                     }
-                } else if (type === 'MCQ' || type === 'TRUE_FALSE') {
-                    answers = [ansStr];
-                } else {
-                    answers = ansStr.split(/[;|]/).map(a => a.trim());
+                }
+                
+                if (answers.length === 0) {
+                    if (type === 'MCQ' || type === 'TRUE_FALSE') {
+                        answers = [ansStr];
+                    } else {
+                        answers = ansStr.split(/[;|]/).map(a => a.trim()).filter(Boolean);
+                    }
                 }
             }
 
