@@ -106,40 +106,43 @@ const fixCorruptQuestionOptions = async () => {
             logger.info(`Database Cleaner: Fixed corrupt options for ${fixedCount} questions.`);
         }
 
-        // 3. Link unlinked questions (subjectId = null) to appropriate Subject
-        const unlinkedQuestions = await prisma.question.findMany({ where: { subjectId: null } });
-        if (unlinkedQuestions.length > 0) {
-            const allSubjs = await prisma.subject.findMany();
-            const mathSubj = allSubjs.find(s => s.code.toUpperCase() === 'MATH' || s.name.toLowerCase().includes('math'));
-            const physSubj = allSubjs.find(s => s.code.toUpperCase() === 'PHYS' || s.name.toLowerCase().includes('phys'));
-            const chemSubj = allSubjs.find(s => s.code.toUpperCase() === 'CHEM' || s.name.toLowerCase().includes('chem'));
+        // 3. Smart Subject Re-Classifier: Ensure all questions are accurately linked to Physics, Chemistry, or Mathematics
+        const allSubjs = await prisma.subject.findMany();
+        const mathSubj = allSubjs.find(s => s.code.toUpperCase() === 'MATH' || s.name.toLowerCase().includes('math'));
+        const physSubj = allSubjs.find(s => s.code.toUpperCase() === 'PHYS' || s.name.toLowerCase().includes('phys'));
+        const chemSubj = allSubjs.find(s => s.code.toUpperCase() === 'CHEM' || s.name.toLowerCase().includes('chem'));
 
-            let linkedCount = 0;
-            for (const q of unlinkedQuestions) {
-                const c = (q.content || "").toLowerCase();
-                let targetSubjId = null;
+        const allDbQuestions = await prisma.question.findMany({ include: { subject: true } });
+        let reclassifiedCount = 0;
 
-                if (c.includes("sin") || c.includes("cos") || c.includes("tan") || c.includes("log") || c.includes("derivative") || c.includes("determinant") || c.includes("integral") || c.includes("centroid") || c.includes("matrix") || c.includes("function") || c.includes("equation") || c.includes("subset")) {
-                    targetSubjId = mathSubj?.id;
-                } else if (c.includes("gravity") || c.includes("velocity") || c.includes("acceleration") || c.includes("current") || c.includes("force") || c.includes("mass") || c.includes("energy") || c.includes("wave")) {
-                    targetSubjId = physSubj?.id;
-                } else if (c.includes("noble gas") || c.includes("atom") || c.includes("element") || c.includes("compound") || c.includes("acid") || c.includes("base") || c.includes("reaction") || c.includes("ph")) {
-                    targetSubjId = chemSubj?.id;
-                } else {
-                    targetSubjId = mathSubj?.id || allSubjs[0]?.id;
-                }
+        for (const q of allDbQuestions) {
+            const c = (q.content || "").toLowerCase();
+            let targetSubjId = null;
 
-                if (targetSubjId) {
-                    await prisma.question.update({
-                        where: { id: q.id },
-                        data: { subjectId: targetSubjId }
-                    });
-                    linkedCount++;
-                }
+            // Check Physics regex
+            if (/\b(unit|resistance|charge|particle|frequency|sound|wavelength|lens|myopia|magnetic|conductor|scalar|vector|velocity|gravity|capacitance|electric|current|force|energy|power|work|momentum|light|optics|voltage|circuit|ohm|ampere|volt|joule|watt|hertz|farad|pascal|newton|friction|thermodynamics|pressure|photon)\b/i.test(c)) {
+                targetSubjId = physSubj?.id;
             }
-            if (linkedCount > 0) {
-                logger.info(`Database Cleaner: Auto-linked ${linkedCount} unlinked questions to Subjects.`);
+            // Check Chemistry regex
+            else if (/\b(atomic|carbon|element|noble gas|periodic|acid|base|ph|reaction|compound|molecule|bond|electron|proton|neutron|valency|isotope|solution|molarity|oxidation|catalyst|polymer|organic|inorganic|alkane|alkene|alkyne|alcohol|hydrocarbon|sodium|potassium|calcium|iron|copper|hydrogen|oxygen|nitrogen|helium|argon|chlorine|fluorine)\b/i.test(c)) {
+                targetSubjId = chemSubj?.id;
             }
+            // Check Mathematics regex
+            else if (/\b(minimum value|maximum value|sin|cos|tan|cot|sec|cosec|equation|derivative|integral|determinant|matrix|log|log10|logarithm|solution|centroid|triangle|subset|subsets|set|elements|distance between|slope|line|probability|permutation|combination|algebra|calculus|trigonometry|radius|area|volume|polynomial|roots|quadratics|dx)\b/i.test(c)) {
+                targetSubjId = mathSubj?.id;
+            }
+
+            if (targetSubjId && q.subjectId !== targetSubjId) {
+                await prisma.question.update({
+                    where: { id: q.id },
+                    data: { subjectId: targetSubjId }
+                });
+                reclassifiedCount++;
+            }
+        }
+
+        if (reclassifiedCount > 0) {
+            logger.info(`Database Cleaner: Re-classified ${reclassifiedCount} questions into Physics, Chemistry, and Mathematics.`);
         }
     } catch (err) {
         logger.error(`Database Cleaner error: ${err.message}`);

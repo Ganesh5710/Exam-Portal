@@ -611,7 +611,22 @@ const parseStructuredFile = (filePath, ext) => {
             }
 
             const rawSubj = getKey(['subjectname', 'subject', 'subjectcode', 'section', 'course'])?.toString() || '';
-            const subjectName = rawSubj || (['Sheet1', 'Sheet 1', 'Questions'].includes(sheetName) ? '' : sheetName);
+            let subjectName = rawSubj || (['Sheet1', 'Sheet 1', 'Questions'].includes(sheetName) ? '' : sheetName);
+
+            // Fallback smart content classifier if subject column was missing or empty
+            if (!subjectName) {
+                const c = content.toLowerCase();
+                if (/\b(unit|resistance|charge|particle|frequency|sound|wavelength|lens|myopia|magnetic|conductor|scalar|vector|velocity|gravity|capacitance|electric|current|force|energy|power|work|momentum|light|optics|voltage|circuit|ohm|ampere|volt|joule|watt|hertz|farad|pascal|newton|friction|thermodynamics|pressure|photon)\b/i.test(c)) {
+                    subjectName = "Physics";
+                } else if (/\b(atomic|carbon|element|noble gas|periodic|acid|base|ph|reaction|compound|molecule|bond|electron|proton|neutron|valency|isotope|solution|molarity|oxidation|catalyst|polymer|organic|inorganic|alkane|alkene|alkyne|alcohol|hydrocarbon|sodium|potassium|calcium|iron|copper|hydrogen|oxygen|nitrogen|helium|argon|chlorine|fluorine)\b/i.test(c)) {
+                    subjectName = "Chemistry";
+                } else if (/\b(minimum value|maximum value|sin|cos|tan|cot|sec|cosec|equation|derivative|integral|determinant|matrix|log|log10|logarithm|solution|centroid|triangle|subset|subsets|set|elements|distance between|slope|line|probability|permutation|combination|algebra|calculus|trigonometry|radius|area|volume|polynomial|roots|quadratics|dx)\b/i.test(c)) {
+                    subjectName = "Mathematics";
+                } else {
+                    subjectName = "General";
+                }
+            }
+
             const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
             const topic = getKey(['topic', 'subjecttopic'])?.toString() || 'General';
 
