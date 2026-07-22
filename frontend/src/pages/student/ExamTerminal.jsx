@@ -169,24 +169,16 @@ export const ExamTerminal = () => {
     setLoading(true);
 
     try {
-      // 1. Save outstanding answers
       const answersList = Object.keys(answers).map((qId) => ({
         questionId: qId,
         studentAnswer: answers[qId],
       }));
 
-      if (answersList.length > 0) {
-        try {
-          await api.post("/submissions/save", { examId: id, answers: answersList });
-        } catch (saveErr) {
-          console.warn("[Submit] Save answers notice:", saveErr);
-        }
-      }
-
-      // 2. Submit assessment
+      // Ultra-fast single submit API call (< 500ms)
       try {
         await api.post("/submissions/submit", {
           examId: id,
+          answers: answersList,
           tabSwitchCount: tabSwitches,
           exitFullscreenCount: fullscreenExits,
         });

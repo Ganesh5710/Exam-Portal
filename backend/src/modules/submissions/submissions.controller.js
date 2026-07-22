@@ -138,6 +138,39 @@ const submitExam = async (req, res, next) => {
             });
         }
 
+        // 1. Bulk Upsert Answers passed in submission payload if any
+        const payloadAnswers = req.body.answers;
+        if (Array.isArray(payloadAnswers) && payloadAnswers.length > 0) {
+            await Promise.all(
+                payloadAnswers.map(ans => {
+                    const { questionId, studentAnswer } = ans;
+                    if (!questionId) return null;
+                    return db_1.prisma.answer.upsert({
+                        where: {
+                            submissionId_questionId: {
+                                submissionId: submission.id,
+                                questionId
+                            }
+                        },
+                        create: {
+                            submissionId: submission.id,
+                            questionId,
+                            studentAnswer
+                        },
+                        update: {
+                            studentAnswer
+                        }
+                    });
+                }).filter(Boolean)
+            );
+        }
+
+        // Refresh submission answers in memory
+        submission = await db_1.prisma.submission.findUnique({
+            where: { id: submission.id },
+            include: { answers: true }
+        });
+
         // ── Helper: normalize answer text for comparison ─────────────────────
         const norm = (v) => String(v ?? '').trim().toLowerCase();
 
@@ -170,6 +203,7 @@ const submitExam = async (req, res, next) => {
         let totalScore = 0;
         let autoGradingComplete = true;
         const sectionBreakdown = {};
+        const answerUpdates = [];
 
         for (const question of examQuestions) {
             const subjectName = question.subject?.name || 'General';
@@ -257,14 +291,22 @@ const submitExam = async (req, res, next) => {
             }
 
             if (savedAns) {
-                await db_1.prisma.answer.update({
-                    where: { id: savedAns.id },
-                    data: { isCorrect, scoreAwarded }
-                });
                 totalScore += scoreAwarded;
                 sectionBreakdown[subjectName].score += scoreAwarded;
                 if (isCorrect) sectionBreakdown[subjectName].correctCount += 1;
+
+                answerUpdates.push(
+                    db_1.prisma.answer.update({
+                        where: { id: savedAns.id },
+                        data: { isCorrect, scoreAwarded }
+                    })
+                );
             }
+        }
+
+        // Execute all answer updates in parallel
+        if (answerUpdates.length > 0) {
+            await Promise.all(answerUpdates);
         }
 
         // ── Format section scores ─────────────────────────────────────────────
