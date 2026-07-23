@@ -57,9 +57,36 @@ export const MathContent = ({
   const [zoomImage, setZoomImage] = useState(null);
   const resolvedDiagramUrl = resolveImageUrl(fileUrl);
 
+  // Preprocess text to auto-detect unwrapped LaTeX environments (matrices, fractions, ordered pairs)
+  const preprocessMathText = (text) => {
+    if (!text || typeof text !== "string") return "";
+
+    let str = text;
+
+    // 1. Auto-wrap unwrapped LaTeX matrix environments (\begin{bmatrix}...\end{bmatrix}, pmatrix, matrix, vmatrix, etc.)
+    const envRegex = /(\\begin\{(?:bmatrix|pmatrix|matrix|vmatrix|Vmatrix|array|align|cases)\}[\s\S]*?\\end\{(?:bmatrix|pmatrix|matrix|vmatrix|Vmatrix|array|align|cases)\})/g;
+    str = str.replace(envRegex, (match) => {
+      const cleanMatch = match.replace(/\\\\\\\\/g, "\\\\");
+      return `\n$$\n${cleanMatch}\n$$\n`;
+    });
+
+    // 2. Auto-wrap standalone LaTeX math expressions (\frac{...}{...}, \left(...\right), \sqrt{...}) if not already enclosed in $
+    const inlineMathRegex = /(\\frac\{[^{}]*\}\{[^{}]*\}|\\left\([\s\S]*?\\right\)|\\sqrt\{[^{}]*\})/g;
+    str = str.replace(inlineMathRegex, (match) => {
+      return `$${match}$`;
+    });
+
+    // 3. Clean up any redundant triple or quadruple dollar signs
+    str = str.replace(/\$\$\$\$/g, "$$").replace(/\$\$\$/g, "$$");
+
+    return str;
+  };
+
   // Helper to render LaTeX math safely using KaTeX
   const renderFormattedText = (rawText) => {
     if (!rawText) return "";
+
+    const textToParse = preprocessMathText(rawText);
 
     // Split text by LaTeX math delimiters: $$...$$, $...$, \(...\), \[...\]
     const parts = [];
@@ -67,12 +94,12 @@ export const MathContent = ({
     let lastIndex = 0;
     let match;
 
-    while ((match = mathRegex.exec(rawText)) !== null) {
+    while ((match = mathRegex.exec(textToParse)) !== null) {
       // Plain text before match
       if (match.index > lastIndex) {
         parts.push({
           type: "text",
-          value: rawText.substring(lastIndex, match.index),
+          value: textToParse.substring(lastIndex, match.index),
         });
       }
 
@@ -95,24 +122,26 @@ export const MathContent = ({
       lastIndex = mathRegex.lastIndex;
     }
 
-    if (lastIndex < rawText.length) {
+    if (lastIndex < textToParse.length) {
       parts.push({
         type: "text",
-        value: rawText.substring(lastIndex),
+        value: textToParse.substring(lastIndex),
       });
     }
 
     return parts.map((part, idx) => {
       if (part.type === "math") {
         try {
-          const html = katex.renderToString(part.value, {
+          // Replace escaped backslashes inside matrices (\\\\ -> \\)
+          const cleanVal = part.value.replace(/\\\\\\\\/g, "\\\\");
+          const html = katex.renderToString(cleanVal, {
             displayMode: part.display,
             throwOnError: false,
           });
           return (
             <span
               key={idx}
-              className={`inline-block mx-0.5 ${part.display ? "my-2 text-center w-full" : ""}`}
+              className={`inline-block mx-0.5 ${part.display ? "my-2 text-center w-full overflow-x-auto py-1" : ""}`}
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );

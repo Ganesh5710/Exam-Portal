@@ -79,23 +79,23 @@ const extractQuestions = async (req, res, next) => {
             });
         }
 
-        const prompt = `You are an expert exam ingestion tool for Physics, Chemistry, and Mathematics. Analyze the provided document carefully and extract ALL questions from it.
+        const prompt = `You are an expert exam ingestion tool for Physics, Chemistry, and Mathematics (including JEE Main / Advanced questions). Analyze the provided document carefully and extract ALL questions from it.
 
 Rules:
 - Extract every single question — do not skip any.
-- Format all mathematical equations, fractions, square roots, matrices, and scientific symbols cleanly using LaTeX syntax (e.g. \\frac{a}{b}, \\sqrt{x}, \\theta, \\pi, \\varepsilon_0, x^2, H_2O).
+- Format all mathematical equations, fractions, square roots, matrices, determinants, transposes, ordered pairs, and scientific symbols cleanly using valid LaTeX syntax:
+  - Matrices: \\begin{bmatrix} a & b & c \\\\ a & c & a \\\\ c & a & b \\end{bmatrix}
+  - Fractions: \\frac{1}{3}, -\\frac{1}{3}, \\frac{2}{3}
+  - Ordered Pairs / Tuples: \\left(9, \\frac{1}{9}\\right), \\left(3, \\frac{1}{81}\\right)
+  - Equalities & Exponents: a^3 + b^3 + c^3 = 2, A^T A = I, x^2 + y^2 + z^2 = 1
+- For MCQ: Include all 4 option choices accurately. Format option texts with LaTeX math formatting if options contain math fractions, matrices, or ordered pairs (e.g. ["3", "\\frac{1}{3}", "-\\frac{1}{3}", "\\frac{2}{3}"] or ["(3, 81)", "\\left(9, \\frac{1}{9}\\right)", "\\left(3, \\frac{1}{81}\\right)", "\\left(9, \\frac{1}{81}\\right)"]).
 - If a question contains a diagram or figure reference, preserve it in the content text (e.g. "[Diagram attached: ...]").
-- For MCQ: include exactly 4 options and the correct answer.
-- For True/False: options must be ["True","False"] and answer is "True" or "False".
-- For Fill in the Blank: use ___ in the question text and provide answer(s).
-- For Descriptive/Integer: just provide the question and answer.
-- Detect difficulty (EASY/MEDIUM/HARD) from context clues or keywords.
 - Return ONLY a raw JSON array. NO markdown fences, NO explanation text.
 
 Schema per question object:
 {
   "type": "MCQ" | "MULTI_CORRECT" | "TRUE_FALSE" | "FILL_BLANK" | "DESCRIPTIVE" | "CODING",
-  "content": "Full question text with LaTeX math formulas",
+  "content": "Full question text with LaTeX math formulas and matrix formatting",
   "options": ["option1","option2","option3","option4"],
   "answers": ["correct option text"] OR "True"/"False" string for TRUE_FALSE,
   "explanation": "explanation text or empty string",
