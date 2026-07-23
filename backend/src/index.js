@@ -94,6 +94,10 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
+// /api/health alias for UptimeRobot and external monitors
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date() });
+});
 // Global Error Handler
 app.use(error_1.errorHandler);
 // Background Cron Jobs
