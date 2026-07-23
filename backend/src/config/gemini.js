@@ -24,9 +24,11 @@ async function callGeminiWithFallback(apiKey, options) {
     // Build content parts
     const contentsParts = [{ text: prompt }];
     if (mediaData) {
+        let cleanMime = mediaData.mimeType || 'image/jpeg';
+        if (cleanMime === 'image/jpg') cleanMime = 'image/jpeg';
         contentsParts.push({
             inlineData: {
-                mimeType: mediaData.mimeType,
+                mimeType: cleanMime,
                 data: mediaData.data
             }
         });

@@ -138,6 +138,7 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
         }
 
         let questions = [];
+        let lastAiError = '';
         try {
             const result = await gemini_1.callGeminiWithFallback(geminiApiKey, { prompt: fullPrompt, mediaData });
             let text = result.text || '';
@@ -152,6 +153,7 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
             const parsed = JSON.parse(text);
             questions = Array.isArray(parsed) ? parsed : [parsed];
         } catch (aiErr) {
+            lastAiError = aiErr.message;
             logger_1.logger.warn(`[extract] AI parse failed: ${aiErr.message}. Trying local fallback.`);
         }
 
@@ -166,7 +168,9 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
             cleanup();
             return res.status(400).json({
                 success: false,
-                message: 'No valid questions could be extracted from this file. If you are uploading a PDF or Image, ensure your GEMINI_API_KEY is active in Render or Admin Settings.'
+                message: lastAiError
+                  ? `Extraction Error: ${lastAiError}`
+                  : 'No valid questions could be extracted from this file. Ensure your GEMINI_API_KEY is active and quota is available.'
             });
         }
 
