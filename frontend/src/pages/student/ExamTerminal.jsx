@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { MathContent } from "../../components/common/MathContent";
+import { MathContent, resolveImageUrl } from "../../components/common/MathContent";
 
 // Utility script loader for dynamic CDN models loading
 // Resolves a promise once the script tag has finished importing into the document header.
@@ -727,10 +727,18 @@ export const ExamTerminal = () => {
                   const letter = String.fromCharCode(65 + i);
                   const isSelected =
                     answers[currentQuestion.id]?.selectedOption === opt;
+                  const isImg = opt && typeof opt === "string" && (
+                    opt.startsWith("http://") ||
+                    opt.startsWith("https://") ||
+                    opt.startsWith("/uploads/") ||
+                    opt.startsWith("data:image/") ||
+                    /\.(jpg|jpeg|png|webp|svg)(\?.*)?$/i.test(opt.trim())
+                  );
 
                   return (
                     <button
                       key={i}
+                      type="button"
                       onClick={() =>
                         handleSelectOption(currentQuestion.id, opt)
                       }
@@ -745,8 +753,21 @@ export const ExamTerminal = () => {
                       >
                         {letter}
                       </span>
-                      <div className="flex-1">
-                        <MathContent content={opt} showDiagramLabel={false} textSize="text-sm font-medium" />
+                      <div className="flex-1 min-w-0">
+                        {isImg ? (
+                          <div className="flex items-center gap-3 py-1">
+                            <img
+                              src={resolveImageUrl(opt)}
+                              alt={`Option ${letter}`}
+                              className="max-h-40 w-auto object-contain rounded-lg border border-slate-700/80 bg-slate-950 p-2 shadow-md"
+                            />
+                            <span className="text-xs text-violet-400 font-semibold hidden sm:inline">
+                              Option {letter} Diagram Choice
+                            </span>
+                          </div>
+                        ) : (
+                          <MathContent content={opt} showDiagramLabel={false} textSize="text-sm font-medium" />
+                        )}
                       </div>
                     </button>
                   );
