@@ -79,10 +79,12 @@ const extractQuestions = async (req, res, next) => {
             });
         }
 
-        const prompt = `You are an expert exam ingestion tool. Analyze the provided document carefully and extract ALL questions from it.
+        const prompt = `You are an expert exam ingestion tool for Physics, Chemistry, and Mathematics. Analyze the provided document carefully and extract ALL questions from it.
 
 Rules:
 - Extract every single question — do not skip any.
+- Format all mathematical equations, fractions, square roots, matrices, and scientific symbols cleanly using LaTeX syntax (e.g. \\frac{a}{b}, \\sqrt{x}, \\theta, \\pi, \\varepsilon_0, x^2, H_2O).
+- If a question contains a diagram or figure reference, preserve it in the content text (e.g. "[Diagram attached: ...]").
 - For MCQ: include exactly 4 options and the correct answer.
 - For True/False: options must be ["True","False"] and answer is "True" or "False".
 - For Fill in the Blank: use ___ in the question text and provide answer(s).
@@ -93,7 +95,7 @@ Rules:
 Schema per question object:
 {
   "type": "MCQ" | "MULTI_CORRECT" | "TRUE_FALSE" | "FILL_BLANK" | "DESCRIPTIVE" | "CODING",
-  "content": "Full question text",
+  "content": "Full question text with LaTeX math formulas",
   "options": ["option1","option2","option3","option4"],
   "answers": ["correct option text"] OR "True"/"False" string for TRUE_FALSE,
   "explanation": "explanation text or empty string",
@@ -101,7 +103,8 @@ Schema per question object:
   "score": 5,
   "negativeMarks": 0,
   "tags": ["tag1","tag2"],
-  "topic": "topic name or empty string"
+  "topic": "topic name or empty string",
+  "fileUrl": "image/diagram url if present, otherwise null"
 }
 
 Return ONLY the JSON array. Start your response with [ and end with ].`;
@@ -158,6 +161,7 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
                     topic: typeof q.topic === 'string' ? q.topic : '',
                     subjectName: typeof q.subjectName === 'string' ? q.subjectName : (typeof q.subject === 'string' ? q.subject : ''),
                     subjectCode: typeof q.subjectCode === 'string' ? q.subjectCode : (typeof q.subjectName === 'string' ? q.subjectName : ''),
+                    fileUrl: typeof q.fileUrl === 'string' ? q.fileUrl : (typeof q.imageUrl === 'string' ? q.imageUrl : null),
                 };
             });
 

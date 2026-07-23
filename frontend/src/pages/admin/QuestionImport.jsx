@@ -20,7 +20,9 @@ import {
   BookOpen,
   Tag,
   Award,
+  Image as ImageIcon,
 } from "lucide-react";
+import { MathContent } from "../../components/common/MathContent";
 
 /* ─────────────────────────────── helpers ─────────────────────────── */
 const TYPES = ["MCQ", "MULTI_CORRECT", "TRUE_FALSE", "FILL_BLANK", "DESCRIPTIVE", "CODING"];
@@ -162,6 +164,7 @@ export const QuestionImport = () => {
         subjectName: q.subjectName || q.subjectCode || q.subject || null,
         subjectCode: q.subjectCode || q.subjectName || null,
         departmentId: q.departmentId || null,
+        fileUrl: q.fileUrl || null,
         topic: q.topic || "",
       }));
 
@@ -511,8 +514,9 @@ const QuestionCard = ({ q, idx, selected, expanded, onToggleSelect, onToggleExpa
             <span className="text-[10px] text-slate-500 font-mono">#{idx + 1}</span>
             {q.score && <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Award size={9} /> {q.score}pts</span>}
             {q.topic && <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Tag size={9} /> {q.topic}</span>}
+            {q.fileUrl && <span className="text-[10px] text-violet-400 font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20"><ImageIcon size={9} /> Diagram Attached</span>}
           </div>
-          <p className="text-sm text-slate-200 leading-relaxed line-clamp-2">{q.content}</p>
+          <MathContent content={q.content} fileUrl={q.fileUrl} textSize="text-sm font-medium" />
         </div>
 
         {/* Action buttons */}
@@ -532,9 +536,9 @@ const QuestionCard = ({ q, idx, selected, expanded, onToggleSelect, onToggleExpa
       {/* Expanded Detail */}
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-slate-800 pt-3 ml-7">
-          {/* Full question text */}
+          {/* Full question text & diagram */}
           <div className="bg-slate-950/60 rounded-lg p-3 border border-slate-800">
-            <p className="text-sm text-slate-100 leading-relaxed">{q.content}</p>
+            <MathContent content={q.content} fileUrl={q.fileUrl} textSize="text-sm font-medium" />
           </div>
 
           {/* Options */}
@@ -551,7 +555,9 @@ const QuestionCard = ({ q, idx, selected, expanded, onToggleSelect, onToggleExpa
                       ${isCorrect ? "bg-emerald-950/30 border-emerald-600/30 text-emerald-300" : "bg-slate-900/50 border-slate-800 text-slate-400"}`}
                   >
                     <span className="font-bold shrink-0">{String.fromCharCode(65 + oi)}.</span>
-                    <span>{opt}</span>
+                    <div className="flex-1">
+                      <MathContent content={opt} showDiagramLabel={false} textSize="text-xs" />
+                    </div>
                     {isCorrect && <CheckCircle2 size={11} className="ml-auto shrink-0 text-emerald-400" />}
                   </div>
                 );
@@ -669,6 +675,43 @@ const EditModal = ({ q, setQ, onSave, onClose }) => {
               rows={4}
               className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 resize-y"
             />
+          </div>
+
+          {/* Diagram / Attachment Image */}
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+            <label className="block text-xs font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+              <ImageIcon size={14} /> Diagram / Image Attachment
+            </label>
+            <div className="flex flex-wrap gap-2 items-center">
+              <input
+                type="text"
+                value={q.fileUrl || ""}
+                onChange={(e) => update("fileUrl", e.target.value)}
+                placeholder="Image / Diagram URL (e.g. https://... or /uploads/diagram.png)"
+                className="flex-1 min-w-[200px] px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-violet-500"
+              />
+              {q.fileUrl && (
+                <button
+                  type="button"
+                  onClick={() => update("fileUrl", null)}
+                  className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition-colors"
+                >
+                  Remove Diagram
+                </button>
+              )}
+            </div>
+            {q.fileUrl && (
+              <div className="mt-2 p-2 bg-slate-900 border border-slate-800 rounded-lg flex items-center gap-3">
+                <img
+                  src={q.fileUrl}
+                  alt="Diagram Preview"
+                  className="h-16 w-auto object-contain rounded border border-slate-700"
+                />
+                <span className="text-xs text-emerald-400 font-semibold">
+                  ✓ Diagram attached & ready for student exam view
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Options (for MCQ / MULTI_CORRECT) */}

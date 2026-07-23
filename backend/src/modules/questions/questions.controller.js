@@ -1,6 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bulkDeleteQuestions = exports.generateAIQuestions = exports.runQuestionCode = exports.bulkImportQuestions = exports.deleteQuestion = exports.updateQuestion = exports.createQuestion = exports.getQuestions = void 0;
+exports.uploadQuestionImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Please upload an image file.' });
+        }
+        const fileUrl = `/uploads/${req.file.filename}`;
+        return res.status(200).json({ success: true, data: { fileUrl } });
+    } catch (error) {
+        next(error);
+    }
+};
 const db_1 = require("../../database/db");
 const codeExecution_service_1 = require("./codeExecution.service");
 const gemini_1 = require("../../config/gemini");
@@ -290,6 +300,7 @@ const bulkImportQuestions = async (req, res, next) => {
                 formattedAnswers = (options && options.length > 0) ? [options[0]] : ['N/A'];
             }
 
+
             toInsert.push({
                 type: (type ? type.toString().toUpperCase() : 'MCQ'),
                 content: content.trim(),
@@ -300,6 +311,7 @@ const bulkImportQuestions = async (req, res, next) => {
                 negativeMarks: parseFloat(negativeMarks) || 0.0,
                 difficulty: (difficulty ? difficulty.toString().toUpperCase() : 'MEDIUM'),
                 tags: Array.isArray(tags) ? tags : [],
+                fileUrl: fileUrl || record.imageUrl || record.image || null,
                 departmentId: resolvedDeptId,
                 subjectId: resolvedSubjId
             });

@@ -21,7 +21,32 @@ const questionCreateSchema = zod_1.z.object({
         departmentId: zod_1.z.string().uuid('Department must be assigned')
     })
 });
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+
+const imgStorage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path_1.default.join(__dirname, '../../../../uploads');
+        if (!fs_1.default.existsSync(dir)) {
+            fs_1.default.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = path_1.default.extname(file.originalname) || '.png';
+        cb(null, `diagram-${uniqueSuffix}${ext}`);
+    }
+});
+
+const uploadImg = (0, multer_1.default)({
+    storage: imgStorage,
+    limits: { fileSize: 25 * 1024 * 1024 }
+});
+
 router.use(auth_1.protect);
+router.post('/upload-image', (0, auth_1.restrictTo)('ADMIN'), uploadImg.single('file'), questions_controller_1.uploadQuestionImage);
 router.post('/run-code', questions_controller_1.runQuestionCode);
 router.post('/generate-ai', (0, auth_1.restrictTo)('ADMIN'), questions_controller_1.generateAIQuestions);
 router.get('/', (0, auth_1.restrictTo)('ADMIN'), questions_controller_1.getQuestions);

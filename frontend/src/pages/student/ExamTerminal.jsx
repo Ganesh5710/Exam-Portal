@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+import { MathContent } from "../../components/common/MathContent";
+
 // Utility script loader for dynamic CDN models loading
 // Resolves a promise once the script tag has finished importing into the document header.
 // Used for loading script assets dynamically on-demand, such as the TensorFlow Face Detection CDN.
@@ -710,11 +712,13 @@ export const ExamTerminal = () => {
             </span>
           </div>
 
-          {/* Question Text */}
+          {/* Question Text & Diagram Attachment */}
           <div className="space-y-6">
-            <p className="text-lg font-medium leading-relaxed">
-              {currentQuestion?.content ? currentQuestion.content.replace(/^\d+[\s\.\)\-:]+\s*/, "") : ""}
-            </p>
+            <MathContent
+              content={currentQuestion?.content ? currentQuestion.content.replace(/^\d+[\s\.\)\-:]+\s*/, "") : ""}
+              fileUrl={currentQuestion?.fileUrl}
+              textSize="text-lg font-medium"
+            />
 
             {/* Render input components according to question types */}
             {currentQuestion?.type === "MCQ" && (
@@ -735,13 +739,15 @@ export const ExamTerminal = () => {
                       `}
                     >
                       <span
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0
                         ${isSelected ? "bg-primary text-white" : "bg-slate-800 text-slate-400"}
                       `}
                       >
                         {letter}
                       </span>
-                      {opt}
+                      <div className="flex-1">
+                        <MathContent content={opt} showDiagramLabel={false} textSize="text-sm font-medium" />
+                      </div>
                     </button>
                   );
                 })}

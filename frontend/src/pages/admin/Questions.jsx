@@ -17,8 +17,11 @@ import {
   CheckSquare,
   Square,
   AlertOctagon,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { MathContent } from "../../components/common/MathContent";
 
 export const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -55,6 +58,8 @@ export const Questions = () => {
   });
   const [aiPreviewQuestions, setAiPreviewQuestions] = useState([]);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   // Form States
   const [formData, setFormData] = useState({
     type: "MCQ",
@@ -68,7 +73,26 @@ export const Questions = () => {
     difficulty: "MEDIUM",
     subjectId: "",
     tagsString: "",
+    fileUrl: "",
   });
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    setUploadingImage(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await api.post("/questions/upload-image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setFormData((prev) => ({ ...prev, fileUrl: res.data?.data?.fileUrl || "" }));
+      toast.success("Diagram image uploaded successfully!");
+    } catch (err) {
+      toast.error("Failed to upload image diagram.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleGenerateAI = async (e) => {
     e.preventDefault();
@@ -294,6 +318,7 @@ export const Questions = () => {
         tags: formData.tagsString
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
+        fileUrl: formData.fileUrl || null,
         departmentId: formData.subjectId,
       };
 
@@ -347,6 +372,7 @@ export const Questions = () => {
         tags: formData.tagsString
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
+        fileUrl: formData.fileUrl || null,
         departmentId: formData.subjectId,
       };
 
@@ -391,6 +417,7 @@ export const Questions = () => {
       difficulty: "MEDIUM",
       subjectId: subjects[0]?.id || "",
       tagsString: "",
+      fileUrl: "",
     });
   };
 
@@ -427,6 +454,7 @@ export const Questions = () => {
       difficulty: q.difficulty,
       subjectId: q.departmentId || q.subjectId,
       tagsString: tagsText,
+      fileUrl: q.fileUrl || "",
     });
     setShowEditModal(true);
   };
@@ -716,8 +744,8 @@ export const Questions = () => {
                         )}
                       </button>
                     </td>
-                    <td className="px-6 py-4 font-medium text-white max-w-md truncate">
-                      {q.content}
+                    <td className="px-6 py-4 font-medium text-white max-w-md">
+                      <MathContent content={q.content} fileUrl={q.fileUrl} textSize="text-xs font-medium" />
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -926,6 +954,67 @@ export const Questions = () => {
                   className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
                   required
                 />
+              </div>
+
+              {/* Diagram / Attachment Image */}
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                <label className="block text-xs font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <ImageIcon size={14} /> Diagram / Attachment Image (Physics / Chemistry / Maths)
+                </label>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="create-diagram-upload"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) handleImageUpload(e.target.files[0]);
+                    }}
+                  />
+                  <label
+                    htmlFor="create-diagram-upload"
+                    className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-violet-400" /> Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={14} className="text-violet-400" /> Upload Diagram Image
+                      </>
+                    )}
+                  </label>
+                  <span className="text-xs text-slate-500 font-semibold">OR Image URL:</span>
+                  <input
+                    type="text"
+                    value={formData.fileUrl || ""}
+                    onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
+                    placeholder="https://... or /uploads/diagram.png"
+                    className="flex-1 min-w-[180px] p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-violet-500"
+                  />
+                  {formData.fileUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, fileUrl: "" })}
+                      className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {formData.fileUrl && (
+                  <div className="mt-2 p-2 bg-slate-900 border border-slate-800 rounded-lg flex items-center gap-3">
+                    <img
+                      src={formData.fileUrl}
+                      alt="Diagram Preview"
+                      className="h-16 w-auto object-contain rounded border border-slate-700"
+                    />
+                    <span className="text-xs text-emerald-400 font-semibold">
+                      ✓ Diagram image attached & ready for student exam view
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Dynamic options for MCQ */}
@@ -1190,6 +1279,67 @@ export const Questions = () => {
                   className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
                   required
                 />
+              </div>
+
+              {/* Diagram / Attachment Image */}
+              <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                <label className="block text-xs font-bold text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <ImageIcon size={14} /> Diagram / Attachment Image (Physics / Chemistry / Maths)
+                </label>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="edit-diagram-upload"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) handleImageUpload(e.target.files[0]);
+                    }}
+                  />
+                  <label
+                    htmlFor="edit-diagram-upload"
+                    className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                  >
+                    {uploadingImage ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-violet-400" /> Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={14} className="text-violet-400" /> Upload Diagram Image
+                      </>
+                    )}
+                  </label>
+                  <span className="text-xs text-slate-500 font-semibold">OR Image URL:</span>
+                  <input
+                    type="text"
+                    value={formData.fileUrl || ""}
+                    onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
+                    placeholder="https://... or /uploads/diagram.png"
+                    className="flex-1 min-w-[180px] p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-violet-500"
+                  />
+                  {formData.fileUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, fileUrl: "" })}
+                      className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {formData.fileUrl && (
+                  <div className="mt-2 p-2 bg-slate-900 border border-slate-800 rounded-lg flex items-center gap-3">
+                    <img
+                      src={formData.fileUrl}
+                      alt="Diagram Preview"
+                      className="h-16 w-auto object-contain rounded border border-slate-700"
+                    />
+                    <span className="text-xs text-emerald-400 font-semibold">
+                      ✓ Diagram image attached & ready for student exam view
+                    </span>
+                  </div>
+                )}
               </div>
 
               {formData.type === "MCQ" && (
