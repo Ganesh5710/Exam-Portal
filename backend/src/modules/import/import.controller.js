@@ -107,73 +107,91 @@ const extractQuestions = async (req, res, next) => {
             });
         }
 
-        const prompt = `You are an expert exam ingestion tool for Physics, Chemistry, and Mathematics (including JEE Main / Advanced questions). Your task is to parse EVERY SINGLE question from the uploaded document into clean, perfectly formatted structured data — without dropping, skipping, or altering any mathematical expressions.
+        const prompt = `You are an expert Optical Character Recognition (OCR) and LaTeX formatting engine for advanced Mathematics, Physics, and Chemistry exam papers.
 
-STRICT FORMATTING RULES:
+Your task is to parse EVERY question from the uploaded document/image into a clean structured JSON array — without dropping, skipping, or altering any mathematical expression.
 
-1. LaTeX Enclosure:
-   - Wrap ALL mathematical expressions, symbols, fractions, square roots, calculus notation, matrices, and scientific notation in LaTeX delimiters.
-   - Use $...$ for inline math and $$...$$ for display-level math.
-   - Examples:
-     - Fraction: $\\frac{1}{3}$, $-\\frac{2}{3}$
-     - Square root: $\\sqrt{x^2 + y^2}$
-     - Integral: $\\int_0^{\\pi} \\sin(x)\\,dx$
-     - Limit: $\\lim_{x \\to 0} \\frac{\\sin x}{x}$
-     - Derivative: $\\frac{d}{dx}(x^2) = 2x$
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 RULE 1: MATHEMATICAL FORMULATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Matrices: Always render as full 2D arrays. NEVER flatten into a single line.
+  Round brackets: $\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$
+  Square brackets: $\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}$
+  Determinant: $\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}$
 
-2. Matrix Preservation (CRITICAL — Never Flatten Matrices):
-   - Render every matrix exactly as a grid using proper LaTeX environments.
-   - Use \\begin{pmatrix}...\\end{pmatrix} for round-bracketed matrices.
-   - Use \\begin{bmatrix}...\\end{bmatrix} for square-bracketed matrices.
-   - Use \\begin{vmatrix}...\\end{vmatrix} for determinants.
-   - Use & to separate columns, and \\\\ to separate rows.
-   - Example 3×3 matrix: $\\begin{bmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{bmatrix}$
-   - NEVER flatten a matrix into plain text like "a b c / d e f / g h i".
+- Fractions: Always use $\\frac{numerator}{denominator}$. NEVER use "/" for math fractions.
 
-3. Fraction Formatting:
-   - Always use $\\frac{numerator}{denominator}$ — NEVER use "/" for math fractions.
-   - Ordered pairs with fractions: $\\left(9, \\frac{1}{9}\\right)$
+- Square roots: $\\sqrt{x}$, nth roots: $\\sqrt[n]{x}$
 
-4. Options Alignment:
-   - Preserve ALL 4 MCQ option choices (A, B, C, D) exactly as in the original document.
-   - If an option contains a matrix, fraction, or complex expression, format it fully in LaTeX.
-   - Example options array: ["$\\frac{1}{3}$", "$-\\frac{1}{3}$", "$\\frac{2}{3}$", "$\\frac{1}{6}$"]
-   - Example matrix options: ["$\\begin{bmatrix} 1 & 0 \\\\ 0 & 1 \\end{bmatrix}$", "$\\begin{bmatrix} 0 & 1 \\\\ 1 & 0 \\end{bmatrix}$", ...]
+- Integrals: $\\int_{a}^{b} f(x)\\,dx$, $\\int_{0}^{\\pi} \\sin(x)\\,dx$
 
-5. Diagram / Image:
-   - If a question references a diagram or figure, write "[Diagram: figure X]" in the content field.
-   - Set "fileUrl": null unless an actual image URL is directly embedded.
+- Limits: $\\lim_{x \\to 0} \\frac{\\sin x}{x}$
 
-6. answers field:
-   - For MCQ: The answer must be the EXACT full text of the correct option (including LaTeX), as it appears in the options array.
-   - Example: if option B is "$\\frac{1}{3}$", then "answers": ["$\\frac{1}{3}$"]
+- Sums/Products: $\\sum_{i=1}^{n} i^2$, $\\prod_{k=1}^{n} k$
 
-7. Output:
-   - Return ONLY a raw JSON array. NO markdown fences. NO explanation text before or after.
-   - Start your response with [ and end with ]
+- Derivatives: $\\frac{d}{dx}(x^2) = 2x$, $\\frac{\\partial f}{\\partial x}$
 
-JSON Schema per question:
+- Subscripts & Superscripts: Always use curly braces for multi-character indices. e.g., $x^{10}$, $a_{ij}$, $e^{i\\pi}$
+
+- Greek Letters & Symbols: $\\alpha$, $\\beta$, $\\gamma$, $\\theta$, $\\pi$, $\\Delta$, $\\Sigma$, $\\lambda$, $\\mu$, $\\omega$, $\\infty$, $\\vec{v}$, $\\hat{n}$
+
+- Piecewise functions: Use $\\begin{cases} f_1(x) & \\text{if } x > 0 \\\\ f_2(x) & \\text{if } x \\leq 0 \\end{cases}$
+
+- Multi-step equations: Use $\\begin{align*} eq1 \\\\ eq2 \\end{align*}$
+
+- Ordered pairs: $\\left(9, \\frac{1}{9}\\right)$, $\\left(3, \\frac{1}{81}\\right)$
+
+- Absolute values: $|x|$ or $\\left|\\frac{a}{b}\\right|$
+
+- Vectors & dot products: $\\vec{A} \\cdot \\vec{B}$, $|\\vec{F}| = ma$
+
+- Chemical formulas (Chemistry): $H_2O$, $CO_2$, $H_2SO_4$, reaction arrows: $\\rightarrow$, $\\rightleftharpoons$
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 RULE 2: OPTIONS & ANSWERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Preserve ALL 4 MCQ option choices (A, B, C, D) exactly as in the original.
+- Wrap all option math content in LaTeX $...$
+- Prefix each option with "(A)", "(B)", "(C)", "(D)".
+- Matrix option example: "(A) $\\begin{bmatrix} 1 & 0 \\\\ 0 & 1 \\end{bmatrix}$"
+- Fraction option example: "(B) $\\frac{1}{3}$"
+- Answer field: Return the EXACT full option string including the (A)/(B)/(C)/(D) prefix and its full LaTeX content.
+  Example: "answers": ["(B) $\\frac{1}{3}$"]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖼️ RULE 3: DIAGRAMS & IMAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- If a question has a diagram, circuit, graph, or geometric figure, insert a placeholder in the content field:
+  [Diagram: brief description of figure]
+- Set "fileUrl": null
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 RULE 4: JSON OUTPUT SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Return ONLY a raw JSON array. NO markdown fences. NO explanation text. Start with [ and end with ].
+
+Each question object:
 {
-  "type": "MCQ" | "MULTI_CORRECT" | "TRUE_FALSE" | "FILL_BLANK" | "DESCRIPTIVE",
-  "content": "Full question text with all math in LaTeX $...$ or $$...$$",
-  "options": ["(A) option text", "(B) option text", "(C) option text", "(D) option text"],
-  "answers": ["exact matching option text"],
-  "explanation": "explanation or empty string",
-  "difficulty": "EASY" | "MEDIUM" | "HARD",
+  "type": "MCQ",
+  "content": "Full question text with all math in $...$",
+  "options": ["(A) ...", "(B) ...", "(C) ...", "(D) ..."],
+  "answers": ["(X) exact full option text as in options array"],
+  "explanation": "",
+  "difficulty": "MEDIUM",
   "score": 4,
   "negativeMarks": 1,
-  "tags": ["Mathematics", "JEE"],
-  "topic": "topic name",
+  "tags": ["Mathematics"],
+  "topic": "Matrices / Calculus / Vectors / etc.",
   "fileUrl": null
 }
 
-EXTRACT EVERY QUESTION. DO NOT SKIP ANY. Start response with [`;
+EXTRACT EVERY SINGLE QUESTION. DO NOT SKIP ANY. Start your response with [`;
 
         let fullPrompt = prompt;
         if (!mediaData) {
             fullPrompt += `\n\nDocument content to extract from:\n\n${documentText}`;
         } else {
-            fullPrompt += `\n\nAnalyze the attached document image/file directly and extract all questions from it.`;
+            fullPrompt += `\n\nAnalyze the attached document/image directly and extract ALL questions from it.`;
         }
         fullPrompt += `\n]`;
 
