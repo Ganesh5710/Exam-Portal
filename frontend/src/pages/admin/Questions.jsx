@@ -95,6 +95,31 @@ export const Questions = () => {
     }
   };
 
+  const handleOptionImageUpload = async (index, file) => {
+    if (!file) return;
+    setUploadingOptionIndex(index);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await api.post("/questions/upload-image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const uploadedUrl = res.data?.data?.fileUrl || "";
+      const newOptions = [...formData.options];
+      newOptions[index] = uploadedUrl;
+      setFormData((prev) => ({
+        ...prev,
+        options: newOptions,
+        correctAnswer: prev.correctAnswer === "" ? uploadedUrl : prev.correctAnswer,
+      }));
+      toast.success(`Image uploaded for Option ${String.fromCharCode(65 + index)}!`);
+    } catch (err) {
+      toast.error("Failed to upload option image.");
+    } finally {
+      setUploadingOptionIndex(null);
+    }
+  };
+
   const handleGenerateAI = async (e) => {
     e.preventDefault();
     if (!aiFormData.topic || !aiFormData.subjectId) {
@@ -1021,29 +1046,78 @@ export const Questions = () => {
               {/* Dynamic options for MCQ */}
               {formData.type === "MCQ" && (
                 <div className="space-y-3 p-3 bg-slate-950 border border-slate-850 rounded-lg">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Answer Choices Options
-                  </span>
-                  <div className="grid grid-cols-2 gap-3">
-                    {formData.options.map((opt, i) => (
-                      <div key={i} className="flex gap-2 items-center">
-                        <span className="text-xs font-mono font-bold text-slate-500">
-                          {String.fromCharCode(65 + i)}
-                        </span>
-                        <input
-                          type="text"
-                          value={opt}
-                          onChange={(e) => {
-                            const newOptions = [...formData.options];
-                            newOptions[i] = e.target.value;
-                            setFormData({ ...formData, options: newOptions });
-                          }}
-                          className="flex-1 p-2 bg-slate-900 border border-slate-800 rounded text-xs text-white"
-                          placeholder={`Option ${i + 1}`}
-                          required={i < 2}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Answer Choices Options (Text or Diagram)</span>
+                    <span className="text-[10px] text-violet-400 font-normal">Click 📷 icon to upload option image</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {formData.options.map((opt, i) => {
+                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg"));
+                      return (
+                        <div key={i} className="space-y-1.5 p-2 bg-slate-900 border border-slate-800 rounded-lg">
+                          <div className="flex gap-2 items-center">
+                            <span className="text-xs font-mono font-bold text-violet-400 w-5">
+                              {String.fromCharCode(65 + i)}.
+                            </span>
+                            <input
+                              type="text"
+                              value={opt}
+                              onChange={(e) => {
+                                const newOptions = [...formData.options];
+                                newOptions[i] = e.target.value;
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="flex-1 p-1.5 bg-slate-950 border border-slate-800 rounded text-xs text-white"
+                              placeholder={`Option ${String.fromCharCode(65 + i)} text or URL`}
+                              required={i < 2}
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id={`create-opt-img-${i}`}
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) handleOptionImageUpload(i, e.target.files[0]);
+                              }}
+                            />
+                            <label
+                              htmlFor={`create-opt-img-${i}`}
+                              className="cursor-pointer p-1.5 bg-slate-800 hover:bg-slate-700 text-violet-300 rounded text-xs font-semibold border border-slate-700 transition-colors shrink-0"
+                              title={`Upload Image for Option ${String.fromCharCode(65 + i)}`}
+                            >
+                              {uploadingOptionIndex === i ? (
+                                <Loader2 size={13} className="animate-spin text-violet-400" />
+                              ) : (
+                                <Upload size={13} />
+                              )}
+                            </label>
+                          </div>
+                          {isImg && (
+                            <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                              <img
+                                src={opt}
+                                alt={`Option ${String.fromCharCode(65 + i)}`}
+                                className="h-10 w-auto object-contain rounded border border-slate-700"
+                              />
+                              <span className="text-[10px] text-emerald-400 font-semibold flex-1">
+                                ✓ Option Image Attached
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newOptions = [...formData.options];
+                                  newOptions[i] = "";
+                                  setFormData({ ...formData, options: newOptions });
+                                }}
+                                className="text-[10px] text-red-400 hover:underline font-bold"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1345,29 +1419,78 @@ export const Questions = () => {
 
               {formData.type === "MCQ" && (
                 <div className="space-y-3 p-3 bg-slate-950 border border-slate-850 rounded-lg">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Answer Choices Options
-                  </span>
-                  <div className="grid grid-cols-2 gap-3">
-                    {formData.options.map((opt, i) => (
-                      <div key={i} className="flex gap-2 items-center">
-                        <span className="text-xs font-mono font-bold text-slate-500">
-                          {String.fromCharCode(65 + i)}
-                        </span>
-                        <input
-                          type="text"
-                          value={opt}
-                          onChange={(e) => {
-                            const newOptions = [...formData.options];
-                            newOptions[i] = e.target.value;
-                            setFormData({ ...formData, options: newOptions });
-                          }}
-                          className="flex-1 p-2 bg-slate-900 border border-slate-800 rounded text-xs text-white"
-                          placeholder={`Option ${i + 1}`}
-                          required={i < 2}
-                        />
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Answer Choices Options (Text or Diagram)</span>
+                    <span className="text-[10px] text-violet-400 font-normal">Click 📷 icon to upload option image</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {formData.options.map((opt, i) => {
+                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg"));
+                      return (
+                        <div key={i} className="space-y-1.5 p-2 bg-slate-900 border border-slate-800 rounded-lg">
+                          <div className="flex gap-2 items-center">
+                            <span className="text-xs font-mono font-bold text-violet-400 w-5">
+                              {String.fromCharCode(65 + i)}.
+                            </span>
+                            <input
+                              type="text"
+                              value={opt}
+                              onChange={(e) => {
+                                const newOptions = [...formData.options];
+                                newOptions[i] = e.target.value;
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="flex-1 p-1.5 bg-slate-950 border border-slate-800 rounded text-xs text-white"
+                              placeholder={`Option ${String.fromCharCode(65 + i)} text or URL`}
+                              required={i < 2}
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id={`edit-opt-img-${i}`}
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) handleOptionImageUpload(i, e.target.files[0]);
+                              }}
+                            />
+                            <label
+                              htmlFor={`edit-opt-img-${i}`}
+                              className="cursor-pointer p-1.5 bg-slate-800 hover:bg-slate-700 text-violet-300 rounded text-xs font-semibold border border-slate-700 transition-colors shrink-0"
+                              title={`Upload Image for Option ${String.fromCharCode(65 + i)}`}
+                            >
+                              {uploadingOptionIndex === i ? (
+                                <Loader2 size={13} className="animate-spin text-violet-400" />
+                              ) : (
+                                <Upload size={13} />
+                              )}
+                            </label>
+                          </div>
+                          {isImg && (
+                            <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                              <img
+                                src={opt}
+                                alt={`Option ${String.fromCharCode(65 + i)}`}
+                                className="h-10 w-auto object-contain rounded border border-slate-700"
+                              />
+                              <span className="text-[10px] text-emerald-400 font-semibold flex-1">
+                                ✓ Option Image Attached
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newOptions = [...formData.options];
+                                  newOptions[i] = "";
+                                  setFormData({ ...formData, options: newOptions });
+                                }}
+                                className="text-[10px] text-red-400 hover:underline font-bold"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

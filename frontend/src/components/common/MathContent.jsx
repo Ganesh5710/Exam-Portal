@@ -123,6 +123,29 @@ export const MathContent = ({
 
       // Check for inline images inside text (e.g. ![alt](url) or <img src="url">)
       const textVal = part.value;
+      const trimmedVal = textVal.trim();
+
+      if (
+        trimmedVal.startsWith("http://") ||
+        trimmedVal.startsWith("https://") ||
+        trimmedVal.startsWith("/uploads/") ||
+        trimmedVal.startsWith("data:image/") ||
+        /\.(jpg|jpeg|png|webp|svg)(\?.*)?$/i.test(trimmedVal)
+      ) {
+        const resolvedSrc = resolveImageUrl(trimmedVal);
+        return (
+          <img
+            key={idx}
+            src={resolvedSrc}
+            alt="Option Diagram"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomImage(resolvedSrc);
+            }}
+            className="inline-block max-h-44 w-auto object-contain rounded-lg border border-slate-700 my-1 cursor-pointer hover:scale-[1.02] transition-transform"
+          />
+        );
+      }
       const imgMdRegex = /!\[(.*?)\]\((.*?)\)/g;
       if (imgMdRegex.test(textVal)) {
         const textParts = textVal.split(imgMdRegex);
