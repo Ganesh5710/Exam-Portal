@@ -4,6 +4,45 @@ import "katex/dist/katex.min.css";
 import { Maximize2, X, Image as ImageIcon } from "lucide-react";
 
 /**
+ * Resolves relative image URLs (/uploads/...) to absolute Backend Server origin.
+ */
+export const resolveImageUrl = (url) => {
+  if (!url) return "";
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+
+  const cleanPath = url.startsWith("/") ? url : `/${url}`;
+
+  // 1. Try VITE_API_URL environment variable
+  const envUrl = import.meta.env.VITE_API_URL || "";
+  if (envUrl && envUrl.startsWith("http")) {
+    try {
+      const origin = new URL(envUrl).origin;
+      return `${origin}${cleanPath}`;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // 2. Local dev environment
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  ) {
+    return `http://localhost:5000${cleanPath}`;
+  }
+
+  // 3. Fallback for deployed host: resolve against origin
+  return typeof window !== "undefined" ? `${window.location.origin}${cleanPath}` : cleanPath;
+};
+
+/**
  * MathContent component renders mathematical equations (LaTeX),
  * scientific notation, embedded images, and attached diagram (fileUrl)
  * with a full-screen interactive lightbox zoom feature.
@@ -16,6 +55,7 @@ export const MathContent = ({
   showDiagramLabel = true,
 }) => {
   const [zoomImage, setZoomImage] = useState(null);
+  const resolvedDiagramUrl = resolveImageUrl(fileUrl);
 
   // Helper to render LaTeX math safely using KaTeX
   const renderFormattedText = (rawText) => {
@@ -95,13 +135,13 @@ export const MathContent = ({
               }
               if (sIdx % 3 === 2) {
                 // src
-                const src = sub;
+                const resolvedSrc = resolveImageUrl(sub);
                 return (
                   <img
                     key={sIdx}
-                    src={src}
+                    src={resolvedSrc}
                     alt="Embedded Diagram"
-                    onClick={() => setZoomImage(src)}
+                    onClick={() => setZoomImage(resolvedSrc)}
                     className="inline-block max-h-64 rounded-lg border border-slate-700 my-2 cursor-pointer hover:scale-[1.02] transition-transform"
                   />
                 );
@@ -126,7 +166,7 @@ export const MathContent = ({
       )}
 
       {/* Attached Diagram / Image File (fileUrl) */}
-      {fileUrl && (
+      {resolvedDiagramUrl && (
         <div className="relative group my-3 inline-block max-w-full">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 shadow-lg space-y-2 inline-block">
             {showDiagramLabel && (
@@ -137,17 +177,17 @@ export const MathContent = ({
             )}
             <div className="relative rounded-lg overflow-hidden bg-slate-950 flex items-center justify-center max-h-80 min-h-[140px] p-2">
               <img
-                src={fileUrl}
+                src={resolvedDiagramUrl}
                 alt="Question Diagram"
-                onClick={() => setZoomImage(fileUrl)}
+                onClick={() => setZoomImage(resolvedDiagramUrl)}
                 className="max-h-72 w-auto object-contain rounded-md cursor-pointer group-hover:opacity-95 transition-all"
                 onError={(e) => {
-                  e.target.style.display = "none";
+                  console.warn("Diagram image load error:", resolvedDiagramUrl);
                 }}
               />
               <button
                 type="button"
-                onClick={() => setZoomImage(fileUrl)}
+                onClick={() => setZoomImage(resolvedDiagramUrl)}
                 className="absolute top-2 right-2 p-1.5 bg-slate-900/80 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700"
                 title="Expand Diagram"
               >
