@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![SkillBrix Logo](https://img.shields.io/badge/SkillBrix-Exam%20Portal-6366f1?style=for-the-badge&logo=book-open&logoColor=white)
+
 
 [![Live Frontend](https://img.shields.io/badge/🌐%20Live%20App-skillbrix--exam.vercel.app-22c55e?style=for-the-badge)](https://skillbrix-exam.vercel.app)
 
