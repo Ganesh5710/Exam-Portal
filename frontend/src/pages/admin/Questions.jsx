@@ -59,6 +59,7 @@ export const Questions = () => {
   const [aiPreviewQuestions, setAiPreviewQuestions] = useState([]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingOptionIndex, setUploadingOptionIndex] = useState(null);
 
   // Form States
   const [formData, setFormData] = useState({
