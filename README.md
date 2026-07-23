@@ -1,12 +1,10 @@
-# 🎓 SkillBrix Exam Portal
+
 
 <div align="center">
 
 ![SkillBrix Logo](https://img.shields.io/badge/SkillBrix-Exam%20Portal-6366f1?style=for-the-badge&logo=book-open&logoColor=white)
 
 [![Live Frontend](https://img.shields.io/badge/🌐%20Live%20App-skillbrix--exam.vercel.app-22c55e?style=for-the-badge)](https://skillbrix-exam.vercel.app)
-[![Backend API](https://img.shields.io/badge/🚀%20API-exam--portal--xtx0.onrender.com-6366f1?style=for-the-badge)](https://exam-portal-xtx0.onrender.com)
-[![GitHub](https://img.shields.io/badge/GitHub-Ganesh5710-181717?style=for-the-badge&logo=github)](https://github.com/Ganesh5710/Exam-Portal)
 
 A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** examinations supporting Physics, Chemistry, and Mathematics — with AI-powered question importing, LaTeX math rendering, image/diagram support, and real-time exam taking.
 
@@ -14,7 +12,7 @@ A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** ex
 
 ---
 
-## 📋 Table of Contents
+
 
 - [🌟 Features](#-features)
 - [🖥️ Tech Stack](#️-tech-stack)
@@ -31,7 +29,7 @@ A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** ex
 
 ---
 
-## 🌟 Features
+
 
 ### 👨‍💼 Admin Panel
 - **Dashboard** — Overview of exams, students, questions, and results
@@ -84,34 +82,16 @@ A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** ex
 
 ---
 
-## 🚀 Live Demo
+##  Live Demo
 
 | Service | URL |
 |---|---|
-| 🌐 Frontend | [https://skillbrix-exam.vercel.app](https://skillbrix-exam.vercel.app) |
-| 🚀 Backend API | [https://exam-portal-xtx0.onrender.com](https://exam-portal-xtx0.onrender.com) |
+|  Frontend | [https://skillbrix-exam.vercel.app](https://skillbrix-exam.vercel.app) |
+|  Backend API | [https://exam-portal-xtx0.onrender.com](https://exam-portal-xtx0.onrender.com) |
 
 ---
 
-## 🔐 Default Credentials
 
-### 👨‍💼 Admin Account
-| Field | Value |
-|---|---|
-| Email | `hr@enkonix.in` |
-| Password | `Admin@123` |
-
-### 🎓 Student Accounts
-| Field | Value |
-|---|---|
-| Email | *(assigned during registration or bulk import)* |
-| Default Password | `User@123` |
-
-> **Note:** Students can change their password after first login. When bulk-importing students via Excel, if no password column is provided, the default password `User@123` is assigned automatically.
-
----
-
-## 📐 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
