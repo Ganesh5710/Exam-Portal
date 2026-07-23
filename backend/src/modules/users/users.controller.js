@@ -76,7 +76,7 @@ const createStudent = async (req, res, next) => {
         if (existing) {
             return res.status(400).json({ success: false, message: 'Email already registered.' });
         }
-        const passwordHash = await bcryptjs_1.default.hash(password || 'user@123', 10);
+        const passwordHash = await bcryptjs_1.default.hash(password || 'User@123', 10);
         const student = await db_1.prisma.user.create({
             data: {
                 email,
@@ -262,9 +262,9 @@ const bulkImportStudents = async (req, res, next) => {
         }
 
         // 3. Pre-compute default password hash to avoid hashing it N times
-        const defaultHash = await bcryptjs_1.default.hash('user@123', 10);
+        const defaultHash = await bcryptjs_1.default.hash('User@123', 10);
         const hashCache = new Map();
-        hashCache.set('user@123', defaultHash);
+        hashCache.set('User@123', defaultHash);
         const newStudentsData = [];
         let skipped = 0;
         for (const record of students) {
@@ -283,7 +283,7 @@ const bulkImportStudents = async (req, res, next) => {
                 const nameLower = departmentCode.toLowerCase().trim();
                 deptId = deptMap.get(codeUpper) || deptNameMap.get(nameLower) || null;
             }
-            const pwd = password || 'user@123';
+            const pwd = password || 'User@123';
             let passwordHash = hashCache.get(pwd);
             if (!passwordHash) {
                 passwordHash = await bcryptjs_1.default.hash(pwd, 10);
@@ -385,7 +385,7 @@ const importStudentsFile = async (req, res, next) => {
             const firstName = getKey(['firstname', 'firstname', 'name', 'studentname'])?.toString() || 'Student';
             const lastName = getKey(['lastname', 'lastname'])?.toString() || '';
             const departmentCode = getKey(['departmentcode', 'department', 'deptcode', 'dept'])?.toString() || '';
-            const password = getKey(['password'])?.toString() || 'user@123';
+            const password = getKey(['password'])?.toString() || 'User@123';
 
             const subjects = [
                 getKey(['subject1', 'subj1', 'subjectone']),
@@ -488,9 +488,9 @@ const importStudentsFile = async (req, res, next) => {
             }
         }
 
-        const defaultHash = await bcryptjs_1.default.hash('user@123', 10);
+        const defaultHash = await bcryptjs_1.default.hash('User@123', 10);
         const hashCache = new Map();
-        hashCache.set('user@123', defaultHash);
+        hashCache.set('User@123', defaultHash);
         const newStudentsData = [];
         let skipped = 0;
 
@@ -511,7 +511,7 @@ const importStudentsFile = async (req, res, next) => {
                 const nameLower = departmentCode.toLowerCase().trim();
                 deptId = deptMap.get(codeUpper) || deptNameMap.get(nameLower) || null;
             }
-            const pwd = password ? password.toString().trim() : 'user@123';
+            const pwd = password ? password.toString().trim() : 'User@123';
             let passwordHash = hashCache.get(pwd);
             if (!passwordHash) {
                 passwordHash = await bcryptjs_1.default.hash(pwd, 10);

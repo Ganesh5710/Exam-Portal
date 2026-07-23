@@ -1,104 +1,436 @@
-# Skillbrix: Next-Generation Online Examination Portal
+# 🎓 SkillBrix Exam Portal
 
-An advanced, secure, and modern web-based examination platform featuring real-time AI-powered proctoring, a premium interactive 3D command center preview, automatic grading, and comprehensive administrator results dashboards.
+<div align="center">
 
-## Core Capabilities
+![SkillBrix Logo](https://img.shields.io/badge/SkillBrix-Exam%20Portal-6366f1?style=for-the-badge&logo=book-open&logoColor=white)
 
-- **Interactive 3D Preview Widget**: Live perspective dashboard layout featuring mouse parallax rotation and floating telemetry overlays.
-- **WebSocket-Driven Monitor**: Instant WebSocket proctor updates tracking focus switches and gaze violations in real-time.
-- **Bulk Question Importer**: Fast parsing of up to 2,000+ questions from Excel/CSV templates with custom marking keys.
+[![Live Frontend](https://img.shields.io/badge/🌐%20Live%20App-skillbrix--exam.vercel.app-22c55e?style=for-the-badge)](https://skillbrix-exam.vercel.app)
+[![Backend API](https://img.shields.io/badge/🚀%20API-exam--portal--xtx0.onrender.com-6366f1?style=for-the-badge)](https://exam-portal-xtx0.onrender.com)
+[![GitHub](https://img.shields.io/badge/GitHub-Ganesh5710-181717?style=for-the-badge&logo=github)](https://github.com/Ganesh5710/Exam-Portal)
 
-## Key Features
+A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** examinations supporting Physics, Chemistry, and Mathematics — with AI-powered question importing, LaTeX math rendering, image/diagram support, and real-time exam taking.
 
-### 👨‍🎓 Student Terminal
-* **Secure Assessment Environment**: Fullscreen mode enforcement, devtools block, copy-paste block, and right-click disable.
-* **AI Gaze & Face Proctoring**: Integrated BlazeFace model detects multiple faces, look-aways, and webcam absences.
-* **Tab Switch & Screen Escape Violations**: Auto-warns and auto-submits exams upon exceeding 5 strikes.
-* **Dynamic Time Schedule Checking**: Real-time timer checks for exam availability without requiring manual page refresh.
-* **Auto-Polling Grade Release**: Dynamic result confirmation page automatically pulls score/grade data every 30 seconds once released by admin.
+</div>
 
-### 👩‍💼 Admin Dashboard
-* **Live Candidate Monitor**: Real-time socket-based proctoring console showing student screen state, webcam gaze status, and violation logs.
-* **Question Bank & AI Importers**: Easily import descriptive, coding, MCQ, and true/false questions via PDF/Docx files.
-* **Proctor Commands**: Force-terminate exam sessions or extend timers in real-time.
-* **Flexible Results Management**: Manual grading interface for descriptive questions, dynamic grade/percentage calculations, and bulk publish options.
+---
 
-### 🚀 Newly Added Features (July 2026)
-* **📊 Excel Results Streaming Export**: Administrators can stream and export complete candidate results to an Excel / CSV spreadsheet with passing percentages, violation counts, and pass/fail indicators directly from the admin panel.
-* **🔒 Strict Fullscreen Lockdown**: Forces candidates into absolute fullscreen mode during an exam. If they attempt to press Escape or minimize/exit fullscreen, it locks the screen, flags a violation telemetry signal, and counts it as a strike.
-* **⚡ Instant Live Result Publishing**: Submissions and graded results are immediately viewable to students without requiring manually reloading or refreshing the browser page.
-* **💬 Conversational AI Dashboard Assistant**: A floating AI widget inside the admin dashboard. Instructors can query statistics (e.g. "what is the average score of all exams?") or request operational how-to guides (e.g. "how do I add students?") and receive structured markdown instructions or dynamic tables/charts.
-* **🌓 Premium Light/Dark Theme Switcher**: Fully functional global theme switch that transforms both public routes (like the Landing Page) and all 10 administrative panels cleanly into responsive light or dark modes.
+## 📋 Table of Contents
 
-## Feature Walkthroughs
+- [🌟 Features](#-features)
+- [🖥️ Tech Stack](#️-tech-stack)
+- [🚀 Live Demo](#-live-demo)
+- [🔐 Default Credentials](#-default-credentials)
+- [📐 Architecture](#-architecture)
+- [⚙️ Local Setup](#️-local-setup)
+- [📁 Project Structure](#-project-structure)
+- [🤖 AI Question Importer](#-ai-question-importer)
+- [📐 Math Rendering](#-math-rendering)
+- [🔌 API Overview](#-api-overview)
+- [🌍 Deployment](#-deployment)
+- [📸 Screenshots](#-screenshots)
 
-### 1. Interactive 3D Mockup
-Skillbrix features a premium 3D perspective dashboard preview on its landing page. 
-- Integrated custom CSS 3D transforms (`perspective`, `rotateX`, `rotateY`) matching local mouse coordinate movements.
-- Supports four dynamic, responsive floating metrics cards (`Integrity Signal`, `Peak Throughput`, `Completion Pulse`, `Review Velocity`).
-- Built custom visual data graphics (SVG sparklines, progressive circular charts, and bar charts) displaying live simulated telemetries.
+---
 
-### 2. AI Proctoring Command Center
-Provides administrators with absolute visibility into candidate exam behaviors in real-time.
-- **WebSocket State Machine**: Direct integration updates individual candidate cards instantly on screen changes or webcam warnings.
-- **Visual Proctoring Panel**: Live simulations tracking cheat violations, offline heartbeats, frozen nodes, and status indicators.
-- **Violation Logging Node**: Real-time terminal feeds displaying time-stamped proctor event strings (e.g. gaze lookaway logs).
+## 🌟 Features
 
-### 3. Bulk Excel/CSV Importer
-Accelerates test creation by allowing massive questions batches to be processed instantly.
-- **2,000+ Questions Capacity**: Fully optimized file upload parser that processes 2k questions in a few seconds.
-- **Client-Side Validation**: Immediate schema audit (verifying correct choices, score bounds, negative weight limits) before DB commit.
-- **Custom Parsing Engine**: Built using modern XLSX spreadsheet libraries to parse Excel and CSV files with clear structure error highlight.
+### 👨‍💼 Admin Panel
+- **Dashboard** — Overview of exams, students, questions, and results
+- **Department Management** — Organize students and exams by department (JEE MAINS)
+- **Subject Management** — Physics, Chemistry, Mathematics
+- **Question Bank** — Create, edit, filter questions with full LaTeX math support
+- **AI Question Importer** — Upload PDF, Images (JPG/PNG), Word (.docx) or Excel files and auto-extract questions using Google Gemini AI
+- **Exam Builder** — Create time-limited exams with configurable scoring and negative marking
+- **Student Management** — Bulk import students from Excel/CSV
+- **Results Analytics** — View scores, rankings, and performance analytics
 
-### 4. Flexible Scoring Engine
-Allows granular control over exam grading criteria, parameters, and policies.
-- **Negative Marking Support**: Configurable penalties for wrong options, avoiding random guessing.
-- **Autograde Execution**: Instantly calculates and commits final scores upon assessment submissions.
-- **Local Persistence Fail-Safe**: Local storage auto-sync keeps answers safe during connectivity loss.
+### 🎓 Student Portal
+- **Real-time Exam Interface** — Clean timer-based exam UI with section navigation
+- **Math Rendering** — Beautifully rendered LaTeX matrices, fractions, integrals, Greek letters
+- **Image Support** — Physics/Chemistry diagrams displayed inline inside questions
+- **Instant Results** — Scores displayed immediately after exam submission
+- **Previous Results** — Full history of past exam attempts
 
-## Technology Stack
-* **Frontend**: React (Vite), Tailwind CSS, Vanilla CSS 3D Transforms, custom SVG Chart components
-* **Backend**: Node.js, Express, Secure WebSockets (Socket.io)
-* **Libraries & Databases**: SheetJS (XLSX parsing), PostgreSQL / SQLite, Prisma ORM
-* **Tooling**: Git, NPM, production builds via Vite/Rollup
+### 🤖 AI-Powered Features
+- **AI Question Import** — Upload a PDF/Image/Docx → Gemini Vision extracts all questions with full LaTeX formatting
+- **AI Question Generator** — Generate MCQ/Descriptive questions on any topic using Gemini AI
+- **OCR Engine** — Reads handwritten-style question papers and converts to structured JSON
 
-## System Architecture
+### 📐 Mathematics Support
+- Full LaTeX rendering via **KaTeX**
+- Matrices: `\begin{bmatrix}`, `\begin{pmatrix}`, `\begin{vmatrix}`
+- Fractions: `\frac{a}{b}`
+- Integrals, Limits, Sums: `\int`, `\lim`, `\sum`
+- Greek letters: `\alpha`, `\beta`, `\theta`, `\Delta`
+- Vectors, derivatives, piecewise functions
+- Chemistry formulas: `H_2O`, `\rightarrow`, `\rightleftharpoons`
 
-The application is structured as a decoupled client-server architecture:
-- **`frontend/`**: Single-Page Application (SPA) built using React, optimized with Vite for fast local reloading and lightweight production builds.
-- **`backend/`**: Node.js microservice handling session state management, real-time proctored Socket channels, and REST API controllers.
+---
 
-## API Endpoints Overview
+## 🖥️ Tech Stack
 
-- **Auth Router**: `POST /api/auth/login`, `POST /api/auth/verify-otp`, `POST /api/auth/logout` (Token & OTP authentication).
-- **Assessment Router**: `GET /api/exams`, `POST /api/exams`, `GET /api/exams/:id/questions` (Test lifecycle and scheduling).
-- **Submissions Router**: `POST /api/submissions/save`, `POST /api/submissions/submit`, `POST /api/submissions/bulk-publish` (Evaluation and grade release).
-- **Analytics Router**: `GET /api/analytics/dashboard-summary`, `POST /api/analytics/ai-assistant` (Telemetry and Gemini AI dashboard assistant).
-- **Import Router**: `POST /api/import/upload`, `GET /api/import/status/:id`, `POST /api/import/approve/:id` (Multi-format document parsing engine).
-- **Backup Router**: `POST /api/backup/create`, `GET /api/backup/list`, `POST /api/backup/restore` (Transactional database snapshots).
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18, Vite, Vanilla CSS |
+| **Math Rendering** | KaTeX |
+| **Backend** | Node.js, Express.js |
+| **Database** | PostgreSQL (via Supabase) |
+| **ORM** | Prisma |
+| **Auth** | JWT (Access + Refresh tokens) |
+| **AI** | Google Gemini 2.0 Flash Vision API |
+| **File Parsing** | pdf-parse, mammoth (docx), xlsx |
+| **Frontend Hosting** | Vercel |
+| **Backend Hosting** | Render |
+| **Image Storage** | Cloudinary |
 
-## How to Run Locally
+---
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-2. **Start Dev Servers (Backend on port 5000, Frontend on port 3000)**:
-   ```bash
-   npm run dev
-   ```
+## 🚀 Live Demo
 
-## Environment Variables
-Ensure you have a `.env` file populated in the `backend/` directory with the following keys:
-- `PORT`: Network port for backend microservice (defaults to 5000).
-- `DATABASE_URL`: Connection string for PostgreSQL / SQLite databases.
-- `JWT_SECRET`: Secret key for secure token signatures.
+| Service | URL |
+|---|---|
+| 🌐 Frontend | [https://skillbrix-exam.vercel.app](https://skillbrix-exam.vercel.app) |
+| 🚀 Backend API | [https://exam-portal-xtx0.onrender.com](https://exam-portal-xtx0.onrender.com) |
 
-## Contributing
-We welcome contributions to Skillbrix! Please follow these standards:
-- Write semantic, clean code with structured styles.
-- Commit messages should follow the conventional commit format (e.g. `feat: ...`, `fix: ...`, `docs: ...`).
-- Test features thoroughly on local dev servers before submitting pull requests.
+---
 
-## License
-Skillbrix is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+## 🔐 Default Credentials
+
+### 👨‍💼 Admin Account
+| Field | Value |
+|---|---|
+| Email | `hr@enkonix.in` |
+| Password | `Admin@123` |
+
+### 🎓 Student Accounts
+| Field | Value |
+|---|---|
+| Email | *(assigned during registration or bulk import)* |
+| Default Password | `User@123` |
+
+> **Note:** Students can change their password after first login. When bulk-importing students via Excel, if no password column is provided, the default password `User@123` is assigned automatically.
+
+---
+
+## 📐 Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    FRONTEND (Vercel)                    │
+│         React + Vite + KaTeX + Vanilla CSS              │
+└────────────────────────┬────────────────────────────────┘
+                         │ HTTPS REST API
+┌────────────────────────▼────────────────────────────────┐
+│                   BACKEND (Render)                      │
+│            Node.js + Express.js + Prisma                │
+│   ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│   │  Auth Module │  │ Import Module│  │  Exam Module │  │
+│   └─────────────┘  └──────┬───────┘  └──────────────┘  │
+│                           │ Gemini Vision API            │
+│   ┌────────────────────── ▼ ─────────────────────────┐  │
+│   │          Google Gemini 2.0 Flash (AI)             │  │
+│   └───────────────────────────────────────────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│              PostgreSQL via Supabase                    │
+│        Users, Exams, Questions, Results, Settings       │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ⚙️ Local Setup
+
+### Prerequisites
+- Node.js v18+
+- PostgreSQL database (or Supabase account)
+- Google Gemini API Key (free from [aistudio.google.com](https://aistudio.google.com/app/apikey))
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Ganesh5710/Exam-Portal.git
+cd Exam-Portal
+```
+
+### 2. Install All Dependencies
+```bash
+npm install
+npm install --prefix backend
+npm install --prefix frontend
+```
+
+### 3. Configure Environment Variables
+
+Copy and fill the backend `.env` file:
+```bash
+cp backend/.env.example backend/.env
+```
+
+```env
+# Server
+PORT=5000
+NODE_ENV=development
+
+# PostgreSQL
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?pgbouncer=true"
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+
+# JWT
+JWT_ACCESS_SECRET="your-access-secret"
+JWT_REFRESH_SECRET="your-refresh-secret"
+JWT_ACCESS_EXPIRATION="15m"
+JWT_REFRESH_EXPIRATION="7d"
+
+# AI (Google Gemini)
+GEMINI_API_KEY="AIzaSy..."
+
+# Admin defaults
+DEFAULT_ADMIN_EMAIL="admin@yourcompany.com"
+DEFAULT_ADMIN_PASSWORD="Admin@123"
+
+# Cloudinary (optional, for image uploads)
+CLOUDINARY_CLOUD_NAME=""
+CLOUDINARY_API_KEY=""
+CLOUDINARY_API_SECRET=""
+```
+
+### 4. Initialize the Database
+```bash
+cd backend
+npx prisma migrate deploy
+npx prisma db seed
+```
+
+### 5. Run Locally
+```bash
+# From project root — starts both backend (port 5000) and frontend (port 5173)
+npm run dev
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:5000/api |
+
+---
+
+## 📁 Project Structure
+
+```
+Exam-Portal/
+├── backend/                   # Node.js + Express API server
+│   ├── prisma/
+│   │   ├── schema.prisma      # Database schema
+│   │   └── seed.js            # Database seeder
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── gemini.js      # Gemini AI client with model fallback
+│   │   │   └── logger.js
+│   │   └── modules/
+│   │       ├── auth/          # Login, refresh, logout
+│   │       ├── users/         # Student & admin management
+│   │       ├── questions/     # Question bank CRUD + AI generator
+│   │       ├── exams/         # Exam CRUD + attempt management
+│   │       ├── import/        # AI document/image import engine
+│   │       ├── departments/   # Department management
+│   │       └── subjects/      # Subject management
+│   └── package.json
+│
+├── frontend/                  # React + Vite SPA
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── common/
+│   │   │       └── MathContent.jsx   # KaTeX LaTeX renderer
+│   │   ├── pages/
+│   │   │   ├── admin/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── Questions.jsx     # Question Bank
+│   │   │   │   ├── QuestionImport.jsx # AI Importer
+│   │   │   │   ├── Exams.jsx
+│   │   │   │   ├── Students.jsx
+│   │   │   │   ├── Results.jsx
+│   │   │   │   └── Settings.jsx
+│   │   │   └── student/
+│   │   │       ├── ExamList.jsx
+│   │   │       ├── ExamTerminal.jsx   # Exam taking interface
+│   │   │       └── Results.jsx
+│   │   └── App.jsx
+│   └── package.json
+│
+├── package.json               # Root scripts: dev, build, install-all
+└── README.md
+```
+
+---
+
+## 🤖 AI Question Importer
+
+The AI Importer accepts the following file formats:
+
+| Format | Support |
+|---|---|
+| 📄 PDF | ✅ Full text + Vision fallback for custom fonts |
+| 🖼️ JPG/PNG/JPEG | ✅ Direct Gemini Vision processing |
+| 📝 Word (.docx) | ✅ Text extraction via mammoth |
+| 📊 Excel (.xlsx/.csv) | ✅ Structured row parsing |
+
+### How it Works:
+1. Upload your question paper (PDF, image, Word, or Excel)
+2. The backend sends the file to **Google Gemini 2.0 Flash Vision**
+3. Gemini extracts every question with full LaTeX formatting:
+   - Matrices → `\begin{bmatrix}...\end{bmatrix}`
+   - Fractions → `\frac{a}{b}`
+   - Integrals → `\int_{a}^{b}`
+   - Greek letters → `\alpha`, `\theta`, `\Delta`
+4. Preview the extracted questions and select which ones to import
+5. Questions are saved to the Question Bank
+
+### Setup:
+Add your **Google Gemini API Key** in:
+- **Admin → Settings → GEMINI_API_KEY**
+
+Get a free key at: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+
+---
+
+## 📐 Math Rendering
+
+All mathematical content is rendered using **KaTeX** via the `MathContent.jsx` component.
+
+### Supported Syntax:
+
+```latex
+# Matrices
+$\begin{bmatrix} a & b \\ c & d \end{bmatrix}$
+
+# Fractions
+$\frac{d^2y}{dx^2} + \frac{dy}{dx} + y = 0$
+
+# Integrals
+$\int_{0}^{\pi} \sin(x)\,dx = 2$
+
+# Limits
+$\lim_{x \to 0} \frac{\sin x}{x} = 1$
+
+# Sums
+$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$
+
+# Greek Letters
+$\alpha + \beta + \gamma = \pi$
+
+# Vectors
+$\vec{F} = m\vec{a}$
+
+# Chemistry
+$H_2SO_4 \rightarrow 2H^+ + SO_4^{2-}$
+```
+
+---
+
+## 🔌 API Overview
+
+### Authentication
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Login (admin/student) |
+| POST | `/api/auth/refresh` | Refresh access token |
+| POST | `/api/auth/logout` | Logout |
+
+### Questions
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/questions` | List questions (with filters) |
+| POST | `/api/questions` | Create question |
+| PUT | `/api/questions/:id` | Update question |
+| DELETE | `/api/questions/:id` | Delete question |
+| POST | `/api/questions/generate-ai` | AI generate questions |
+
+### Import
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/import/extract` | Upload file & extract questions via AI |
+| POST | `/api/import/save` | Save selected extracted questions |
+
+### Exams
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/exams` | List exams |
+| POST | `/api/exams` | Create exam |
+| POST | `/api/exams/:id/start` | Student starts exam |
+| POST | `/api/exams/:id/submit` | Student submits exam |
+| GET | `/api/exams/:id/results` | Get exam results |
+
+### Users / Students
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/users` | List students |
+| POST | `/api/users` | Create student |
+| POST | `/api/users/bulk-import` | Bulk import students from Excel |
+
+---
+
+## 🌍 Deployment
+
+### Frontend (Vercel)
+1. Fork or clone this repository
+2. Connect to Vercel → Import the `frontend/` directory
+3. Set build command: `npm run build`
+4. Set output directory: `dist`
+
+### Backend (Render)
+1. Create a new **Web Service** on Render
+2. Connect to your GitHub repo
+3. Set root directory: `backend/`
+4. Set build command: `npm install && npx prisma generate`
+5. Set start command: `node src/index.js`
+6. Add environment variables (see [Setup](#️-local-setup)):
+   - `DATABASE_URL`
+   - `JWT_ACCESS_SECRET`
+   - `JWT_REFRESH_SECRET`
+   - `GEMINI_API_KEY`
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Admin Dashboard
+Clean overview of exams, questions, students, and analytics.
+
+### 📚 Question Bank
+Filter by Department, Subject, and Question Type. Full LaTeX preview.
+
+### 🤖 AI Question Importer
+Upload PDF/Image → AI extracts all questions with matrices and fractions intact.
+
+### 📝 Exam Terminal
+Clean, distraction-free exam UI with timer, section navigation, and LaTeX rendering.
+
+### 📊 Results Dashboard
+View student scores, ranks, and analytics after exam submission.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "feat: add your feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is proprietary software developed for **SkillBrix / Enkonix**.
+All rights reserved © 2026.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for JEE MAINS students**
+
+[![Live App](https://img.shields.io/badge/🌐%20Try%20It%20Live-skillbrix--exam.vercel.app-22c55e?style=for-the-badge)](https://skillbrix-exam.vercel.app)
+
+</div>
