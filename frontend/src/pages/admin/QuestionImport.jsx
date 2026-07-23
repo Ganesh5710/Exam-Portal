@@ -517,6 +517,30 @@ const QuestionCard = ({ q, idx, selected, expanded, onToggleSelect, onToggleExpa
             {q.fileUrl && <span className="text-[10px] text-violet-400 font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-violet-500/10 border border-violet-500/20"><ImageIcon size={9} /> Diagram Attached</span>}
           </div>
           <MathContent content={q.content} fileUrl={q.fileUrl} textSize="text-sm font-medium" />
+
+          {/* Always Visible Options for MCQ */}
+          {Array.isArray(q.options) && q.options.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
+              {q.options.map((opt, oi) => {
+                const isCorrect = Array.isArray(q.answers)
+                  ? q.answers.includes(opt) || q.answers.includes(String.fromCharCode(65 + oi))
+                  : q.answers === opt || q.answers === String.fromCharCode(65 + oi);
+                return (
+                  <div
+                    key={oi}
+                    className={`flex items-center gap-2 text-xs rounded-lg px-2.5 py-1.5 border transition-colors
+                      ${isCorrect ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300 font-semibold" : "bg-slate-950/40 border-slate-800 text-slate-300"}`}
+                  >
+                    <span className="font-bold text-violet-400 shrink-0">{String.fromCharCode(65 + oi)}.</span>
+                    <div className="flex-1 min-w-0 truncate">
+                      <MathContent content={opt} showDiagramLabel={false} textSize="text-xs" />
+                    </div>
+                    {isCorrect && <CheckCircle2 size={12} className="ml-auto shrink-0 text-emerald-400" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Action buttons */}
@@ -743,21 +767,78 @@ const EditModal = ({ q, setQ, onSave, onClose }) => {
 
           {/* Options (for MCQ / MULTI_CORRECT) */}
           {(q.type === "MCQ" || q.type === "MULTI_CORRECT") && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Answer Options</label>
-              <div className="space-y-2">
-                {(q.options?.length ? q.options : ["", "", "", ""]).map((opt, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 w-5">{String.fromCharCode(65 + i)}.</span>
-                    <input
-                      type="text"
-                      value={opt}
-                      onChange={(e) => updateOption(i, e.target.value)}
-                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                      className="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-violet-500"
-                    />
-                  </div>
-                ))}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span>Answer Choices Options (Text or Diagram)</span>
+                <span className="text-[10px] text-violet-400 font-normal">Click 📷 icon to upload option image</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {(q.options?.length ? q.options : ["", "", "", ""]).map((opt, i) => {
+                  const isImg = opt && (opt.startsWith("http") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg"));
+                  return (
+                    <div key={i} className="space-y-1.5 p-2 bg-slate-950 border border-slate-800 rounded-lg">
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs font-mono font-bold text-violet-400 w-5">
+                          {String.fromCharCode(65 + i)}.
+                        </span>
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => updateOption(i, e.target.value)}
+                          placeholder={`Option ${String.fromCharCode(65 + i)} text or URL`}
+                          className="flex-1 p-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-white"
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id={`import-opt-img-${i}`}
+                          className="hidden"
+                          onChange={async (e) => {
+                            if (e.target.files?.[0]) {
+                              const fd = new FormData();
+                              fd.append("file", e.target.files[0]);
+                              try {
+                                const res = await api.post("/questions/upload-image", fd, {
+                                  headers: { "Content-Type": "multipart/form-data" },
+                                });
+                                updateOption(i, res.data?.data?.fileUrl || "");
+                                toast.success(`Image uploaded for Option ${String.fromCharCode(65 + i)}!`);
+                              } catch (err) {
+                                toast.error("Failed to upload option image.");
+                              }
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`import-opt-img-${i}`}
+                          className="cursor-pointer p-1.5 bg-slate-800 hover:bg-slate-700 text-violet-300 rounded text-xs font-semibold border border-slate-700 transition-colors shrink-0"
+                          title={`Upload Image for Option ${String.fromCharCode(65 + i)}`}
+                        >
+                          <Upload size={13} />
+                        </label>
+                      </div>
+                      {isImg && (
+                        <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                          <img
+                            src={opt}
+                            alt={`Option ${String.fromCharCode(65 + i)}`}
+                            className="h-10 w-auto object-contain rounded border border-slate-700"
+                          />
+                          <span className="text-[10px] text-emerald-400 font-semibold flex-1">
+                            ✓ Option Image Attached
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateOption(i, "")}
+                            className="text-[10px] text-red-400 hover:underline font-bold"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
