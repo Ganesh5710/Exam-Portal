@@ -84,21 +84,26 @@ const extractQuestions = async (req, res, next) => {
             documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
         }
 
-        // Build the AI prompt - check env var first, then DB systemSettings as fallback
-        let geminiApiKey = process.env.GEMINI_API_KEY;
+        // Build the AI prompt - check DB systemSettings FIRST, then env var as fallback
+        let geminiApiKey = null;
+        try {
+            const setting = await db_1.prisma.systemSettings.findUnique({
+                where: { key: 'GEMINI_API_KEY' }
+            });
+            if (setting?.value && setting.value.trim()) {
+                geminiApiKey = setting.value.trim();
+            }
+        } catch (_) {}
+
         if (!geminiApiKey) {
-            try {
-                const setting = await db_1.prisma.systemSettings.findUnique({
-                    where: { key: 'GEMINI_API_KEY' }
-                });
-                if (setting?.value) geminiApiKey = setting.value;
-            } catch (_) {}
+            geminiApiKey = process.env.GEMINI_API_KEY;
         }
+
         if (!geminiApiKey) {
             cleanup();
             return res.status(500).json({
                 success: false,
-                message: 'GEMINI_API_KEY is not set. Please add it in Render → Environment Variables as GEMINI_API_KEY, or in Admin → Settings.'
+                message: 'GEMINI_API_KEY is not set. Please add it in Admin → Settings.'
             });
         }
 

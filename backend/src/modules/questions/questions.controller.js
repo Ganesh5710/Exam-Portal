@@ -566,7 +566,18 @@ const generateAIQuestions = async (req, res, next) => {
     if (!topic || !departmentId) {
         return res.status(400).json({ success: false, message: 'Topic and departmentId are required.' });
     }
-    const geminiApiKey = process.env.GEMINI_API_KEY;
+    let geminiApiKey = null;
+    try {
+        const setting = await db_1.prisma.systemSettings.findUnique({
+            where: { key: 'GEMINI_API_KEY' }
+        });
+        if (setting?.value && setting.value.trim()) {
+            geminiApiKey = setting.value.trim();
+        }
+    } catch (_) {}
+    if (!geminiApiKey) {
+        geminiApiKey = process.env.GEMINI_API_KEY;
+    }
     try {
         if (!geminiApiKey) {
             throw new Error('GEMINI_API_KEY missing');
