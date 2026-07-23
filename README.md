@@ -10,24 +10,7 @@ A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** ex
 
 </div>
 
----
 
-
-
-- [🌟 Features](#-features)
-- [🖥️ Tech Stack](#️-tech-stack)
-- [🚀 Live Demo](#-live-demo)
-- [🔐 Default Credentials](#-default-credentials)
-- [📐 Architecture](#-architecture)
-- [⚙️ Local Setup](#️-local-setup)
-- [📁 Project Structure](#-project-structure)
-- [🤖 AI Question Importer](#-ai-question-importer)
-- [📐 Math Rendering](#-math-rendering)
-- [🔌 API Overview](#-api-overview)
-- [🌍 Deployment](#-deployment)
-- [📸 Screenshots](#-screenshots)
-
----
 
 
 
@@ -53,16 +36,7 @@ A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** ex
 - **AI Question Generator** — Generate MCQ/Descriptive questions on any topic using Gemini AI
 - **OCR Engine** — Reads handwritten-style question papers and converts to structured JSON
 
-### 📐 Mathematics Support
-- Full LaTeX rendering via **KaTeX**
-- Matrices: `\begin{bmatrix}`, `\begin{pmatrix}`, `\begin{vmatrix}`
-- Fractions: `\frac{a}{b}`
-- Integrals, Limits, Sums: `\int`, `\lim`, `\sum`
-- Greek letters: `\alpha`, `\beta`, `\theta`, `\Delta`
-- Vectors, derivatives, piecewise functions
-- Chemistry formulas: `H_2O`, `\rightarrow`, `\rightleftharpoons`
 
----
 
 ## 🖥️ Tech Stack
 
@@ -139,47 +113,7 @@ npm install --prefix backend
 npm install --prefix frontend
 ```
 
-### 3. Configure Environment Variables
 
-Copy and fill the backend `.env` file:
-```bash
-cp backend/.env.example backend/.env
-```
-
-```env
-# Server
-PORT=5000
-NODE_ENV=development
-
-# PostgreSQL
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?pgbouncer=true"
-DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-
-# JWT
-JWT_ACCESS_SECRET="your-access-secret"
-JWT_REFRESH_SECRET="your-refresh-secret"
-JWT_ACCESS_EXPIRATION="15m"
-JWT_REFRESH_EXPIRATION="7d"
-
-# AI (Google Gemini)
-GEMINI_API_KEY="AIzaSy..."
-
-# Admin defaults
-DEFAULT_ADMIN_EMAIL="admin@yourcompany.com"
-DEFAULT_ADMIN_PASSWORD="Admin@123"
-
-# Cloudinary (optional, for image uploads)
-CLOUDINARY_CLOUD_NAME=""
-CLOUDINARY_API_KEY=""
-CLOUDINARY_API_SECRET=""
-```
-
-### 4. Initialize the Database
-```bash
-cd backend
-npx prisma migrate deploy
-npx prisma db seed
-```
 
 ### 5. Run Locally
 ```bash
