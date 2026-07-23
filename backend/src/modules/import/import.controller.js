@@ -157,12 +157,17 @@ Return ONLY the JSON array. Start your response with [ and end with ].`;
 
         // Fallback local parsing if AI returned no questions
         if (questions.length === 0) {
-            if (!documentText || !documentText.trim()) {
-                documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
-            }
             if (documentText && documentText.trim()) {
                 questions = import_job_1.parseQuestionsLocally(documentText);
             }
+        }
+
+        if (questions.length === 0) {
+            cleanup();
+            return res.status(400).json({
+                success: false,
+                message: 'No valid questions could be extracted from this file. If you are uploading a PDF or Image, ensure your GEMINI_API_KEY is active in Render or Admin Settings.'
+            });
         }
 
         // Validate & normalise each question

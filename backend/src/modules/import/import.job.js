@@ -43,6 +43,11 @@ const extractTextFromFile = async (filePath, mimeType = '') => {
     const lowerPath = filePath.toLowerCase();
     const lowerMime = (mimeType || '').toLowerCase();
 
+    // 0. DO NOT read binary images as utf-8 text!
+    if (lowerPath.endsWith('.png') || lowerPath.endsWith('.jpg') || lowerPath.endsWith('.jpeg') || lowerPath.endsWith('.webp') || lowerPath.endsWith('.gif') || lowerMime.includes('image')) {
+        return '';
+    }
+
     // 1. Try Excel / CSV / Spreadsheet
     if (lowerPath.endsWith('.xlsx') || lowerPath.endsWith('.xls') || lowerPath.endsWith('.csv') || lowerPath.endsWith('.tsv') || lowerMime.includes('spreadsheet') || lowerMime.includes('excel') || lowerMime.includes('csv')) {
         try {
@@ -55,6 +60,7 @@ const extractTextFromFile = async (filePath, mimeType = '') => {
             }
             if (text.trim()) return text;
         } catch (e) {}
+        return '';
     }
 
     // 2. Try Word (.docx / .doc)
@@ -63,6 +69,7 @@ const extractTextFromFile = async (filePath, mimeType = '') => {
             const result = await mammoth_1.default.extractRawText({ path: filePath });
             if (result.value && result.value.trim()) return result.value;
         } catch (e) {}
+        return '';
     }
 
     // 3. Try PDF (.pdf)
@@ -70,26 +77,29 @@ const extractTextFromFile = async (filePath, mimeType = '') => {
         try {
             const dataBuffer = fs_1.default.readFileSync(filePath);
             const parsed = await pdf_parse_1.default(dataBuffer);
-            if (parsed.text && parsed.text.trim()) return parsed.text;
+            if (parsed.text && parsed.text.trim()) {
+                const text = parsed.text;
+                const total = text.length;
+                const weird = (text.match(/[\#\*\@\%\^\_\~\{\}\|\[\]\$\`\<\>]/g) || []).length;
+                const alpha = (text.match(/[a-zA-Z0-9\s.,?!()\-+=\/]/g) || []).length;
+                // If text is font garble, discard it and return empty for Vision fallback
+                if (weird / total > 0.08 || alpha / total < 0.60) {
+                    logger_1.logger.info(`[extractTextFromFile] PDF text contains font garble. Returning empty string for Vision processing.`);
+                    return '';
+                }
+                return text;
+            }
         } catch (e) {}
+        return '';
     }
 
-    // 4. Try Plain Text / Markdown / JSON
-    try {
-        const text = fs_1.default.readFileSync(filePath, 'utf8');
-        if (text && text.trim()) return text;
-    } catch (e) {}
-
-    // 5. Ultimate Fallback: Try xlsx.readFile anyway
-    try {
-        const workbook = xlsx.readFile(filePath);
-        let text = '';
-        for (const name of workbook.SheetNames) {
-            const sheet = workbook.Sheets[name];
-            text += xlsx.utils.sheet_to_csv(sheet);
-        }
-        if (text.trim()) return text;
-    } catch (e) {}
+    // 4. Try Plain Text / Markdown / JSON ONLY if extension matches
+    if (['.txt', '.md', '.json', '.text'].some(e => lowerPath.endsWith(e)) || lowerMime.includes('text/plain') || lowerMime.includes('json')) {
+        try {
+            const text = fs_1.default.readFileSync(filePath, 'utf8');
+            if (text && text.trim()) return text;
+        } catch (e) {}
+    }
 
     return '';
 };
@@ -450,21 +460,7 @@ function parseQuestionsLocally(text) {
             q.answers = q.answers[0] || 'N/A';
         }
     });
-    // If no questions detected, return a default mock descriptive question containing the full text
-    if (questions.length === 0 && text.trim().length > 10) {
-        questions.push({
-            type: 'DESCRIPTIVE',
-            content: `Please read and summarize the following text document contents: \n\n${text.substring(0, 300)}...`,
-            options: [],
-            answers: ['A summary matching the core points of the document.'],
-            difficulty: 'MEDIUM',
-            score: 10,
-            negativeMarks: 0,
-            explanation: 'Locally generated question fallback due to AI rate-limiting.',
-            tags: ['Local Fallback'],
-            topic: 'Summary'
-        });
-    }
+    // If no questions detected, return empty array so upper layer handles AI vision parsing or throws clean error
     return questions;
 }
 
