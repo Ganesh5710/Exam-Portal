@@ -71,8 +71,8 @@ const createQuestion = async (req, res, next) => {
                 options: options || null,
                 answers,
                 explanation: explanation || null,
-                score: parseFloat(score) || 1.0,
-                negativeMarks: parseFloat(negativeMarks) || 0.0,
+                score: parseFloat(score) || 4.0,
+                negativeMarks: parseFloat(negativeMarks) || 1.0,
                 difficulty,
                 tags: tags || [],
                 fileUrl: fileUrl || null,
@@ -309,8 +309,8 @@ const bulkImportQuestions = async (req, res, next) => {
                 options: Array.isArray(options) ? options : (options ? [options] : null),
                 answers: formattedAnswers,
                 explanation: explanation ? String(explanation) : null,
-                score: parseFloat(score) || 5.0,
-                negativeMarks: parseFloat(negativeMarks) || 0.0,
+                score: parseFloat(score) || 4.0,
+                negativeMarks: parseFloat(negativeMarks) || 1.0,
                 difficulty: (difficulty ? difficulty.toString().toUpperCase() : 'MEDIUM'),
                 tags: Array.isArray(tags) ? tags : [],
                 fileUrl: fileUrl || record.imageUrl || record.image || null,
@@ -419,7 +419,7 @@ const LOCAL_QUESTIONS_DB = {
             options: ['O(1)', 'O(n)', 'O(log n)', 'O(n log n)'],
             answers: ['O(log n)'],
             difficulty: 'MEDIUM',
-            score: 5,
+            score: 4,
             negativeMarks: 1,
             explanation: 'Binary Search divides the search space in half with each step, leading to a logarithmic time complexity of O(log n).',
             tags: ['Algorithms', 'Searching', 'Binary Search']
@@ -430,8 +430,8 @@ const LOCAL_QUESTIONS_DB = {
             options: ['True', 'False'],
             answers: 'False',
             difficulty: 'EASY',
-            score: 3,
-            negativeMarks: 0,
+            score: 4,
+            negativeMarks: 1,
             explanation: 'Binary search requires the elements to be sorted beforehand to determine which half of the array to search next.',
             tags: ['Searching', 'Binary Search']
         },
@@ -446,8 +446,8 @@ const LOCAL_QUESTIONS_DB = {
                 ]
             },
             difficulty: 'HARD',
-            score: 15,
-            negativeMarks: 0,
+            score: 4,
+            negativeMarks: 1,
             explanation: 'Iterative implementation uses low and high pointers, updating mid = low + (high-low)/2 until match is found.',
             tags: ['Coding', 'Algorithms', 'Searching']
         }
@@ -459,8 +459,8 @@ const LOCAL_QUESTIONS_DB = {
             options: ['useState', 'useContext', 'useEffect', 'useReducer'],
             answers: ['useEffect'],
             difficulty: 'EASY',
-            score: 5,
-            negativeMarks: 0,
+            score: 4,
+            negativeMarks: 1,
             explanation: 'useEffect handles side effects such as data fetching, subscriptions, or manual DOM changes.',
             tags: ['React', 'Frontend', 'Hooks']
         },
@@ -470,8 +470,8 @@ const LOCAL_QUESTIONS_DB = {
             options: ['True', 'False'],
             answers: 'True',
             difficulty: 'EASY',
-            score: 3,
-            negativeMarks: 0,
+            score: 4,
+            negativeMarks: 1,
             explanation: 'In JSX, lower-case tag names are treated as HTML tags, whereas capitalized names are treated as React components.',
             tags: ['React', 'JSX']
         }
@@ -483,8 +483,8 @@ const LOCAL_QUESTIONS_DB = {
             options: ['SORT BY', 'ORDER BY', 'GROUP BY', 'ORDER'],
             answers: ['ORDER BY'],
             difficulty: 'EASY',
-            score: 5,
-            negativeMarks: 0,
+            score: 4,
+            negativeMarks: 1,
             explanation: 'ORDER BY is used to sort records in ascending or descending order.',
             tags: ['SQL', 'Database']
         }
@@ -513,7 +513,7 @@ function generateQuestionsLocally(topic, type, count) {
                 ],
                 answers: [`An optimized approach to solve problems related to ${topic}`],
                 difficulty: 'MEDIUM',
-                score: 5,
+                score: 4,
                 negativeMarks: 1,
                 explanation: `${topic} is a key paradigm designed to optimize performance and structural clarity in software systems.`,
                 tags: [topic, 'General']
@@ -524,8 +524,8 @@ function generateQuestionsLocally(topic, type, count) {
                 options: ['True', 'False'],
                 answers: 'True',
                 difficulty: 'EASY',
-                score: 3,
-                negativeMarks: 0,
+                score: 4,
+                negativeMarks: 1,
                 explanation: `${topic} is widely adopted and considered a best practice in modern software engineering.`,
                 tags: [topic]
             },
@@ -535,8 +535,8 @@ function generateQuestionsLocally(topic, type, count) {
                 options: [],
                 answers: ['efficiency', 'performance', 'speed'],
                 difficulty: 'MEDIUM',
-                score: 5,
-                negativeMarks: 0,
+                score: 4,
+                negativeMarks: 1,
                 explanation: `Improving efficiency is a primary driver behind adopting ${topic}.`,
                 tags: [topic]
             }

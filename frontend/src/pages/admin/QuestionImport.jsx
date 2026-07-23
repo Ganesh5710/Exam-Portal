@@ -158,8 +158,8 @@ export const QuestionImport = () => {
         answers: q.answers,
         explanation: q.explanation || "",
         difficulty: q.difficulty || "MEDIUM",
-        score: parseFloat(q.score) || 5,
-        negativeMarks: parseFloat(q.negativeMarks) || 0,
+        score: parseFloat(q.score) || 4,
+        negativeMarks: parseFloat(q.negativeMarks) || 1,
         tags: Array.isArray(q.tags) ? q.tags : [],
         subjectId: subjectId !== "auto" ? subjectId : (q.subjectId || null),
         subjectName: q.subjectName || q.subjectCode || q.subject || null,
@@ -695,7 +695,7 @@ const EditModal = ({ q, setQ, onSave, onClose }) => {
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Score (points)</label>
               <input
                 type="number" min="0" step="0.5"
-                value={q.score ?? 5}
+                value={q.score ?? 4}
                 onChange={(e) => update("score", parseFloat(e.target.value) || 0)}
                 className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
               />
@@ -704,7 +704,7 @@ const EditModal = ({ q, setQ, onSave, onClose }) => {
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Negative Marks</label>
               <input
                 type="number" min="0" step="0.25"
-                value={q.negativeMarks ?? 0}
+                value={q.negativeMarks ?? 1}
                 onChange={(e) => update("negativeMarks", parseFloat(e.target.value) || 0)}
                 className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500"
               />

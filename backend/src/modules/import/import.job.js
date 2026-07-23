@@ -147,8 +147,8 @@ Return questions matching this exact schema:
 
 Include in every question:
 - "difficulty": "EASY", "MEDIUM", or "HARD" (detect if available, else guess)
-- "score": number (suggested points, default: 5)
-- "negativeMarks": number (default: 0)
+- "score": number (suggested points, default: 4)
+- "negativeMarks": number (default: 1)
 - "explanation": string (answer explanation if available)
 - "tags": array of strings
 - "department": string (detect department name or code if mentioned in headers/text, e.g. CSE)
@@ -258,7 +258,7 @@ function parseInlineMCQ(text) {
             answers,
             explanation: explanationPart || 'Offline parsed question fallback.',
             difficulty: 'MEDIUM',
-            score: 5,
+            score: 4,
             negativeMarks: 1,
             tags: ['Offline Fallback', 'MCQ'],
             topic: 'General'
@@ -301,8 +301,8 @@ function parseQuestionsLocally(text) {
                     options: [],
                     answers: [],
                     difficulty: 'MEDIUM',
-                    score: 5,
-                    negativeMarks: 0,
+                    score: 4,
+                    negativeMarks: 1,
                     explanation: '',
                     tags: [],
                     topic: 'General'
@@ -340,7 +340,7 @@ function parseQuestionsLocally(text) {
                         q.difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(val.toUpperCase()) ? val.toUpperCase() : 'MEDIUM';
                     }
                     else if (h.includes('score') || h.includes('marks')) {
-                        q.score = parseFloat(val) || 5;
+                        q.score = parseFloat(val) || 4;
                     }
                     else if (h.includes('negative')) {
                         q.negativeMarks = parseFloat(val) || 0;
@@ -389,8 +389,8 @@ function parseQuestionsLocally(text) {
                 options: [],
                 answers: [],
                 difficulty: 'MEDIUM',
-                score: 5,
-                negativeMarks: 0,
+                score: 4,
+                negativeMarks: 1,
                 explanation: '',
                 tags: [],
                 topic: 'General'
@@ -664,8 +664,8 @@ const processImportJob = async (jobId, filePath, mimeType) => {
                     cleanQ.type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(q.type)
                         ? q.type
                         : 'MCQ';
-                    cleanQ.score = parseFloat(q.score) || 5.0;
-                    cleanQ.negativeMarks = parseFloat(q.negativeMarks) || 0.0;
+                    cleanQ.score = parseFloat(q.score) || 4.0;
+                    cleanQ.negativeMarks = parseFloat(q.negativeMarks) || 1.0;
                     cleanQ.difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(q.difficulty) ? q.difficulty : 'MEDIUM';
                     cleanQ.tags = Array.isArray(q.tags) ? q.tags : [];
                     cleanQ.validationWarnings = [];
@@ -783,7 +783,7 @@ const processImportJob = async (jobId, filePath, mimeType) => {
                         ],
                         answers: ['Maximize performance, efficiency, and resource utilization'],
                         difficulty: 'MEDIUM',
-                        score: 5,
+                        score: 4,
                         negativeMarks: 1,
                         explanation: `${topic} is designed as an industry-standard practice focusing on structural efficiency.`,
                         tags: [topic, 'Import Fallback'],
@@ -796,7 +796,7 @@ const processImportJob = async (jobId, filePath, mimeType) => {
                         answers: 'True',
                         difficulty: 'EASY',
                         score: 3,
-                        negativeMarks: 0,
+                        negativeMarks: 1,
                         explanation: `Yes, ${topic} is widely adopted due to its scalability and stability.`,
                         tags: [topic],
                         topic
@@ -807,8 +807,8 @@ const processImportJob = async (jobId, filePath, mimeType) => {
                         options: [],
                         answers: ['efficiency', 'performance', 'speed'],
                         difficulty: 'MEDIUM',
-                        score: 5,
-                        negativeMarks: 0,
+                        score: 4,
+                        negativeMarks: 1,
                         explanation: `Reliability and efficiency are key goals.`,
                         tags: [topic],
                         topic
@@ -822,8 +822,8 @@ const processImportJob = async (jobId, filePath, mimeType) => {
             cleanQ.type = ['MCQ', 'MULTI_CORRECT', 'TRUE_FALSE', 'FILL_BLANK', 'DESCRIPTIVE', 'CODING'].includes(q.type)
                 ? q.type
                 : 'MCQ';
-            cleanQ.score = parseFloat(q.score) || 5.0;
-            cleanQ.negativeMarks = parseFloat(q.negativeMarks) || 0.0;
+            cleanQ.score = parseFloat(q.score) || 4.0;
+            cleanQ.negativeMarks = parseFloat(q.negativeMarks) || 1.0;
             cleanQ.difficulty = ['EASY', 'MEDIUM', 'HARD'].includes(q.difficulty) ? q.difficulty : 'MEDIUM';
             cleanQ.tags = Array.isArray(q.tags) ? q.tags : [];
             // Perform AI validations
