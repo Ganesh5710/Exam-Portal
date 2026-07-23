@@ -88,7 +88,8 @@ export const Questions = () => {
       setFormData((prev) => ({ ...prev, fileUrl: res.data?.data?.fileUrl || "" }));
       toast.success("Diagram image uploaded successfully!");
     } catch (err) {
-      toast.error("Failed to upload image diagram.");
+      console.error("Upload error details:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to upload image diagram.");
     } finally {
       setUploadingImage(false);
     }

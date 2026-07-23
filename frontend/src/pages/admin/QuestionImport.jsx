@@ -684,6 +684,33 @@ const EditModal = ({ q, setQ, onSave, onClose }) => {
             </label>
             <div className="flex flex-wrap gap-2 items-center">
               <input
+                type="file"
+                accept="image/*"
+                id="import-diagram-upload"
+                className="hidden"
+                onChange={async (e) => {
+                  if (e.target.files?.[0]) {
+                    const fd = new FormData();
+                    fd.append("file", e.target.files[0]);
+                    try {
+                      const res = await api.post("/questions/upload-image", fd, {
+                        headers: { "Content-Type": "multipart/form-data" },
+                      });
+                      update("fileUrl", res.data?.data?.fileUrl || "");
+                      toast.success("Diagram image uploaded successfully!");
+                    } catch (err) {
+                      toast.error(err.response?.data?.message || "Failed to upload image diagram.");
+                    }
+                  }
+                }}
+              />
+              <label
+                htmlFor="import-diagram-upload"
+                className="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+              >
+                <Upload size={14} className="text-violet-400" /> Upload File
+              </label>
+              <input
                 type="text"
                 value={q.fileUrl || ""}
                 onChange={(e) => update("fileUrl", e.target.value)}

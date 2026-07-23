@@ -21,26 +21,26 @@ const questionCreateSchema = zod_1.z.object({
         departmentId: zod_1.z.string().uuid('Department must be assigned')
     })
 });
-const multer_1 = __importDefault(require("multer"));
-const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
-const imgStorage = multer_1.default.diskStorage({
+const imgStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = path_1.default.join(__dirname, '../../../../uploads');
-        if (!fs_1.default.existsSync(dir)) {
-            fs_1.default.mkdirSync(dir, { recursive: true });
+        const dir = path.join(__dirname, '../../../../uploads');
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = path_1.default.extname(file.originalname) || '.png';
+        const ext = path.extname(file.originalname) || '.png';
         cb(null, `diagram-${uniqueSuffix}${ext}`);
     }
 });
 
-const uploadImg = (0, multer_1.default)({
+const uploadImg = multer({
     storage: imgStorage,
     limits: { fileSize: 25 * 1024 * 1024 }
 });
