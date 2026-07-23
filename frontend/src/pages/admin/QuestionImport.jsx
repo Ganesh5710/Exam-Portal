@@ -47,7 +47,9 @@ export const QuestionImport = () => {
   const [step, setStep] = useState("upload"); // upload | extracting | preview | done
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [departments, setDepartments] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [departmentId, setDepartmentId] = useState("auto");
   const [subjectId, setSubjectId] = useState("auto");
   const [questions, setQuestions] = useState([]);
   const [selected, setSelected] = useState({});          // idx → bool
@@ -58,17 +60,15 @@ export const QuestionImport = () => {
   const [stats, setStats] = useState({ saved: 0, skipped: 0, failed: 0 });
   const fileRef = useRef(null);
 
-  /* --- load subjects on mount --- */
+  /* --- load departments and subjects on mount --- */
   useEffect(() => {
-    api.get("/subjects").then((r) => {
-      const list = r.data?.data || [];
-      setSubjects(list);
-    }).catch(() => {
-      // fallback: try departments endpoint
-      api.get("/departments").then((r) => {
-        setSubjects(r.data?.data || []);
-      }).catch(() => {});
-    });
+    Promise.all([
+      api.get("/departments"),
+      api.get("/subjects"),
+    ]).then(([dRes, sRes]) => {
+      setDepartments(dRes.data?.data || []);
+      setSubjects(sRes.data?.data || []);
+    }).catch(() => {});
   }, []);
 
   /* ─── STEP 1 : File Selection ─── */
@@ -86,6 +86,7 @@ export const QuestionImport = () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (departmentId !== "auto") formData.append("departmentId", departmentId);
     if (subjectId !== "auto") formData.append("subjectId", subjectId);
 
     try {
@@ -254,23 +255,43 @@ export const QuestionImport = () => {
       {step === "upload" && (
         <div className="max-w-2xl mx-auto space-y-6">
 
-          {/* Subject selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-300">
-              Target Subject (optional)
-            </label>
-            <select
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 transition-all"
-            >
-              <option value="auto">Auto-detect from file</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.code ? `(${s.code})` : ""}
-                </option>
-              ))}
-            </select>
+          {/* Department & Subject selectors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300">
+                Target Department (optional)
+              </label>
+              <select
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 transition-all font-medium"
+              >
+                <option value="auto">Auto-detect Department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} {d.code ? `(${d.code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300">
+                Target Subject (optional)
+              </label>
+              <select
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-violet-500 transition-all font-medium"
+              >
+                <option value="auto">Auto-detect Subject</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.code ? `(${s.code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Drag-and-drop zone */}

@@ -23,8 +23,9 @@ import {
 import toast from "react-hot-toast";
 import { MathContent } from "../../components/common/MathContent";
 
-export const Questions = () => {
+export const Questions = () => {  // Data States
   const [questions, setQuestions] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +34,7 @@ export const Questions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterDifficulty, setFilterDifficulty] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
   const [filterSubject, setFilterSubject] = useState("");
 
   // Bulk select state
@@ -72,6 +74,7 @@ export const Questions = () => {
     score: "5.0",
     negativeMarks: "0.0",
     difficulty: "MEDIUM",
+    departmentId: "",
     subjectId: "",
     tagsString: "",
     fileUrl: "",
@@ -265,15 +268,24 @@ export const Questions = () => {
     toast.success("JSON Backup downloaded successfully!");
   };
 
-  const fetchSubjects = async () => {
+  const fetchMetadata = async () => {
     try {
-      const res = await api.get("/departments");
-      setSubjects(res.data.data || []);
-      if (res.data.data?.length > 0 && !formData.subjectId) {
-        setFormData((prev) => ({ ...prev, subjectId: res.data.data[0].id }));
+      const [deptRes, subjRes] = await Promise.all([
+        api.get("/departments"),
+        api.get("/subjects"),
+      ]);
+      const depts = deptRes.data?.data || [];
+      const subjs = subjRes.data?.data || [];
+      setDepartments(depts);
+      setSubjects(subjs);
+      if (depts.length > 0 && !formData.departmentId) {
+        setFormData((prev) => ({ ...prev, departmentId: depts[0].id }));
       }
-    } catch {
-      // ignore
+      if (subjs.length > 0 && !formData.subjectId) {
+        setFormData((prev) => ({ ...prev, subjectId: subjs[0].id }));
+      }
+    } catch (e) {
+      console.error("Error loading metadata:", e);
     }
   };
 
@@ -284,7 +296,8 @@ export const Questions = () => {
       if (searchQuery) params.append("search", searchQuery);
       if (filterType) params.append("type", filterType);
       if (filterDifficulty) params.append("difficulty", filterDifficulty);
-      if (filterSubject) params.append("departmentId", filterSubject);
+      if (filterDepartment) params.append("departmentId", filterDepartment);
+      if (filterSubject) params.append("subjectId", filterSubject);
 
       const res = await api.get(`/questions?${params.toString()}`);
       setQuestions(res.data.data || []);
@@ -293,10 +306,10 @@ export const Questions = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, filterType, filterDifficulty, filterSubject]);
+  }, [searchQuery, filterType, filterDifficulty, filterDepartment, filterSubject]);
 
   useEffect(() => {
-    fetchSubjects();
+    fetchMetadata();
   }, []);
 
   useEffect(() => {
@@ -346,7 +359,8 @@ export const Questions = () => {
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
         fileUrl: formData.fileUrl || null,
-        departmentId: formData.subjectId,
+        departmentId: formData.departmentId || (departments[0]?.id || null),
+        subjectId: formData.subjectId || (subjects[0]?.id || null),
       };
 
       await api.post("/questions", body);
@@ -400,7 +414,8 @@ export const Questions = () => {
           ? formData.tagsString.split(",").map((t) => t.trim())
           : [],
         fileUrl: formData.fileUrl || null,
-        departmentId: formData.subjectId,
+        departmentId: formData.departmentId || (departments[0]?.id || null),
+        subjectId: formData.subjectId || (subjects[0]?.id || null),
       };
 
       await api.put(`/questions/${selectedQuestion.id}`, body);
@@ -479,7 +494,8 @@ export const Questions = () => {
       score: String(q.score),
       negativeMarks: String(q.negativeMarks),
       difficulty: q.difficulty,
-      subjectId: q.departmentId || q.subjectId,
+      departmentId: q.departmentId || (departments[0]?.id || ""),
+      subjectId: q.subjectId || (subjects[0]?.id || ""),
       tagsString: tagsText,
       fileUrl: q.fileUrl || "",
     });
@@ -927,7 +943,27 @@ export const Questions = () => {
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Department <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={formData.departmentId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, departmentId: e.target.value })
+                    }
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Subject <span className="text-red-400">*</span>
@@ -940,7 +976,7 @@ export const Questions = () => {
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                     required
                   >
-                    <option value="">Select Subject (Physics, Chemistry, Maths, Descriptive)</option>
+                    <option value="">Select Subject</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
@@ -957,7 +993,7 @@ export const Questions = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, type: e.target.value })
                     }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                   >
                     <option value="MCQ">MCQ</option>
                     <option value="TRUE_FALSE">True / False</option>
@@ -1302,7 +1338,27 @@ export const Questions = () => {
             </div>
 
             <form onSubmit={handleEdit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Department <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={formData.departmentId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, departmentId: e.target.value })
+                    }
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Subject <span className="text-red-400">*</span>
@@ -1315,7 +1371,7 @@ export const Questions = () => {
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                     required
                   >
-                    <option value="">Select Subject (Physics, Chemistry, Maths, Descriptive)</option>
+                    <option value="">Select Subject</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
@@ -1332,7 +1388,7 @@ export const Questions = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, type: e.target.value })
                     }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                   >
                     <option value="MCQ">MCQ</option>
                     <option value="TRUE_FALSE">True / False</option>
