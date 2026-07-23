@@ -930,17 +930,17 @@ export const Questions = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Department
+                    Subject <span className="text-red-400">*</span>
                   </label>
                   <select
                     value={formData.subjectId}
                     onChange={(e) =>
                       setFormData({ ...formData, subjectId: e.target.value })
                     }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                     required
                   >
-                    <option value="">Select Department</option>
+                    <option value="">Select Subject (Physics, Chemistry, Maths, Descriptive)</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
@@ -1305,16 +1305,17 @@ export const Questions = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    Department
+                    Subject <span className="text-red-400">*</span>
                   </label>
                   <select
                     value={formData.subjectId}
                     onChange={(e) =>
                       setFormData({ ...formData, subjectId: e.target.value })
                     }
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 font-medium"
                     required
                   >
+                    <option value="">Select Subject (Physics, Chemistry, Maths, Descriptive)</option>
                     {subjects.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.code})
