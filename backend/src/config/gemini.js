@@ -5,8 +5,8 @@ const logger_1 = require("./logger");
 // All valid active Gemini model candidates, ordered by priority
 const GEMINI_MODELS = [
     'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash-8b',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
 ];
 const MAX_RETRIES_PER_MODEL = 3;
 const BASE_RETRY_DELAY_MS = 4000; // 4 seconds
@@ -40,6 +40,8 @@ async function callGeminiWithFallback(apiKey, options) {
     }
     const bodyStr = JSON.stringify(requestBody);
     let lastError = '';
+    let hitQuota429 = false;
+
     for (const model of GEMINI_MODELS) {
         for (let attempt = 0; attempt < MAX_RETRIES_PER_MODEL; attempt++) {
             try {
@@ -66,8 +68,9 @@ async function callGeminiWithFallback(apiKey, options) {
                 const errBody = await res.text();
                 // Rate limit or overloaded - retry with backoff
                 if (status === 429 || status === 503) {
+                    hitQuota429 = true;
                     const delayMs = BASE_RETRY_DELAY_MS * Math.pow(2, attempt) + Math.random() * 1000;
-                    lastError = `Model ${model}: HTTP ${status} (retrying in ${Math.round(delayMs / 1000)}s)`;
+                    lastError = `Gemini API Rate Limit / Quota Exceeded (HTTP 429). Model ${model} rate-limited.`;
                     logger_1.logger.warn(lastError);
                     if (attempt < MAX_RETRIES_PER_MODEL - 1) {
                         await sleep(delayMs);
@@ -76,27 +79,34 @@ async function callGeminiWithFallback(apiKey, options) {
                     break; // Move to next model
                 }
                 // 400 = bad request, 404 = model not found, 403 = forbidden
-                // These won't improve with retries, move to next model immediately
                 if (status === 400 || status === 403 || status === 404) {
-                    lastError = `Model ${model}: HTTP ${status}`;
-                    logger_1.logger.warn(`${lastError}: ${errBody.substring(0, 200)}`);
+                    if (!hitQuota429) {
+                        lastError = `Model ${model}: HTTP ${status}`;
+                    }
+                    logger_1.logger.warn(`Model ${model}: HTTP ${status}: ${errBody.substring(0, 200)}`);
                     break; // Try next model
                 }
                 // Other errors
-                lastError = `Model ${model}: HTTP ${status}`;
-                logger_1.logger.warn(`${lastError}: ${errBody.substring(0, 200)}`);
+                if (!hitQuota429) {
+                    lastError = `Model ${model}: HTTP ${status}`;
+                }
+                logger_1.logger.warn(`Model ${model}: HTTP ${status}: ${errBody.substring(0, 200)}`);
                 break;
             }
             catch (err) {
-                lastError = `Model ${model}: ${err.message}`;
-                logger_1.logger.warn(lastError);
+                if (!hitQuota429) {
+                    lastError = `Model ${model}: ${err.message}`;
+                }
+                logger_1.logger.warn(`Model ${model} error: ${err.message}`);
                 break; // Network error, try next model
             }
         }
     }
+
+    if (hitQuota429) {
+        throw new Error(`Gemini API Quota Exceeded (HTTP 429): Your Gemini API key's rate limit or daily free quota has been exhausted. Please wait 1 minute or generate a fresh API key at https://aistudio.google.com/app/apikey and save it in Admin → Settings.`);
+    }
+
     // All models exhausted
-    throw new Error(`AI generation failed after trying all available models. ` +
-        `This usually means your Gemini API key's daily quota is exhausted. ` +
-        `Please wait a few minutes and try again, or upgrade your API key at https://ai.google.dev. ` +
-        `Last error: ${lastError}`);
+    throw new Error(`AI generation failed. Last error: ${lastError}`);
 }
