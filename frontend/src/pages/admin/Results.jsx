@@ -302,9 +302,7 @@ export const Results = () => {
         "Exam Title",
         "Total Score",
         "Max Score",
-        "Result Status",
         "Percentage",
-        "Grade",
       ];
       const subjectHeaders = subjectList.map((s) => `${s} Marks`);
       const trailingHeaders = ["Violations Count", "Status", "Submitted At"];
@@ -335,9 +333,7 @@ export const Results = () => {
           sub.exam?.title || "",
           sub.totalScore ?? 0,
           maxMark,
-          sub.isPassed ? "PASS" : "FAIL",
           sub.percentage != null ? `${sub.percentage.toFixed(1)}%` : "0.0%",
-          sub.grade || "",
         ];
 
         const subjectValues = subjectList.map((sName) => {
@@ -433,16 +429,11 @@ export const Results = () => {
     return (
       <div className="flex items-center gap-2">
         <span
-          className={`text-sm font-bold ${passed ? "text-emerald-400" : "text-red-400"}`}
+          className="text-sm font-bold text-emerald-400"
         >
           {score}
         </span>
         <span className="text-slate-500 text-xs">/ {maxMark}</span>
-        <span
-          className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${passed ? "text-emerald-500 bg-emerald-500/10" : "text-red-500 bg-red-500/10"}`}
-        >
-          {passed ? "PASS" : "FAIL"}
-        </span>
       </div>
     );
   };
@@ -606,7 +597,6 @@ export const Results = () => {
                     "Exam",
                     "Score",
                     "Subject Breakdown",
-                    "Grade",
                     "Violations",
                     "Status",
                     "Submitted",
@@ -733,17 +723,7 @@ export const Results = () => {
                       })()}
                     </td>
 
-                    {/* Grade */}
-                    <td className="px-5 py-4">
-                      <span className="text-sm font-bold text-white">
-                        {sub.grade || "—"}
-                      </span>
-                      {sub.percentage != null && (
-                        <span className="ml-1 text-xs text-slate-500">
-                          ({sub.percentage.toFixed(1)}%)
-                        </span>
-                      )}
-                    </td>
+
 
                     {/* Violations */}
                     <td className="px-5 py-4">
