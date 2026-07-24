@@ -209,7 +209,7 @@ const bulkImportQuestions = async (req, res, next) => {
         const toInsert = [];
 
         for (const record of questions) {
-            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department, subjectId, subjectName, subjectCode, subject } = record;
+            const { type, content, options, answers, explanation, score, negativeMarks, difficulty, tags, departmentId, departmentCode, department, subjectId, subjectName, subjectCode, subject, fileUrl, imageUrl, image } = record;
 
             if (!content || typeof content !== 'string' || content.trim().length === 0) {
                 continue;
@@ -313,7 +313,7 @@ const bulkImportQuestions = async (req, res, next) => {
                 negativeMarks: parseFloat(negativeMarks) || 1.0,
                 difficulty: (difficulty ? difficulty.toString().toUpperCase() : 'MEDIUM'),
                 tags: Array.isArray(tags) ? tags : [],
-                fileUrl: fileUrl || record.imageUrl || record.image || null,
+                fileUrl: fileUrl || imageUrl || image || null,
                 departmentId: resolvedDeptId,
                 subjectId: resolvedSubjId
             });
