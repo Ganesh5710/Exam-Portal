@@ -54,7 +54,7 @@ app.use((0, helmet_1.default)({
 app.use((0, cors_1.default)({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-gemini-api-key', 'X-Gemini-Api-Key'],
     credentials: true
 }));
 app.options('*', (0, cors_1.default)());
