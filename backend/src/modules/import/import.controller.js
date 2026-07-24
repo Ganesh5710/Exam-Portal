@@ -29,15 +29,23 @@ const extractQuestions = async (req, res, next) => {
     try {
         logger_1.logger.info(`[extract] Processing file: ${req.file.originalname} (${mimeType})`);
 
-        // ── PATH A: Structured file (Excel / CSV / JSON) ──────────────
-        if (['.xlsx', '.xls', '.csv', '.json'].includes(ext)) {
-            const questions = import_job_1.parseStructuredFile(filePath, ext);
+        // ── PATH A: Instant Offline Mode (Header or Structured File) ──────────────
+        const forceOffline = req.headers['x-offline-import'] === 'true' || req.body?.offline === 'true';
+        if (forceOffline || ['.xlsx', '.xls', '.csv', '.json'].includes(ext)) {
+            let questions = [];
+            if (['.xlsx', '.xls', '.csv', '.json'].includes(ext)) {
+                questions = import_job_1.parseStructuredFile(filePath, ext);
+            } else {
+                let docText = '';
+                try { docText = await import_job_1.extractTextFromFile(filePath, mimeType); } catch (_) {}
+                if (docText) questions = import_job_1.parseQuestionsLocally(docText);
+            }
             if (questions && questions.length > 0) {
                 cleanup();
-                logger_1.logger.info(`[extract] Structured parse: ${questions.length} questions`);
+                logger_1.logger.info(`[extract] Offline parse successful: ${questions.length} questions`);
                 return res.status(200).json({
                     success: true,
-                    data: { questions, source: 'structured' }
+                    data: { questions, source: 'offline' }
                 });
             }
         }

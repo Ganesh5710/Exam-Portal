@@ -17,6 +17,7 @@ import {
   RefreshCw,
   ArrowLeft,
   Sparkles,
+  Zap,
   BookOpen,
   Tag,
   Award,
@@ -88,7 +89,7 @@ export const QuestionImport = () => {
   };
 
   /* ─── STEP 2 : Extract via direct API ─── */
-  const handleExtract = async () => {
+  const handleExtract = async (isOffline = false) => {
     if (!file) return toast.error("Please choose a file first.");
     setStep("extracting");
 
@@ -98,7 +99,9 @@ export const QuestionImport = () => {
     if (subjectId !== "auto") formData.append("subjectId", subjectId);
 
     const headers = { "Content-Type": "multipart/form-data" };
-    if (customApiKey.trim()) {
+    if (isOffline) {
+      headers["x-offline-import"] = "true";
+    } else if (customApiKey.trim()) {
       headers["x-gemini-api-key"] = customApiKey.trim();
       localStorage.setItem("GEMINI_API_KEY", customApiKey.trim());
       // Sync key to backend systemSettings database
@@ -400,14 +403,25 @@ export const QuestionImport = () => {
             ))}
           </div>
 
-          <button
-            onClick={handleExtract}
-            disabled={!file}
-            className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-600/20"
-          >
-            <Sparkles size={18} />
-            Extract Questions with AI
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              onClick={() => handleExtract(false)}
+              disabled={!file}
+              className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-600/20"
+            >
+              <Sparkles size={18} />
+              Extract Questions with AI (Gemini)
+            </button>
+
+            <button
+              onClick={() => handleExtract(true)}
+              disabled={!file}
+              className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold border border-emerald-500/30 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+            >
+              <Zap size={18} className="text-emerald-400" />
+              ⚡ Fast Offline Import (No AI / Instant)
+            </button>
+          </div>
         </div>
       )}
 
