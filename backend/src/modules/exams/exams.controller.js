@@ -18,38 +18,29 @@ const getExams = async (req, res, next) => {
         }
         else {
             // Students see only exams assigned to them that are currently published
-            const assignments = await db_1.prisma.examAssignment.findMany({
-                where: {
-                    studentId: userId,
-                    exam: {
-                        status: 'PUBLISHED'
+            const [assignments, studentSubmissions] = await Promise.all([
+                db_1.prisma.examAssignment.findMany({
+                    where: { studentId: userId, exam: { status: 'PUBLISHED' } },
+                    include: { exam: { include: { department: { select: { name: true, code: true } } } } },
+                    orderBy: { exam: { startTime: 'asc' } }
+                }),
+                db_1.prisma.submission.findMany({
+                    where: { studentId: userId },
+                    select: {
+                        id: true,
+                        examId: true,
+                        totalScore: true,
+                        isPassed: true,
+                        percentage: true,
+                        status: true,
+                        grade: true,
+                        submitTime: true
                     }
-                },
-                include: {
-                    exam: {
-                        include: {
-                            department: { select: { name: true, code: true } }
-                        }
-                    }
-                },
-                orderBy: { exam: { startTime: 'asc' } }
-            });
-            const exams = await Promise.all(assignments.map(async (a) => {
-                const submission = await db_1.prisma.submission.findUnique({
-                    where: { examId_studentId: { examId: a.examId, studentId: userId } },
-                    include: {
-                        exam: {
-                            include: {
-                                examQuestions: {
-                                    include: { question: { select: { score: true } } }
-                                }
-                            }
-                        }
-                    }
-                });
-                const maxScore = submission
-                    ? submission.exam.examQuestions.reduce((sum, eq) => sum + eq.question.score, 0)
-                    : 0;
+                })
+            ]);
+            const subMap = new Map(studentSubmissions.map(s => [s.examId, s]));
+            const exams = assignments.map(a => {
+                const submission = subMap.get(a.examId);
                 return {
                     ...a.exam,
                     assignmentId: a.id,
@@ -63,7 +54,6 @@ const getExams = async (req, res, next) => {
                         percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
                         grade: submission.status === 'PUBLISHED' ? submission.grade : null,
                         isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
-                        maxPossibleScore: maxScore
                     } : null
                 };
             }));

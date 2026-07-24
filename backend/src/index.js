@@ -105,6 +105,13 @@ app.use(error_1.errorHandler);
 setInterval(async () => {
     await (0, autosave_job_1.runAutosaveDatabaseSync)();
 }, 30000);
+
+// Self-Keepalive Ping to keep Render instance hot & active 24/7
+setInterval(() => {
+    try {
+        fetch(`http://127.0.0.1:${PORT}/health`).catch(() => {});
+    } catch (_) {}
+}, 180000);
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, async () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);

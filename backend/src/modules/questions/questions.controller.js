@@ -42,7 +42,21 @@ const getQuestions = async (req, res, next) => {
 
         const questions = await db_1.prisma.question.findMany({
             where,
-            include: {
+            select: {
+                id: true,
+                type: true,
+                content: true,
+                options: true,
+                answers: true,
+                explanation: true,
+                score: true,
+                negativeMarks: true,
+                difficulty: true,
+                tags: true,
+                fileUrl: true,
+                departmentId: true,
+                subjectId: true,
+                createdAt: true,
                 department: {
                     select: { id: true, name: true, code: true }
                 },
@@ -50,6 +64,7 @@ const getQuestions = async (req, res, next) => {
                     select: { id: true, name: true, code: true }
                 }
             },
+            take: 200,
             orderBy: { createdAt: 'desc' }
         });
         return res.status(200).json({ success: true, data: questions });
