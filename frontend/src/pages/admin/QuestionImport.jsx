@@ -51,7 +51,14 @@ export const QuestionImport = () => {
   const [subjects, setSubjects] = useState([]);
   const [departmentId, setDepartmentId] = useState("auto");
   const [subjectId, setSubjectId] = useState("auto");
-  const [customApiKey, setCustomApiKey] = useState(localStorage.getItem("GEMINI_API_KEY") || "");
+  const [customApiKey, setCustomApiKey] = useState(() => {
+    const saved = localStorage.getItem("GEMINI_API_KEY") || "";
+    if (saved.startsWith("AQ.Ab8R")) {
+      localStorage.removeItem("GEMINI_API_KEY");
+      return "";
+    }
+    return saved;
+  });
   const [questions, setQuestions] = useState([]);
   const [selected, setSelected] = useState({});          // idx → bool
   const [editIdx, setEditIdx] = useState(null);

@@ -110,6 +110,8 @@ const extractQuestions = async (req, res, next) => {
             });
         }
 
+        logger_1.logger.info(`[extract] Executing Gemini extraction using key prefix: ${geminiApiKey.substring(0, 10)}...`);
+
         const prompt = `You are an expert Optical Character Recognition (OCR) and LaTeX formatting engine for advanced Mathematics, Physics, and Chemistry exam papers.
 
 Your task is to parse EVERY question from the uploaded document/image into a clean structured JSON array — without dropping, skipping, or altering any mathematical expression.
