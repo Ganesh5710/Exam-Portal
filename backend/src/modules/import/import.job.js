@@ -377,10 +377,10 @@ function parseQuestionsLocally(text) {
             questions.push(inlineMCQ);
             continue;
         }
-        // Detect question start: e.g. "Q1.", "1.", "Question 1:", "1)", "Q1:"
+        // Detect question start: e.g. "Q1.", "1.", "Question 1:", "1)", "24.", "Q24:"
         const questionMatch = line.match(/^(?:Q(?:uestion)?\s*\d+[:.]?|\d+[\.)])\s*(.+)$/i);
         if (questionMatch) {
-            if (currentQuestion) {
+            if (currentQuestion && currentQuestion.content.trim()) {
                 questions.push(currentQuestion);
             }
             currentQuestion = {
@@ -392,18 +392,20 @@ function parseQuestionsLocally(text) {
                 score: 4,
                 negativeMarks: 1,
                 explanation: '',
-                tags: [],
+                tags: ['Offline Parsed'],
                 topic: 'General'
             };
             continue;
         }
         if (!currentQuestion)
             continue;
-        // Detect options: e.g. "A) ...", "a. ...", "1) ...", "[A] ...", "- ...", "* ..."
-        const optionMatch = line.match(/^(?:[A-D]|[a-d]|\d+)\s*[\.)]\s*(.+)$/i) || line.match(/^\[([A-D]|[a-d])\]\s*(.+)$/i);
+        // Detect options: e.g. "(A)", "(1)", "[A]", "A)", "a.", "1)", "(a)", "(1)"
+        const optionMatch = line.match(/^(?:\(([A-D]|[a-d]|[1-4])\)|\[([A-D]|[a-d]|[1-4])\]|(?:[A-D]|[a-d])\s*[\.):])\s*(.+)$/i);
         if (optionMatch && currentQuestion.options.length < 4) {
-            const optVal = (optionMatch[2] || optionMatch[1]).trim();
-            currentQuestion.options.push(optVal);
+            const optLetter = (optionMatch[1] || optionMatch[2] || '').toUpperCase();
+            const optText = optionMatch[3].trim();
+            const prefix = optLetter ? `(${optLetter}) ` : '';
+            currentQuestion.options.push(prefix + optText);
             continue;
         }
         // Detect Correct Answer: e.g. "Answer: A", "Correct Answer: B", "Ans: C"
@@ -435,10 +437,10 @@ function parseQuestionsLocally(text) {
             currentQuestion.explanation += '\n' + line;
         }
     }
-    if (currentQuestion) {
+    if (currentQuestion && currentQuestion.content.trim()) {
         questions.push(currentQuestion);
     }
-    // Resolve option letter answers to actual option strings
+    // Resolve option letter answers to actual option strings, ensure default answer if missing
     questions.forEach(q => {
         if (q.ansLetter && q.options.length > 0) {
             const idx = q.ansLetter.charCodeAt(0) - 65;
@@ -448,6 +450,11 @@ function parseQuestionsLocally(text) {
             else {
                 q.answers = [q.ansLetter];
             }
+        }
+        if ((!q.answers || q.answers.length === 0) && q.options.length > 0) {
+            q.answers = [q.options[0]];
+        }
+    });
             delete q.ansLetter;
         }
         // Auto-detect type
