@@ -62,24 +62,10 @@ const extractQuestions = async (req, res, next) => {
                 extractedText = await import_job_1.extractTextFromFile(filePath, mimeType);
             } catch (_) {}
 
-            // Check if pdf-parse returned corrupted CID font garbage (e.g. 'Gau*c#G;gNof+M')
-            const isGarbage = (text) => {
-                if (!text || text.trim().length < 20) return true;
-                const total = text.length;
-                const weird = (text.match(/[\#\*\@\%\^\_\~\{\}\|\[\]\$\`\<\>]/g) || []).length;
-                const alpha = (text.match(/[a-zA-Z0-9\s.,?!()\-+=\/]/g) || []).length;
-                return (weird / total > 0.10) || (alpha / total < 0.60);
-            };
-
+            // Always preserve extracted text if present
+            documentText = extractedText || '';
             const fileBuffer = fs_1.readFileSync(filePath);
             mediaData = { mimeType: 'application/pdf', data: fileBuffer.toString('base64') };
-
-            if (!isGarbage(extractedText)) {
-                documentText = extractedText;
-            } else {
-                logger_1.logger.info(`[extract] PDF text contained font garble. Using Gemini Vision on PDF media directly.`);
-                documentText = ''; // Send PDF directly to Gemini Vision!
-            }
         } else {
             documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
         }
