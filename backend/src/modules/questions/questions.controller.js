@@ -1,14 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
 exports.uploadQuestionImage = async (req, res, next) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Please upload an image file.' });
         }
-        const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-        const host = req.get('host');
-        const fileUrl = `${proto}://${host}/uploads/${req.file.filename}`;
-        return res.status(200).json({ success: true, data: { fileUrl, relativeUrl: `/uploads/${req.file.filename}` } });
+        const mime = req.file.mimetype || 'image/png';
+        const fileBuffer = fs_1.readFileSync(req.file.path);
+        const dataUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+        try { fs_1.unlinkSync(req.file.path); } catch (_) {}
+        return res.status(200).json({ success: true, data: { fileUrl: dataUrl, relativeUrl: dataUrl } });
     } catch (error) {
         next(error);
     }

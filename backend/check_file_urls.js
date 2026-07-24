@@ -1,16 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function main() {
-  const qs = await prisma.question.findMany({
-    where: { fileUrl: { not: null } }
+async function check() {
+  const questions = await prisma.question.findMany({
+    where: { fileUrl: { not: null } },
+    select: { id: true, content: true, fileUrl: true }
   });
-  console.log('Found:', qs.length, 'questions with fileUrl');
-  qs.forEach(q => {
-    console.log(q.id, ':', q.content.slice(0, 50), '->', q.fileUrl);
+  console.log(`Found ${questions.length} questions with fileUrl:`);
+  questions.forEach(q => {
+    console.log(`ID: ${q.id} | fileUrl length: ${q.fileUrl?.length} | Value prefix: ${q.fileUrl?.substring(0, 100)}`);
   });
+  await prisma.$disconnect();
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+check().catch(console.error);
