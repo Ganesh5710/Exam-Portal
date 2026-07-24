@@ -90,10 +90,6 @@ export const QuestionImport = () => {
   /* ─── STEP 2 : Extract via direct API ─── */
   const handleExtract = async () => {
     if (!file) return toast.error("Please choose a file first.");
-    if (!customApiKey.trim()) {
-      toast.error("🔑 Please paste your fresh Gemini API Key in the 'Active Gemini API Key' box below!", { duration: 6000 });
-      return;
-    }
     setStep("extracting");
 
     const formData = new FormData();
