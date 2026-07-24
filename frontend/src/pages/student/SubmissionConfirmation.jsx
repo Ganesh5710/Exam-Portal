@@ -100,24 +100,7 @@ export const SubmissionConfirmation = () => {
                   : "—"}
               </span>
             </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">Grade</span>
-              <span className="font-bold text-violet-400">
-                {submission.grade || "—"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-800">
-              <span className="text-muted-foreground">Result Status</span>
-              <span
-                className={`font-bold px-2 py-0.5 rounded text-xs ${
-                  submission.isPassed
-                    ? "text-emerald-400 bg-emerald-500/10"
-                    : "text-red-400 bg-red-500/10"
-                }`}
-              >
-                {submission.isPassed ? "PASSED" : "FAILED"}
-              </span>
-            </div>
+
 
             {/* Subject-Wise Marks Breakdown */}
             <div className="pt-4 border-t border-slate-800 space-y-2.5">

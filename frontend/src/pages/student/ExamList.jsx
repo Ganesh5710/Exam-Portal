@@ -120,20 +120,11 @@ export const ExamList = () => {
                   {isSubmitted ? (
                     exam.submission?.status === "PUBLISHED" ? (
                       <div className="flex flex-col items-end gap-1">
-                        <span
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
-                            exam.submission.isPassed
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : "bg-red-500/10 text-red-400 border-red-500/20"
-                          }`}
-                        >
-                          Score: {exam.submission.totalScore} /{" "}
-                          {exam.submission.maxPossibleScore} (
-                          {exam.submission.grade})
+                        <span className="text-xs font-bold px-3 py-1.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                          Score: {exam.submission.totalScore} / {exam.submission.maxPossibleScore}
                         </span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                          Result Released (
-                          {exam.submission.isPassed ? "Passed" : "Failed"})
+                        <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">
+                          Result Released
                         </span>
                       </div>
                     ) : (
