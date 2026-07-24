@@ -661,7 +661,6 @@ export const Questions = () => {  // Data States
             <option value="MCQ">MCQ</option>
             <option value="TRUE_FALSE">True / False</option>
             <option value="FILL_BLANK">Fill in Blank</option>
-            <option value="DESCRIPTIVE">Descriptive</option>
             <option value="CODING">Coding</option>
           </select>
         </div>
@@ -998,7 +997,6 @@ export const Questions = () => {  // Data States
                     <option value="MCQ">MCQ</option>
                     <option value="TRUE_FALSE">True / False</option>
                     <option value="FILL_BLANK">Fill Blank</option>
-                    <option value="DESCRIPTIVE">Descriptive</option>
                     <option value="CODING">Coding</option>
                   </select>
                 </div>
@@ -1393,7 +1391,6 @@ export const Questions = () => {  // Data States
                     <option value="MCQ">MCQ</option>
                     <option value="TRUE_FALSE">True / False</option>
                     <option value="FILL_BLANK">Fill Blank</option>
-                    <option value="DESCRIPTIVE">Descriptive</option>
                     <option value="CODING">Coding</option>
                   </select>
                 </div>
@@ -1819,7 +1816,6 @@ export const Questions = () => {  // Data States
                     <option value="MCQ">MCQ</option>
                     <option value="TRUE_FALSE">True / False</option>
                     <option value="FILL_BLANK">Fill Blank</option>
-                    <option value="DESCRIPTIVE">Descriptive</option>
                     <option value="CODING">Coding</option>
                   </select>
                 </div>
