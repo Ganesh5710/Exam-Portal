@@ -450,21 +450,19 @@ function parseQuestionsLocally(text) {
             else {
                 q.answers = [q.ansLetter];
             }
+            delete q.ansLetter;
         }
         if ((!q.answers || q.answers.length === 0) && q.options.length > 0) {
             q.answers = [q.options[0]];
         }
-    });
-            delete q.ansLetter;
-        }
         // Auto-detect type
         if (q.options.length === 2 && (q.options[0].toLowerCase() === 'true' || q.options[0].toLowerCase() === 'false')) {
             q.type = 'TRUE_FALSE';
-            q.answers = q.answers[0] || 'True';
+            q.answers = Array.isArray(q.answers) ? q.answers : [q.answers || 'True'];
         }
         else if (q.options.length === 0) {
             q.type = 'DESCRIPTIVE';
-            q.answers = q.answers[0] || 'N/A';
+            q.answers = Array.isArray(q.answers) ? q.answers : [q.answers || 'N/A'];
         }
     });
     // If no questions detected, return empty array so upper layer handles AI vision parsing or throws clean error
