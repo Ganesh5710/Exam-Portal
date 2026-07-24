@@ -84,16 +84,19 @@ const extractQuestions = async (req, res, next) => {
             documentText = await import_job_1.extractTextFromFile(filePath, mimeType);
         }
 
-        // Build the AI prompt - check DB systemSettings FIRST, then env var as fallback
-        let geminiApiKey = null;
-        try {
-            const setting = await db_1.prisma.systemSettings.findUnique({
-                where: { key: 'GEMINI_API_KEY' }
-            });
-            if (setting?.value && setting.value.trim()) {
-                geminiApiKey = setting.value.trim();
-            }
-        } catch (_) {}
+        // Build the AI prompt - check header/body override first, then DB systemSettings, then env var
+        let geminiApiKey = req.headers['x-gemini-api-key'] || req.body?.apiKey || null;
+
+        if (!geminiApiKey) {
+            try {
+                const setting = await db_1.prisma.systemSettings.findUnique({
+                    where: { key: 'GEMINI_API_KEY' }
+                });
+                if (setting?.value && setting.value.trim()) {
+                    geminiApiKey = setting.value.trim();
+                }
+            } catch (_) {}
+        }
 
         if (!geminiApiKey) {
             geminiApiKey = process.env.GEMINI_API_KEY;
@@ -103,7 +106,7 @@ const extractQuestions = async (req, res, next) => {
             cleanup();
             return res.status(500).json({
                 success: false,
-                message: 'GEMINI_API_KEY is not set. Please add it in Admin → Settings.'
+                message: 'GEMINI_API_KEY is not set. Please enter your API Key or set it in Admin → Settings.'
             });
         }
 

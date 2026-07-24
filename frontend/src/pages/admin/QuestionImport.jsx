@@ -51,6 +51,7 @@ export const QuestionImport = () => {
   const [subjects, setSubjects] = useState([]);
   const [departmentId, setDepartmentId] = useState("auto");
   const [subjectId, setSubjectId] = useState("auto");
+  const [customApiKey, setCustomApiKey] = useState(localStorage.getItem("GEMINI_API_KEY") || "");
   const [questions, setQuestions] = useState([]);
   const [selected, setSelected] = useState({});          // idx → bool
   const [editIdx, setEditIdx] = useState(null);
@@ -89,10 +90,16 @@ export const QuestionImport = () => {
     if (departmentId !== "auto") formData.append("departmentId", departmentId);
     if (subjectId !== "auto") formData.append("subjectId", subjectId);
 
+    const headers = { "Content-Type": "multipart/form-data" };
+    if (customApiKey.trim()) {
+      headers["x-gemini-api-key"] = customApiKey.trim();
+      localStorage.setItem("GEMINI_API_KEY", customApiKey.trim());
+    }
+
     try {
-      // Call the new synchronous extract endpoint
+      // Call the synchronous extract endpoint
       const res = await api.post("/import/extract", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers,
         timeout: 120000, // 2 minutes
       });
 
@@ -292,6 +299,38 @@ export const QuestionImport = () => {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Custom Gemini API Key Override */}
+          <div className="space-y-1.5 bg-slate-900/60 border border-violet-500/30 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-violet-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🔑 Active Gemini API Key</span>
+              </label>
+              {customApiKey.trim() ? (
+                <span className="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Custom Key Active</span>
+              ) : (
+                <span className="text-slate-400 font-mono text-[10px]">Using System Default</span>
+              )}
+            </div>
+            <input
+              type="text"
+              placeholder="Paste fresh Gemini API Key here (e.g. AIzaSy... or AQ.Ab...)"
+              value={customApiKey}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCustomApiKey(val);
+                if (val.trim()) {
+                  localStorage.setItem("GEMINI_API_KEY", val.trim());
+                } else {
+                  localStorage.removeItem("GEMINI_API_KEY");
+                }
+              }}
+              className="w-full bg-slate-950 border border-slate-700 focus:border-violet-500 rounded-lg px-4 py-2 text-xs text-violet-200 font-mono placeholder:text-slate-600 focus:outline-none transition-all"
+            />
+            <p className="text-[11px] text-slate-400">
+              Paste your key here directly to bypass system limits. Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-violet-400 underline">aistudio.google.com</a>
+            </p>
           </div>
 
           {/* Drag-and-drop zone */}
