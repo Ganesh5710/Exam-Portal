@@ -80,6 +80,25 @@ export const ExamTerminal = () => {
     };
   }, []);
 
+  const getSectionTitle = (q) => {
+    if (q?.sectionName) return q.sectionName;
+    const sName = (q?.subject?.name || (q?.tags && q?.tags[0]) || "").toLowerCase();
+    if (sName.includes("phys")) return "Section 1: Physics";
+    if (sName.includes("chem")) return "Section 2: Chemistry";
+    if (sName.includes("math")) return "Section 3: Mathematics";
+    return "Section 4: General";
+  };
+
+  const sectionsMap = React.useMemo(() => {
+    const map = {};
+    questions.forEach((q, idx) => {
+      const title = getSectionTitle(q);
+      if (!map[title]) map[title] = [];
+      map[title].push({ ...q, originalIndex: idx });
+    });
+    return map;
+  }, [questions]);
+
   // Fetch exam questions
   useEffect(() => {
     const fetchExam = async () => {
@@ -699,10 +718,54 @@ export const ExamTerminal = () => {
         </div>
       </header>
 
+      {/* Sequential Section Navigation Header */}
+      <div className="bg-slate-900/90 border-b border-slate-800 px-6 py-2 flex items-center justify-between overflow-x-auto gap-4 shrink-0">
+        <div className="flex items-center gap-2">
+          {Object.keys(sectionsMap).map((secTitle) => {
+            const secQuestions = sectionsMap[secTitle];
+            const isCurrentSection = secQuestions.some(sq => sq.originalIndex === currentIndex);
+            const firstIndex = secQuestions[0]?.originalIndex ?? 0;
+
+            return (
+              <button
+                key={secTitle}
+                onClick={() => setCurrentIndex(firstIndex)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 shrink-0 border ${
+                  isCurrentSection
+                    ? "bg-violet-600 text-white border-violet-500 shadow-md shadow-violet-500/20"
+                    : "bg-slate-800/80 text-slate-400 border-slate-700/80 hover:bg-slate-800 hover:text-slate-200"
+                }`}
+              >
+                <span>{secTitle}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${isCurrentSection ? "bg-violet-950 text-violet-200" : "bg-slate-950 text-slate-400"}`}>
+                  {secQuestions.length} Qs
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap hidden md:inline">
+          ✓ Sequential Section Order (Physics → Chemistry → Math)
+        </span>
+      </div>
+
       {/* Main Terminal Grid Split */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-full">
         {/* Left Side Pane: Question details */}
-        <div className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-8rem)]">
+        <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(100vh-8rem)]">
+          {/* Prominent Section Header */}
+          <div className="bg-gradient-to-r from-violet-950/80 via-slate-900 to-slate-950 border border-violet-500/30 rounded-xl p-3 flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-pulse"></span>
+              <span className="text-xs md:text-sm font-extrabold tracking-wider text-violet-200 uppercase">
+                {getSectionTitle(currentQuestion)}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-violet-300 bg-violet-950/60 px-2.5 py-1 rounded-md border border-violet-800/80">
+              Sectional Shuffling Enforced
+            </span>
+          </div>
+
           <div className="flex justify-between items-center pb-4 border-b border-slate-900">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Question {currentIndex + 1} of {totalQuestions}

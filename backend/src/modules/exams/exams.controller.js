@@ -289,7 +289,9 @@ const getExamQuestionsForStudent = async (req, res, next) => {
                                 options: true,
                                 score: true,
                                 difficulty: true,
-                                fileUrl: true
+                                fileUrl: true,
+                                subject: { select: { id: true, name: true, code: true } },
+                                tags: true
                             }
                         }
                     }
@@ -317,11 +319,38 @@ const getExamQuestionsForStudent = async (req, res, next) => {
                 }
             });
         }
-        let questions = exam.examQuestions.map(eq => eq.question);
-        // Shuffle questions if toggled
-        if (exam.shuffleQuestions) {
-            questions = questions.sort(() => Math.random() - 0.5);
-        }
+
+        // Section-Based Sequential Progression (Section 1: Physics -> Section 2: Chemistry -> Section 3: Mathematics)
+        const physicsList = [];
+        const chemistryList = [];
+        const mathList = [];
+        const generalList = [];
+
+        exam.examQuestions.forEach(eq => {
+            const q = eq.question;
+            const sName = (q.subject?.name || (q.tags && q.tags[0]) || '').toLowerCase();
+            if (sName.includes('phys')) {
+                physicsList.push({ ...q, sectionName: 'Section 1: Physics', sectionKey: 'Physics' });
+            } else if (sName.includes('chem')) {
+                chemistryList.push({ ...q, sectionName: 'Section 2: Chemistry', sectionKey: 'Chemistry' });
+            } else if (sName.includes('math')) {
+                mathList.push({ ...q, sectionName: 'Section 3: Mathematics', sectionKey: 'Mathematics' });
+            } else {
+                generalList.push({ ...q, sectionName: 'Section 4: General', sectionKey: 'General' });
+            }
+        });
+
+        // Strict Sectional Shuffling Rule: Shuffle ONLY within section boundaries, NEVER mix across sections
+        const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+        const finalPhysics = exam.shuffleQuestions ? shuffle(physicsList) : physicsList;
+        const finalChemistry = exam.shuffleQuestions ? shuffle(chemistryList) : chemistryList;
+        const finalMath = exam.shuffleQuestions ? shuffle(mathList) : mathList;
+        const finalGeneral = exam.shuffleQuestions ? shuffle(generalList) : generalList;
+
+        // Concatenate sections in exact sequential order
+        let questions = [...finalPhysics, ...finalChemistry, ...finalMath, ...finalGeneral];
+
         // Shuffle options of MCQs if options shuffle is active
         if (exam.shuffleOptions) {
             questions = questions.map(q => {
