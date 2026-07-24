@@ -97,6 +97,7 @@ export const QuestionImport = () => {
     formData.append("file", file);
     if (departmentId !== "auto") formData.append("departmentId", departmentId);
     if (subjectId !== "auto") formData.append("subjectId", subjectId);
+    if (isOffline) formData.append("offline", "true");
 
     const headers = { "Content-Type": "multipart/form-data" };
     if (isOffline) {
