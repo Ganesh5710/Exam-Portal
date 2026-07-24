@@ -7,16 +7,35 @@ import { Maximize2, X, Image as ImageIcon } from "lucide-react";
  * Resolves relative image URLs (/uploads/...) to absolute Backend Server origin.
  */
 export const resolveImageUrl = (url) => {
-  if (!url) return "";
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:")
-  ) {
-    return url;
+  if (!url || typeof url !== "string") return "";
+  let clean = url.trim().replace(/\\/g, "/");
+
+  // Auto-prefix raw Base64 image payloads
+  if (clean.startsWith("iVBORw0") || clean.startsWith("iVBORw")) {
+    return `data:image/png;base64,${clean}`;
+  }
+  if (clean.startsWith("/9j/")) {
+    return `data:image/jpeg;base64,${clean}`;
+  }
+  if (clean.startsWith("R0lGO")) {
+    return `data:image/gif;base64,${clean}`;
+  }
+  if (clean.startsWith("UklGR")) {
+    return `data:image/webp;base64,${clean}`;
+  }
+  if (clean.startsWith("PHN2")) {
+    return `data:image/svg+xml;base64,${clean}`;
   }
 
-  const cleanPath = url.startsWith("/") ? url : `/${url}`;
+  if (
+    clean.startsWith("http://") ||
+    clean.startsWith("https://") ||
+    clean.startsWith("data:")
+  ) {
+    return clean;
+  }
+
+  const cleanPath = clean.startsWith("/") ? clean : `/${clean}`;
 
   // 1. Try VITE_API_URL environment variable
   const envUrl = import.meta.env.VITE_API_URL || "";
@@ -24,9 +43,7 @@ export const resolveImageUrl = (url) => {
     try {
       const origin = new URL(envUrl).origin;
       return `${origin}${cleanPath}`;
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }
 
   // 2. Local dev environment
