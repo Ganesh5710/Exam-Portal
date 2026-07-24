@@ -38,8 +38,8 @@ export const resolveImageUrl = (url) => {
     return `http://localhost:5000${cleanPath}`;
   }
 
-  // 3. Fallback for deployed host: resolve against origin
-  return typeof window !== "undefined" ? `${window.location.origin}${cleanPath}` : cleanPath;
+  // 3. Fallback to production Render backend origin
+  return `https://exam-portal-xtx0.onrender.com${cleanPath}`;
 };
 
 /**

@@ -26,13 +26,14 @@ import {
 import { MathContent } from "../../components/common/MathContent";
 
 /* ─────────────────────────────── helpers ─────────────────────────── */
-const TYPES = ["MCQ", "MULTI_CORRECT", "TRUE_FALSE", "FILL_BLANK", "CODING"];
+const TYPES = ["MCQ", "MULTI_CORRECT", "TRUE_FALSE", "FILL_BLANK", "DESCRIPTIVE", "CODING"];
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
 const TYPE_COLORS = {
   MCQ: "bg-blue-500/15 text-blue-300 border-blue-500/30",
   MULTI_CORRECT: "bg-purple-500/15 text-purple-300 border-purple-500/30",
   TRUE_FALSE: "bg-teal-500/15 text-teal-300 border-teal-500/30",
   FILL_BLANK: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  DESCRIPTIVE: "bg-pink-500/15 text-pink-300 border-pink-500/30",
   CODING: "bg-orange-500/15 text-orange-300 border-orange-500/30",
 };
 const DIFF_COLORS = {
