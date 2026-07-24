@@ -222,8 +222,17 @@ EXTRACT EVERY SINGLE QUESTION. DO NOT SKIP ANY. Start your response with [`;
 
         // Fallback local parsing if AI returned no questions
         if (questions.length === 0) {
-            if (documentText && documentText.trim()) {
-                questions = import_job_1.parseQuestionsLocally(documentText);
+            let textToParse = documentText;
+            if (!textToParse || !textToParse.trim()) {
+                try {
+                    const dataBuffer = fs_1.readFileSync(filePath);
+                    const parsed = await pdf_parse_1.default(dataBuffer);
+                    if (parsed.text && parsed.text.trim()) textToParse = parsed.text;
+                } catch (_) {}
+            }
+            if (textToParse && textToParse.trim()) {
+                logger_1.logger.info(`[extract] Attempting offline fallback question parsing...`);
+                questions = import_job_1.parseQuestionsLocally(textToParse);
             }
         }
 
@@ -232,8 +241,8 @@ EXTRACT EVERY SINGLE QUESTION. DO NOT SKIP ANY. Start your response with [`;
             return res.status(400).json({
                 success: false,
                 message: lastAiError
-                  ? `Extraction Error: ${lastAiError}`
-                  : 'No valid questions could be extracted from this file. Ensure your GEMINI_API_KEY is active and quota is available.'
+                  ? `${lastAiError}`
+                  : 'No valid questions could be extracted from this file.'
             });
         }
 
