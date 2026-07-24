@@ -20,6 +20,7 @@ function sleep(ms) {
  */
 async function callGeminiWithFallback(apiKey, options) {
     const { prompt, mediaData, jsonMode = true } = options;
+    const cleanKey = (apiKey || '').trim();
     // Build content parts
     const contentsParts = [{ text: prompt }];
     if (mediaData) {
@@ -41,11 +42,12 @@ async function callGeminiWithFallback(apiKey, options) {
     const bodyStr = JSON.stringify(requestBody);
     let lastError = '';
     let hitQuota429 = false;
+    let hit401Invalid = false;
 
     for (const model of GEMINI_MODELS) {
         for (let attempt = 0; attempt < MAX_RETRIES_PER_MODEL; attempt++) {
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
                 logger_1.logger.info(`Gemini: Trying ${model} (attempt ${attempt + 1}/${MAX_RETRIES_PER_MODEL})...`);
                 const res = await fetch(url, {
                     method: 'POST',
@@ -66,6 +68,11 @@ async function callGeminiWithFallback(apiKey, options) {
                 }
                 const status = res.status;
                 const errBody = await res.text();
+                if (status === 401) {
+                    hit401Invalid = true;
+                    logger_1.logger.warn(`Model ${model}: HTTP 401 Invalid Key: ${errBody.substring(0, 200)}`);
+                    break;
+                }
                 // Rate limit or overloaded - retry with backoff
                 if (status === 429 || status === 503) {
                     hitQuota429 = true;
@@ -101,6 +108,10 @@ async function callGeminiWithFallback(apiKey, options) {
                 break; // Network error, try next model
             }
         }
+    }
+
+    if (hit401Invalid) {
+        throw new Error(`Gemini API Key Invalid (HTTP 401): The API Key provided is invalid or incomplete. Please copy your entire API Key from https://aistudio.google.com/app/apikey (starts with AIzaSy... or AQ.Ab...) and paste it cleanly into the API Key box.`);
     }
 
     if (hitQuota429) {
