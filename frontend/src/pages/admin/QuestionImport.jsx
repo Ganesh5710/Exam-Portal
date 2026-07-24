@@ -101,6 +101,8 @@ export const QuestionImport = () => {
     if (customApiKey.trim()) {
       headers["x-gemini-api-key"] = customApiKey.trim();
       localStorage.setItem("GEMINI_API_KEY", customApiKey.trim());
+      // Sync key to backend systemSettings database
+      api.put("/settings", { GEMINI_API_KEY: customApiKey.trim() }).catch(() => {});
     }
 
     try {

@@ -237,23 +237,14 @@ EXTRACT EVERY SINGLE QUESTION. DO NOT SKIP ANY. Start your response with [`;
             }
         }
 
-        // Guaranteed safety fallback: If still empty, return draft template so upload NEVER fails with 400 error
         if (questions.length === 0) {
-            const fileNameClean = req.file?.originalname || 'Uploaded Document';
-            questions = [
-                {
-                    type: 'MCQ',
-                    content: `[Extracted Question from ${fileNameClean}] Please review and update details.`,
-                    options: ['(A) Option 1', '(B) Option 2', '(C) Option 3', '(D) Option 4'],
-                    answers: ['(A) Option 1'],
-                    explanation: 'Uploaded document processed.',
-                    difficulty: 'MEDIUM',
-                    score: 4,
-                    negativeMarks: 1,
-                    tags: ['Document Import'],
-                    topic: 'General'
-                }
-            ];
+            cleanup();
+            return res.status(400).json({
+                success: false,
+                message: lastAiError
+                  ? lastAiError
+                  : 'No valid questions could be extracted from this document.'
+            });
         }
 
         // Validate & normalise each question
