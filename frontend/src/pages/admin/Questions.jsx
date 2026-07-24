@@ -21,7 +21,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { MathContent } from "../../components/common/MathContent";
+import { MathContent, resolveImageUrl } from "../../components/common/MathContent";
 
 export const Questions = () => {  // Data States
   const [questions, setQuestions] = useState([]);
@@ -1089,7 +1089,7 @@ export const Questions = () => {  // Data States
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {formData.options.map((opt, i) => {
-                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg"));
+                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("data:") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg") || opt.startsWith("iVBORw"));
                       return (
                         <div key={i} className="space-y-1.5 p-2 bg-slate-900 border border-slate-800 rounded-lg">
                           <div className="flex gap-2 items-center">
@@ -1132,7 +1132,7 @@ export const Questions = () => {  // Data States
                           {isImg && (
                             <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
                               <img
-                                src={opt}
+                                src={resolveImageUrl(opt)}
                                 alt={`Option ${String.fromCharCode(65 + i)}`}
                                 className="h-10 w-auto object-contain rounded border border-slate-700"
                               />
@@ -1483,7 +1483,7 @@ export const Questions = () => {  // Data States
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {formData.options.map((opt, i) => {
-                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg"));
+                      const isImg = opt && (opt.startsWith("http") || opt.startsWith("data:") || opt.startsWith("/uploads/") || opt.includes(".png") || opt.includes(".jpg") || opt.includes(".jpeg") || opt.startsWith("iVBORw"));
                       return (
                         <div key={i} className="space-y-1.5 p-2 bg-slate-900 border border-slate-800 rounded-lg">
                           <div className="flex gap-2 items-center">
@@ -1526,7 +1526,7 @@ export const Questions = () => {  // Data States
                           {isImg && (
                             <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
                               <img
-                                src={opt}
+                                src={resolveImageUrl(opt)}
                                 alt={`Option ${String.fromCharCode(65 + i)}`}
                                 className="h-10 w-auto object-contain rounded border border-slate-700"
                               />
