@@ -56,7 +56,7 @@ const getExams = async (req, res, next) => {
                         isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
                     } : null
                 };
-            }));
+            });
             return res.status(200).json({ success: true, data: exams });
         }
     }
