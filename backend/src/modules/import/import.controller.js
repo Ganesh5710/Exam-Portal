@@ -274,7 +274,13 @@ EXTRACT EVERY SINGLE QUESTION. DO NOT SKIP ANY. Start your response with [`;
                     topic: typeof q.topic === 'string' ? q.topic : '',
                     subjectName: typeof q.subjectName === 'string' ? q.subjectName : (typeof q.subject === 'string' ? q.subject : ''),
                     subjectCode: typeof q.subjectCode === 'string' ? q.subjectCode : (typeof q.subjectName === 'string' ? q.subjectName : ''),
-                    fileUrl: typeof q.fileUrl === 'string' ? q.fileUrl : (typeof q.imageUrl === 'string' ? q.imageUrl : null),
+                    fileUrl: (() => {
+                        const raw = typeof q.fileUrl === 'string' ? q.fileUrl : (typeof q.imageUrl === 'string' ? q.imageUrl : null);
+                        if (!raw) return null;
+                        if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+                        if (raw.startsWith('iVBORw') || raw.startsWith('/9j/')) return `data:image/png;base64,${raw}`;
+                        return raw;
+                    })(),
                 };
             });
 
