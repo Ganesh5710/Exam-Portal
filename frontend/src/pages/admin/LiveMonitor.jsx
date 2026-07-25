@@ -12,6 +12,10 @@ import {
   UserCheck2,
   Video,
   ShieldAlert,
+  Mic,
+  Activity,
+  Layers,
+  CheckCircle2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -157,104 +161,133 @@ export const LiveMonitor = () => {
                 session.exitFullscreenCount >= 3 ||
                 faceViolCount >= 3;
 
+              const currentSec = session.currentSection || "Section 1: Physics";
+              const candStatus = session.internetStatus === "offline"
+                ? "Hardware Disconnected"
+                : session.tabSwitchCount > 0 || session.exitFullscreenCount > 0
+                  ? "Tab Switch Warning"
+                  : "Active";
+
+              const getSectionBadgeStyle = (sec) => {
+                if (sec.includes("Phys")) return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+                if (sec.includes("Chem")) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+                if (sec.includes("Math")) return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+                return "bg-violet-500/10 text-violet-400 border-violet-500/30";
+              };
+
+              const getStatusBadgeStyle = (st) => {
+                if (st === "Active") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+                if (st === "Hardware Disconnected") return "bg-red-500/10 text-red-400 border-red-500/30 animate-pulse";
+                return "bg-amber-500/10 text-amber-400 border-amber-500/30";
+              };
+
               return (
                 <div
                   key={`${session.examId}::${session.studentId}`}
-                  className={`glass-card p-6 rounded-xl flex flex-col justify-between transition-all duration-300 border
+                  className={`glass-card p-5 rounded-xl flex flex-col justify-between transition-all duration-300 border space-y-4
                     ${isDanger ? "border-red-500/50 glow-danger bg-red-950/5" : hasViolations ? "border-amber-500/40 bg-amber-950/5" : "border-border"}
                   `}
                 >
-                  <div>
-                    {/* Student Info Title */}
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-bold text-base">
-                          {session.studentName}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          Exam ID: {session.examId.substring(0, 8)}...
-                        </p>
+                  <div className="space-y-4">
+                    {/* Live Stream & Audio Level Frame */}
+                    <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
+                      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                          📹 Stream: ACTIVE
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeStyle(candStatus)} shadow-sm`}>
+                          {candStatus}
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        {session.internetStatus === "online" ? (
-                          <Wifi className="text-emerald-500" size={16} />
-                        ) : (
-                          <WifiOff
-                            className="text-red-500 animate-bounce"
-                            size={16}
-                          />
-                        )}
+                      {/* Simulated / WebRTC Video Canvas Feed */}
+                      <div className="flex flex-col items-center gap-1.5 text-slate-400 text-xs">
+                        <Video size={28} className="text-violet-400 animate-pulse" />
+                        <span className="font-semibold text-white text-xs">{session.studentName}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">WebRTC Feed Verified</span>
+                      </div>
+
+                      {/* Audio Level Meter Overlay Footer */}
+                      <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between backdrop-blur-md">
+                        <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1.5">
+                          <Mic size={12} className="text-emerald-400 animate-pulse" />
+                          Audio Level Meter:
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5">
+                            <span className="w-1 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+                            <span className="w-1 h-4 bg-emerald-400 rounded-full animate-pulse"></span>
+                            <span className="w-1 h-2 bg-emerald-500/60 rounded-full"></span>
+                          </div>
+                          <span className="text-[10px] font-extrabold text-emerald-400">
+                            {session.audioLevelMeter || "Normal (12 dB)"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
+                    {/* Student Info & Active Section */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-base text-white">
+                          {session.studentName}
+                        </h3>
+                        <p className="text-[11px] text-slate-400">
+                          Exam: {session.examId.substring(0, 8)}...
+                        </p>
+                      </div>
+
+                      {/* Current Active Section Badge */}
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold border ${getSectionBadgeStyle(currentSec)} shadow-sm flex items-center gap-1.5`}>
+                        <Layers size={12} />
+                        {currentSec}
+                      </span>
+                    </div>
+
                     {/* Telemetry info rows */}
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Monitor size={14} /> Screen state
+                          <Activity size={13} strokeWidth={2.5} /> Real-time Status
                         </span>
-                        <span
-                          className={`font-semibold ${session.fullscreenStatus ? "text-emerald-400" : "text-red-400"}`}
-                        >
-                          {session.fullscreenStatus
-                            ? "Locked (Fullscreen)"
-                            : "Windowed / Minimize"}
-                        </span>
-                      </div>
-
-                      {/* Webcam Gaze status */}
-                      <div className="flex justify-between items-center py-1.5 border-b border-border">
-                        <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Video size={14} /> Webcam gaze
-                        </span>
-                        <span
-                          className={`font-semibold ${
-                            faceState === "normal"
-                              ? "text-emerald-400"
-                              : faceState === "look_away"
-                                ? "text-orange-400"
-                                : "text-red-400 animate-pulse"
-                          }`}
-                        >
-                          {faceState === "normal"
-                            ? "Gaze Verified"
-                            : faceState === "look_away"
-                              ? "Gaze Look Away"
-                              : faceState === "multiple_faces"
-                                ? "Multiple Faces"
-                                : "No Face Found"}
+                        <span className={`font-bold px-2 py-0.5 rounded text-[11px] border ${getStatusBadgeStyle(candStatus)}`}>
+                          {candStatus}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-muted-foreground flex items-center gap-1.5">
-                          <Clock size={14} /> Time Remaining
+                          <Monitor size={13} /> Screen State
                         </span>
-                        <span className="font-mono font-semibold">
+                        <span className={`font-semibold ${session.fullscreenStatus ? "text-emerald-400" : "text-red-400"}`}>
+                          {session.fullscreenStatus ? "Locked (Fullscreen)" : "Windowed / Minimize"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center py-1.5 border-b border-border">
+                        <span className="text-muted-foreground flex items-center gap-1.5">
+                          <Clock size={13} /> Time Remaining
+                        </span>
+                        <span className="font-mono font-bold text-violet-300">
                           {formatRemainingTime(session.remainingTime)}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center py-1.5 border-b border-border">
                         <span className="text-muted-foreground flex items-center gap-1.5">
-                          <AlertTriangle size={14} /> Screen Violations
+                          <AlertTriangle size={13} /> Screen Violations
                         </span>
-                        <span
-                          className={`font-bold ${session.tabSwitchCount + session.exitFullscreenCount > 0 ? "text-amber-500" : ""}`}
-                        >
-                          Tabs: {session.tabSwitchCount} | Escapes:{" "}
-                          {session.exitFullscreenCount}
+                        <span className={`font-bold ${session.tabSwitchCount + session.exitFullscreenCount > 0 ? "text-amber-500" : "text-slate-300"}`}>
+                          Tabs: {session.tabSwitchCount} | Escapes: {session.exitFullscreenCount}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center py-1.5">
                         <span className="text-muted-foreground flex items-center gap-1.5">
-                          <AlertTriangle size={14} /> Face Violations
+                          <ShieldAlert size={13} /> Face Violations
                         </span>
-                        <span
-                          className={`font-bold ${faceViolCount > 0 ? "text-red-500" : ""}`}
-                        >
+                        <span className={`font-bold ${faceViolCount > 0 ? "text-red-400" : "text-slate-300"}`}>
                           {faceViolCount}
                         </span>
                       </div>

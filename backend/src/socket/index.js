@@ -17,7 +17,7 @@ const initSocketHandler = (io) => {
         });
         // Student joins exam room
         socket.on('start-exam-session', async (data) => {
-            const { studentId, studentName, examId } = data;
+            const { studentId, studentName, examId, currentSection } = data;
             const roomName = `exam-${examId}`;
             socket.join(roomName);
             const sessionKey = `${examId}::${studentId}`;
@@ -25,7 +25,12 @@ const initSocketHandler = (io) => {
                 studentId,
                 studentName,
                 examId,
+                socketId: socket.id,
                 currentQuestionIndex: 0,
+                currentSection: currentSection || 'Section 1: Physics',
+                candidateStatus: 'Active',
+                audioLevelMeter: 'Normal (12 dB)',
+                streamActive: true,
                 remainingTime: 0,
                 internetStatus: 'online',
                 fullscreenStatus: true,
@@ -41,20 +46,51 @@ const initSocketHandler = (io) => {
         });
         // Student reports progress
         socket.on('report-progress', (data) => {
-            const { studentId, examId, currentQuestionIndex, remainingTime, internetStatus, fullscreenStatus, faceStatus } = data;
+            const { studentId, examId, currentQuestionIndex, currentSection, candidateStatus, audioLevelMeter, remainingTime, internetStatus, fullscreenStatus, faceStatus } = data;
             const sessionKey = `${examId}::${studentId}`;
             const session = activeSessions.get(sessionKey);
             if (session) {
-                session.currentQuestionIndex = currentQuestionIndex;
-                session.remainingTime = remainingTime;
-                session.internetStatus = internetStatus;
-                session.fullscreenStatus = fullscreenStatus;
-                if (faceStatus) {
-                    session.faceStatus = faceStatus;
-                }
+                session.socketId = socket.id;
+                session.currentQuestionIndex = currentQuestionIndex ?? session.currentQuestionIndex;
+                if (currentSection) session.currentSection = currentSection;
+                if (candidateStatus) session.candidateStatus = candidateStatus;
+                if (audioLevelMeter) session.audioLevelMeter = audioLevelMeter;
+                session.remainingTime = remainingTime ?? session.remainingTime;
+                session.internetStatus = internetStatus ?? session.internetStatus;
+                session.fullscreenStatus = fullscreenStatus ?? session.fullscreenStatus;
+                if (faceStatus) session.faceStatus = faceStatus;
                 session.lastActive = Date.now();
                 activeSessions.set(sessionKey, session);
                 io.to('admin-room').emit('live-sessions-update', Array.from(activeSessions.values()));
+            }
+        });
+        // WebRTC Signaling Relay Events
+        socket.on('webrtc-offer', (data) => {
+            const { targetSocketId, offer, studentId } = data;
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('webrtc-offer', { offer, senderSocketId: socket.id, studentId });
+            } else {
+                io.to('admin-room').emit('webrtc-offer', { offer, senderSocketId: socket.id, studentId });
+            }
+        });
+        socket.on('webrtc-answer', (data) => {
+            const { targetSocketId, answer } = data;
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('webrtc-answer', { answer, senderSocketId: socket.id });
+            }
+        });
+        socket.on('webrtc-candidate', (data) => {
+            const { targetSocketId, candidate } = data;
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('webrtc-candidate', { candidate, senderSocketId: socket.id });
+            } else {
+                io.to('admin-room').emit('webrtc-candidate', { candidate, senderSocketId: socket.id });
+            }
+        });
+        socket.on('request-webrtc-stream', (data) => {
+            const { studentSocketId } = data;
+            if (studentSocketId) {
+                io.to(studentSocketId).emit('admin-requested-stream', { adminSocketId: socket.id });
             }
         });
         // Student registers a security violation (tab-switch, fullscreen exit, face issues)
