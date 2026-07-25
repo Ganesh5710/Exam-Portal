@@ -39,6 +39,63 @@ const loadScript = (src) => {
   });
 };
 
+const CandidateWebcamPreview = ({ streamRef, proctorActive, proctorWarning, canvasRef }) => {
+  const vRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    const bindStream = () => {
+      if (vRef.current && streamRef.current && active) {
+        if (vRef.current.srcObject !== streamRef.current) {
+          vRef.current.srcObject = streamRef.current;
+        }
+        if (vRef.current.paused) {
+          vRef.current.play().catch(() => {});
+        }
+      }
+    };
+
+    bindStream();
+    const timer = setInterval(bindStream, 500);
+
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [streamRef]);
+
+  return (
+    <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
+      <video
+        ref={vRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ objectFit: "cover" }}
+        className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+      />
+
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full object-cover scale-x-[-1] pointer-events-none"
+      />
+
+      {!proctorActive && (
+        <div className="flex flex-col items-center gap-1.5 text-slate-600 text-xs">
+          <VideoOff size={24} />
+          <span>Loading proctor models...</span>
+        </div>
+      )}
+
+      {proctorWarning && (
+        <div className="absolute inset-x-0 bottom-0 bg-red-600/90 text-white text-[10px] font-bold text-center py-1 uppercase tracking-wider animate-pulse z-10">
+          {proctorWarning}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ExamTerminal = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -1221,34 +1278,12 @@ export const ExamTerminal = () => {
             </div>
 
             {/* Sleek, Clean Video Feed Frame */}
-            <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{ objectFit: "cover" }}
-                className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
-              />
-
-              <canvas
-                ref={canvasRef}
-                className="absolute inset-0 w-full h-full object-cover scale-x-[-1] pointer-events-none"
-              />
-
-              {!proctorActive && (
-                <div className="flex flex-col items-center gap-1.5 text-slate-600 text-xs">
-                  <VideoOff size={24} />
-                  <span>Loading proctor models...</span>
-                </div>
-              )}
-
-              {proctorWarning && (
-                <div className="absolute inset-x-0 bottom-0 bg-red-600/90 text-white text-[10px] font-bold text-center py-1 uppercase tracking-wider animate-pulse z-10">
-                  {proctorWarning}
-                </div>
-              )}
-            </div>
+            <CandidateWebcamPreview
+              streamRef={streamRef}
+              proctorActive={proctorActive}
+              proctorWarning={proctorWarning}
+              canvasRef={canvasRef}
+            />
 
             {/* Decluttered Minimal Single Status Bar */}
             <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
