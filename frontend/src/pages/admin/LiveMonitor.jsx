@@ -177,9 +177,9 @@ export const LiveMonitor = () => {
 
       // Append to the real-time NOC violation log panel
       const newAlert = {
-        studentName: alert.studentName,
-        type: alert.type.replace(/_/g, " "),
-        details: alert.details,
+        studentName: alert.studentName || "Student",
+        type: (alert.type || "VIOLATION").replace(/_/g, " "),
+        details: alert.details || "",
         timestamp: alert.timestamp || Date.now(),
       };
       setAlerts((prev) => [newAlert, ...prev].slice(0, 50));
@@ -328,10 +328,10 @@ export const LiveMonitor = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-bold text-base text-white">
-                          {session.studentName}
+                          {session.studentName || "Candidate"}
                         </h3>
                         <p className="text-[11px] text-slate-400">
-                          Exam: {session.examId.substring(0, 8)}...
+                          Exam: {(session.examId || "").substring(0, 8)}...
                         </p>
                       </div>
 
