@@ -184,6 +184,12 @@ const initSocketHandler = (io) => {
             io.to('admin-room').emit('log-activity', `Force terminated exam session for student: ${reason}`);
             io.emit(`force-terminate::${examId}::${studentId}`, { reason });
         });
+        // Admin broadcasts announcement to all active candidates simultaneously
+        socket.on('broadcast-global-announcement', (data) => {
+            const { message, type } = data;
+            logger_1.logger.info(`Global announcement broadcasted to all active candidates: ${message}`);
+            io.emit('global-announcement', { message, type: type || 'GENERAL', timestamp: Date.now() });
+        });
         // Admin broadcasts announcement
         socket.on('send-announcement', async (data) => {
             const { examId, message, type } = data;

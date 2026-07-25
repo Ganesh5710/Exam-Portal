@@ -80,12 +80,12 @@ const CandidateWebcamPreview = ({
       if (vRef.current && vRef.current.readyState === 4) {
         try {
           const c = document.createElement("canvas");
-          c.width = 640;
-          c.height = 480;
+          c.width = 480;
+          c.height = 360;
           const ctx = c.getContext("2d");
           if (ctx) {
-            ctx.drawImage(vRef.current, 0, 0, 640, 480);
-            const dataUrl = c.toDataURL("image/jpeg", 0.85);
+            ctx.drawImage(vRef.current, 0, 0, 480, 360);
+            const dataUrl = c.toDataURL("image/jpeg", 0.65);
             socket.emit("candidate-frame", {
               studentId: user.id || user._id,
               examId: exam?.id,
@@ -96,7 +96,7 @@ const CandidateWebcamPreview = ({
           // Ignore capture error
         }
       }
-    }, 200);
+    }, 250);
 
     return () => clearInterval(frameTimer);
   }, [socket, user, exam?.id]);
@@ -396,6 +396,38 @@ export const ExamTerminal = () => {
       socket.off("extend-exam-time", handleExtendTime);
     };
   }, [socket, setSecondsLeft]);
+
+  // Global Broadcast Announcement Listener from Admin to All Candidates
+  useEffect(() => {
+    if (!socket) return;
+    const handleGlobalAnnouncement = (data) => {
+      if (data?.message) {
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-1 p-1">
+              <span className="font-extrabold text-amber-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                📢 PROCTOR ANNOUNCEMENT:
+              </span>
+              <p className="text-sm font-semibold text-white">{data.message}</p>
+            </div>
+          ),
+          {
+            duration: 10000,
+            style: {
+              background: "#0f172a",
+              color: "#fff",
+              border: "1px solid rgba(245, 158, 11, 0.4)",
+              boxShadow: "0 10px 25px -5px rgba(245, 158, 11, 0.3)",
+            },
+          },
+        );
+      }
+    };
+    socket.on("global-announcement", handleGlobalAnnouncement);
+    return () => {
+      socket.off("global-announcement", handleGlobalAnnouncement);
+    };
+  }, [socket]);
 
   // Dynamic Gaze/Face AI Proctoring Hook Setup
   useEffect(() => {

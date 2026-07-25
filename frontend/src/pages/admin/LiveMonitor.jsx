@@ -9,6 +9,7 @@ import {
   Bell,
   Hourglass,
   Send,
+  Megaphone,
   UserCheck2,
   Video,
   ShieldAlert,
@@ -152,7 +153,22 @@ export const LiveMonitor = () => {
   const [alerts, setAlerts] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [announcementText, setAnnouncementText] = useState("");
+  const [globalMessage, setGlobalMessage] = useState("");
   const [selectedExtension, setSelectedExtension] = useState(10); // 10 minutes default
+
+  const handleGlobalBroadcast = (e) => {
+    e.preventDefault();
+    if (!socket || !globalMessage.trim()) {
+      toast.error("Please type a message to broadcast to all candidates.");
+      return;
+    }
+    socket.emit("broadcast-global-announcement", {
+      message: globalMessage.trim(),
+      type: "GENERAL",
+    });
+    toast.success("📢 Broadcasted live announcement to all active candidates!");
+    setGlobalMessage("");
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -258,6 +274,30 @@ export const LiveMonitor = () => {
           )}
         </div>
       </div>
+
+      {/* Global Broadcast Announcement Toolbar to All Candidates */}
+      <form
+        onSubmit={handleGlobalBroadcast}
+        className="glass-card p-4 rounded-xl border border-violet-500/30 bg-slate-900/60 flex flex-col sm:flex-row items-center gap-3 shadow-lg shadow-violet-500/5"
+      >
+        <div className="flex items-center gap-2 text-violet-400 font-bold text-xs uppercase tracking-wider whitespace-nowrap">
+          <Megaphone size={16} className="text-amber-400 animate-bounce" />
+          Broadcast to All Candidates:
+        </div>
+        <input
+          type="text"
+          value={globalMessage}
+          onChange={(e) => setGlobalMessage(e.target.value)}
+          placeholder="Type announcement message to broadcast live to all active candidates..."
+          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 transition-all w-full"
+        />
+        <button
+          type="submit"
+          className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 active:scale-95 text-white font-bold text-xs rounded-lg flex items-center gap-2 shadow-md shadow-violet-600/20 transition-all whitespace-nowrap cursor-pointer"
+        >
+          <Send size={14} /> Send Broadcast
+        </button>
+      </form>
 
       {sessions.length === 0 ? (
         <div className="glass-card p-12 text-center rounded-xl flex flex-col items-center justify-center gap-4 min-h-[300px]">
