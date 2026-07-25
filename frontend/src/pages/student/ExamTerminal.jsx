@@ -70,6 +70,17 @@ export const ExamTerminal = () => {
   const [cameraGranted, setCameraGranted] = useState(false);
   const [cameraDeniedMessage, setCameraDeniedMessage] = useState(null);
   const [requestingCamera, setRequestingCamera] = useState(false);
+  const streamRef = useRef(null);
+
+  // Bind local media stream to candidate <video> element as soon as camera is granted and videoRef mounts
+  useEffect(() => {
+    if (cameraGranted && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current
+        .play()
+        .catch((err) => console.warn("Candidate video play notice:", err));
+    }
+  }, [cameraGranted]);
 
   const isSubmitting = useRef(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
@@ -268,8 +279,10 @@ export const ExamTerminal = () => {
             video: { width: 320, height: 240, facingMode: "user" },
             audio: true,
           });
+          streamRef.current = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(() => {});
           }
           setCameraGranted(true);
           setCameraDeniedMessage(null);
@@ -302,22 +315,22 @@ export const ExamTerminal = () => {
                 setFaceCount(predictions.length);
 
                 // Broadcast live video stream frame to Admin Portal socket
-                if (socket && user) {
+                if (socket && user && video) {
                   try {
                     const tempCanvas = document.createElement("canvas");
-                    tempCanvas.width = 160;
-                    tempCanvas.height = 120;
+                    tempCanvas.width = 240;
+                    tempCanvas.height = 180;
                     const tCtx = tempCanvas.getContext("2d");
                     if (tCtx) {
-                      tCtx.drawImage(video, 0, 0, 160, 120);
+                      tCtx.drawImage(video, 0, 0, 240, 180);
                       socket.emit("candidate-frame", {
                         studentId: user.id,
                         examId: exam?.id,
-                        frame: tempCanvas.toDataURL("image/jpeg", 0.4),
+                        frame: tempCanvas.toDataURL("image/jpeg", 0.5),
                       });
                     }
                   } catch (e) {
-                    // Frame emit fallback ignored
+                    // Frame emit fallback
                   }
                 }
 
@@ -689,9 +702,12 @@ export const ExamTerminal = () => {
       }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 320, height: 240, facingMode: "user" },
+        audio: true,
       });
+      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
       }
       setCameraGranted(true);
       setProctorActive(true);
@@ -1211,6 +1227,7 @@ export const ExamTerminal = () => {
                 autoPlay
                 playsInline
                 muted
+                style={{ objectFit: "cover" }}
                 className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
               />
 

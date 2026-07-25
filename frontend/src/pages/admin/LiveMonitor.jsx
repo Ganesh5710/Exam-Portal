@@ -21,10 +21,14 @@ import toast from "react-hot-toast";
 
 const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeStyle }) => {
   const [frameSrc, setFrameSrc] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const adminVideoRef = useRef(null);
+  const pcRef = useRef(null);
 
   useEffect(() => {
     if (!socket || !session?.studentId) return;
 
+    // Listen to real-time frame fallback stream over Socket
     const handleFrame = (data) => {
       if (data?.frame) {
         setFrameSrc(data.frame);
@@ -33,10 +37,52 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
 
     socket.on(`candidate-frame::${session.studentId}`, handleFrame);
 
+    // Initialize WebRTC PeerConnection using Google STUN servers
+    try {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+      pcRef.current = pc;
+
+      pc.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+          setRemoteStream(event.streams[0]);
+          if (adminVideoRef.current) {
+            adminVideoRef.current.srcObject = event.streams[0];
+            adminVideoRef.current.play().catch(() => {});
+          }
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit("webrtc-candidate", {
+            targetSocketId: session.socketId,
+            candidate: event.candidate,
+          });
+        }
+      };
+
+      // Request stream from candidate socket
+      socket.emit("request-webrtc-stream", { studentSocketId: session.socketId });
+    } catch (e) {
+      console.warn("WebRTC init fallback:", e);
+    }
+
     return () => {
       socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
     };
-  }, [socket, session?.studentId]);
+  }, [socket, session?.studentId, session?.socketId]);
+
+  useEffect(() => {
+    if (remoteStream && adminVideoRef.current) {
+      adminVideoRef.current.srcObject = remoteStream;
+      adminVideoRef.current.play().catch(() => {});
+    }
+  }, [remoteStream]);
 
   return (
     <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
@@ -50,13 +96,28 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
         </span>
       </div>
 
-      {frameSrc ? (
+      {/* WebRTC Video Stream Element */}
+      <video
+        ref={adminVideoRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ objectFit: "cover" }}
+        className={`absolute inset-0 w-full h-full object-cover scale-x-[-1] ${remoteStream ? "block" : "hidden"}`}
+      />
+
+      {/* Real-time Socket Frame Stream Fallback Element */}
+      {!remoteStream && frameSrc && (
         <img
           src={frameSrc}
           alt={`Live Feed ${session.studentName}`}
+          style={{ objectFit: "cover" }}
           className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
         />
-      ) : (
+      )}
+
+      {/* Loading Overlay if connecting */}
+      {!remoteStream && !frameSrc && (
         <div className="flex flex-col items-center gap-1.5 text-slate-400 text-xs">
           <Video size={28} className="text-violet-400 animate-pulse" />
           <span className="font-semibold text-white text-xs">{session.studentName}</span>
