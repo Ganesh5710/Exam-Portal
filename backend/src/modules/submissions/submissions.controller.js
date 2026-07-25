@@ -125,6 +125,10 @@ const submitExam = async (req, res, next) => {
             }
         });
 
+        // Automatic Session Cleanup: Clear active candidate session upon exam submission
+        const sessionStore_1 = require("../auth/sessionStore");
+        await sessionStore_1.clearUserSession(studentId);
+
         // Fetch submission
         let submission = await db_1.prisma.submission.findUnique({
             where: { examId_studentId: { examId, studentId } },

@@ -88,7 +88,19 @@ const login = async (req, res, next) => {
             where: { id: user.id },
             data: { loginAttempts: 0, lockUntil: null }
         });
+
+        // Duplicate Login Prevention: Prevent concurrent logins if candidate has an active session
+        const sessionStore_1 = require("./sessionStore");
+        if (user.role === 'STUDENT' && sessionStore_1.hasActiveSession(user.id)) {
+            return res.status(409).json({
+                success: false,
+                message: 'Account currently logged in on another device. Concurrent logins are not allowed during an exam.'
+            });
+        }
+
+        const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
         const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
+
         // Save tokens in cookies (HTTPOnly for security)
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -123,6 +135,7 @@ const login = async (req, res, next) => {
                     role: user.role,
                     departmentId: user.departmentId
                 },
+                sessionToken,
                 accessToken,
                 refreshToken
             }
@@ -189,8 +202,13 @@ const refresh = async (req, res, next) => {
 };
 exports.refresh = refresh;
 const logout = async (req, res, next) => {
-    const { refreshToken } = req.body;
+    const { refreshToken, userId } = req.body;
     try {
+        const sessionStore_1 = require("./sessionStore");
+        const targetUserId = req.user?.id || userId;
+        if (targetUserId) {
+            await sessionStore_1.clearUserSession(targetUserId);
+        }
         if (refreshToken) {
             // Invalidate token in Database
             await db_1.prisma.refreshToken.updateMany({
@@ -267,11 +285,22 @@ const verifyOtp = async (req, res, next) => {
         if (user.otp !== otp) {
             return res.status(401).json({ success: false, message: 'Incorrect verification code.' });
         }
+
+        // Duplicate Login Prevention: Prevent concurrent logins if candidate has an active session
+        const sessionStore_1 = require("./sessionStore");
+        if (user.role === 'STUDENT' && sessionStore_1.hasActiveSession(user.id)) {
+            return res.status(409).json({
+                success: false,
+                message: 'Account currently logged in on another device. Concurrent logins are not allowed during an exam.'
+            });
+        }
+
         // Clear OTP on successful validation
         await db_1.prisma.user.update({
             where: { id: user.id },
             data: { otp: null, otpExpiresAt: null, loginAttempts: 0, lockUntil: null }
         });
+        const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
         const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -306,6 +335,7 @@ const verifyOtp = async (req, res, next) => {
                     role: user.role,
                     departmentId: user.departmentId
                 },
+                sessionToken,
                 accessToken,
                 refreshToken
             }
