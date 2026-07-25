@@ -154,6 +154,7 @@ export const LiveMonitor = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [announcementText, setAnnouncementText] = useState("");
   const [globalMessage, setGlobalMessage] = useState("");
+  const [gridDensity, setGridDensity] = useState("compact"); // 'compact' for 100 candidate monitoring, 'standard'
   const [selectedExtension, setSelectedExtension] = useState(10); // 10 minutes default
 
   const handleGlobalBroadcast = (e) => {
@@ -265,13 +266,39 @@ export const LiveMonitor = () => {
             Real-time candidate monitoring dashboard.
           </p>
         </div>
-        <div className="flex items-center gap-2 border border-border px-3.5 py-1.5 rounded-lg text-sm bg-card">
-          <span className="font-semibold">Network status:</span>
-          {connected ? (
-            <span className="text-emerald-400 font-medium">Synced</span>
-          ) : (
-            <span className="text-red-400 font-medium">Reconnecting</span>
-          )}
+        <div className="flex items-center gap-3">
+          {/* View Density Switcher for 100 Candidate Monitoring */}
+          <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold">
+            <button
+              onClick={() => setGridDensity("compact")}
+              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                gridDensity === "compact"
+                  ? "bg-violet-600 text-white shadow-sm font-extrabold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Layers size={13} /> Compact (100 Grid)
+            </button>
+            <button
+              onClick={() => setGridDensity("standard")}
+              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${
+                gridDensity === "standard"
+                  ? "bg-violet-600 text-white shadow-sm font-extrabold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Monitor size={13} /> Standard
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 border border-border px-3.5 py-1.5 rounded-lg text-xs bg-card">
+            <span className="font-semibold text-slate-400">Network status:</span>
+            {connected ? (
+              <span className="text-emerald-400 font-bold">Synced</span>
+            ) : (
+              <span className="text-red-400 font-bold">Reconnecting</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -315,7 +342,13 @@ export const LiveMonitor = () => {
         /* Multi-grid Layout: Live Session Cards + Side NOC Feed */
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
           {/* Main Sessions Grid */}
-          <div className="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div
+            className={`xl:col-span-3 grid gap-4 ${
+              gridDensity === "compact"
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4"
+                : "grid-cols-1 md:grid-cols-2"
+            }`}
+          >
             {sessions.map((session) => {
               const faceViolCount = session.faceViolationCount || 0;
               const faceState = session.faceStatus || "normal";
@@ -347,6 +380,80 @@ export const LiveMonitor = () => {
                 if (st === "Hardware Disconnected") return "bg-red-500/10 text-red-400 border-red-500/30 animate-pulse";
                 return "bg-amber-500/10 text-amber-400 border-amber-500/30";
               };
+
+              if (gridDensity === "compact") {
+                return (
+                  <div
+                    key={`${session.examId}::${session.studentId}`}
+                    className={`glass-card p-3 rounded-xl border flex flex-col justify-between transition-all duration-200 space-y-2.5 bg-slate-900/70 hover:border-violet-500/50 shadow-md
+                      ${isDanger ? "border-red-500/60 bg-red-950/20 shadow-red-500/10" : hasViolations ? "border-amber-500/50 bg-amber-950/15" : "border-slate-800"}
+                    `}
+                  >
+                    {/* Stream Frame */}
+                    <CandidateLiveStreamFrame
+                      session={session}
+                      socket={socket}
+                      candStatus={candStatus}
+                      getStatusBadgeStyle={getStatusBadgeStyle}
+                    />
+
+                    {/* Header: Candidate Name & Active Section */}
+                    <div className="flex justify-between items-center gap-1.5 pt-1">
+                      <div className="truncate">
+                        <h3 className="font-bold text-xs text-white truncate" title={session.studentName}>
+                          {session.studentName || "Candidate"}
+                        </h3>
+                        <p className="text-[10px] text-slate-400 font-mono">
+                          {(session.examId || "").substring(0, 6)}...
+                        </p>
+                      </div>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold border ${getSectionBadgeStyle(currentSec)} whitespace-nowrap`}>
+                        {currentSec}
+                      </span>
+                    </div>
+
+                    {/* Micro Telemetry Bar */}
+                    <div className="grid grid-cols-2 gap-1 text-[10px] pt-1 border-t border-slate-800/80">
+                      <div className="flex items-center gap-1 text-slate-300">
+                        <Clock size={11} className="text-violet-400" />
+                        <span className="font-mono font-bold text-violet-300">{formatRemainingTime(session.remainingTime)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 justify-end">
+                        <Monitor size={11} className={session.fullscreenStatus ? "text-emerald-400" : "text-red-400"} />
+                        <span className={session.fullscreenStatus ? "text-emerald-400 font-semibold" : "text-red-400 font-bold"}>
+                          {session.fullscreenStatus ? "Locked" : "Windowed"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-slate-400 col-span-2 justify-between pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <AlertTriangle size={11} className={session.tabSwitchCount + session.exitFullscreenCount > 0 ? "text-amber-400" : "text-slate-500"} />
+                          Tabs: <strong className="text-white">{session.tabSwitchCount}</strong> | Esc: <strong className="text-white">{session.exitFullscreenCount}</strong>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ShieldAlert size={11} className={faceViolCount > 0 ? "text-red-400" : "text-slate-500"} />
+                          Faces: <strong className={faceViolCount > 0 ? "text-red-400" : "text-white"}>{faceViolCount}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-2 border-t border-slate-800/80 flex gap-1.5">
+                      <button
+                        onClick={() => setSelectedSession(session)}
+                        className="flex-1 text-[10px] font-bold py-1 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center gap-1 transition-all cursor-pointer"
+                      >
+                        <Bell size={10} /> Warn
+                      </button>
+                      <button
+                        onClick={() => handleExtendTime(session)}
+                        className="flex-1 text-[10px] font-bold py-1 px-2 rounded bg-violet-600/80 hover:bg-violet-600 text-white flex items-center justify-center gap-1 transition-all cursor-pointer"
+                      >
+                        <Hourglass size={10} /> +{selectedExtension}m
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
