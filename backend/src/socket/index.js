@@ -211,8 +211,20 @@ const initSocketHandler = (io) => {
             io.to('admin-room').emit('live-sessions-update', Array.from(activeSessions.values()));
             logger_1.logger.info(`Exam session ended: ${sessionKey}`);
         });
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             logger_1.logger.info(`Socket disconnected: ${socket.id}`);
+            const sessionStore_1 = require('../modules/auth/sessionStore');
+            for (const [key, session] of activeSessions.entries()) {
+                if (session.socketId === socket.id) {
+                    logger_1.logger.info(`Tab closed by candidate ${session.studentName} (${session.studentId}). Performing automatic logout & session cleanup.`);
+                    activeSessions.delete(key);
+                    if (session.studentId) {
+                        await sessionStore_1.clearUserSession(session.studentId);
+                    }
+                    io.to('admin-room').emit('live-sessions-update', Array.from(activeSessions.values()));
+                    break;
+                }
+            }
         });
     });
 };

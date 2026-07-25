@@ -13,6 +13,36 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Automatic tab/browser close logout handler via navigator.sendBeacon
+  useEffect(() => {
+    if (!user) return;
+
+    const handleTabClose = () => {
+      const refreshToken = localStorage.getItem("refreshToken");
+      const apiUrl = import.meta.env.VITE_API_URL || "https://exam-portal-backend-70m2.onrender.com/api";
+      const payload = JSON.stringify({ refreshToken, userId: user.id });
+
+      // Clear local authentication storage on tab/window close
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+
+      // Send async HTTP logout beacon to invalidate session on backend
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon(`${apiUrl}/auth/logout`, blob);
+      }
+    };
+
+    window.addEventListener("pagehide", handleTabClose);
+    window.addEventListener("beforeunload", handleTabClose);
+
+    return () => {
+      window.removeEventListener("pagehide", handleTabClose);
+      window.removeEventListener("beforeunload", handleTabClose);
+    };
+  }, [user]);
+
   // Runs immediately on render startup to verify if cached sessions exist inside local storage
   useEffect(() => {
     const checkAuth = async () => {
