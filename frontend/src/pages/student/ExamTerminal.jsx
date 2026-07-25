@@ -80,12 +80,12 @@ const CandidateWebcamPreview = ({
       if (vRef.current && vRef.current.readyState === 4) {
         try {
           const c = document.createElement("canvas");
-          c.width = 240;
-          c.height = 180;
+          c.width = 640;
+          c.height = 480;
           const ctx = c.getContext("2d");
           if (ctx) {
-            ctx.drawImage(vRef.current, 0, 0, 240, 180);
-            const dataUrl = c.toDataURL("image/jpeg", 0.4);
+            ctx.drawImage(vRef.current, 0, 0, 640, 480);
+            const dataUrl = c.toDataURL("image/jpeg", 0.85);
             socket.emit("candidate-frame", {
               studentId: user.id || user._id,
               examId: exam?.id,
@@ -421,7 +421,12 @@ export const ExamTerminal = () => {
         // Initialize webcam & audio stream
         try {
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 320, height: 240, facingMode: "user" },
+            video: {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              frameRate: { ideal: 30 },
+              facingMode: "user",
+            },
             audio: true,
           });
           streamRef.current = stream;
