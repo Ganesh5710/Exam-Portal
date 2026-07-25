@@ -346,6 +346,57 @@ export const ExamTerminal = () => {
     onAutoSubmit: triggerSubmit,
   });
 
+  // Real-time Telemetry Sync: emit candidate remaining time & current section to Admin Proctoring Console
+  useEffect(() => {
+    if (!socket || !user || !id) return;
+
+    const currentQ = questions[currentIndex];
+    const sectionTitle = getSectionTitle(currentQ);
+
+    socket.emit("report-progress", {
+      studentId: user.id || user._id,
+      examId: id,
+      currentQuestionIndex: currentIndex,
+      currentSection: sectionTitle,
+      candidateStatus: proctorWarning ? "Warning Flagged" : "Active",
+      audioLevelMeter: "Normal (12 dB)",
+      remainingTime: secondsLeft,
+      internetStatus: navigator.onLine ? "online" : "offline",
+      fullscreenStatus: isFullscreen,
+      tabSwitchCount: tabSwitches,
+      exitFullscreenCount: fullscreenExits,
+      faceStatus: proctorWarning || "normal",
+    });
+  }, [
+    secondsLeft,
+    currentIndex,
+    questions,
+    id,
+    user,
+    socket,
+    proctorWarning,
+    isFullscreen,
+    tabSwitches,
+    fullscreenExits,
+  ]);
+
+  // Admin Time Extension Listener (+10m extension)
+  useEffect(() => {
+    if (!socket) return;
+    const handleExtendTime = (data) => {
+      const extensionMins = data?.extensionMinutes || 10;
+      setSecondsLeft((prev) => prev + extensionMins * 60);
+      toast.success(`Exam time extended by +${extensionMins} minutes by Admin!`, {
+        icon: "⏰",
+        duration: 5000,
+      });
+    };
+    socket.on("extend-exam-time", handleExtendTime);
+    return () => {
+      socket.off("extend-exam-time", handleExtendTime);
+    };
+  }, [socket, setSecondsLeft]);
+
   // Dynamic Gaze/Face AI Proctoring Hook Setup
   useEffect(() => {
     if (loading || !exam || !user) return;

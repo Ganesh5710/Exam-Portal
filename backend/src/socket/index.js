@@ -31,7 +31,7 @@ const initSocketHandler = (io) => {
                 candidateStatus: 'Active',
                 audioLevelMeter: 'Normal (12 dB)',
                 streamActive: true,
-                remainingTime: 0,
+                remainingTime: data.remainingTime || 0,
                 internetStatus: 'online',
                 fullscreenStatus: true,
                 tabSwitchCount: 0,
