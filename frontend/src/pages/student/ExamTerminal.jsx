@@ -39,7 +39,15 @@ const loadScript = (src) => {
   });
 };
 
-const CandidateWebcamPreview = ({ streamRef, proctorActive, proctorWarning, canvasRef }) => {
+const CandidateWebcamPreview = ({
+  streamRef,
+  proctorActive,
+  proctorWarning,
+  canvasRef,
+  socket,
+  user,
+  exam,
+}) => {
   const vRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +71,35 @@ const CandidateWebcamPreview = ({ streamRef, proctorActive, proctorWarning, canv
       clearInterval(timer);
     };
   }, [streamRef]);
+
+  // Continuous frame emitter to Admin Proctoring Console
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const frameTimer = setInterval(() => {
+      if (vRef.current && vRef.current.readyState === 4) {
+        try {
+          const c = document.createElement("canvas");
+          c.width = 240;
+          c.height = 180;
+          const ctx = c.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(vRef.current, 0, 0, 240, 180);
+            const dataUrl = c.toDataURL("image/jpeg", 0.4);
+            socket.emit("candidate-frame", {
+              studentId: user.id || user._id,
+              examId: exam?.id,
+              frame: dataUrl,
+            });
+          }
+        } catch (err) {
+          // Ignore capture error
+        }
+      }
+    }, 200);
+
+    return () => clearInterval(frameTimer);
+  }, [socket, user, exam?.id]);
 
   return (
     <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
@@ -1283,6 +1320,9 @@ export const ExamTerminal = () => {
               proctorActive={proctorActive}
               proctorWarning={proctorWarning}
               canvasRef={canvasRef}
+              socket={socket}
+              user={user}
+              exam={exam}
             />
 
             {/* Decluttered Minimal Single Status Bar */}
