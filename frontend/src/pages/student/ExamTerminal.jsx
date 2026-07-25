@@ -66,6 +66,11 @@ export const ExamTerminal = () => {
   const [faceCount, setFaceCount] = useState(0);
   const violationSustainedSeconds = useRef({});
 
+  // Strict Camera Gate & Denial Protocol States
+  const [cameraGranted, setCameraGranted] = useState(false);
+  const [cameraDeniedMessage, setCameraDeniedMessage] = useState(null);
+  const [requestingCamera, setRequestingCamera] = useState(false);
+
   const isSubmitting = useRef(false);
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
 
@@ -265,12 +270,14 @@ export const ExamTerminal = () => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
+          setCameraGranted(true);
+          setCameraDeniedMessage(null);
         } catch (camErr) {
-          toast.error(
-            "Webcam access failed. Running simulation proctor feed...",
-            { id: "webcam-err" },
-          );
-          runSimulation();
+          setCameraGranted(false);
+          const denialMsg =
+            "🚫 Access Denied: Camera access is required to take this exam. Please enable your camera in your browser settings and try again.";
+          setCameraDeniedMessage(denialMsg);
+          toast.error(denialMsg, { id: "cam-denied", duration: 6000 });
           return;
         }
 
@@ -651,6 +658,90 @@ export const ExamTerminal = () => {
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
+
+  const requestCameraPermission = async () => {
+    setRequestingCamera(true);
+    setCameraDeniedMessage(null);
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera API unavailable");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240, facingMode: "user" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraGranted(true);
+      setProctorActive(true);
+      toast.success("Camera access confirmed! Section 1: Physics starting...", { id: "cam-ok" });
+      return stream;
+    } catch (err) {
+      setCameraGranted(false);
+      const denialMsg =
+        "🚫 Access Denied: Camera access is required to take this exam. Please enable your camera in your browser settings and try again.";
+      setCameraDeniedMessage(denialMsg);
+      toast.error(denialMsg, { id: "cam-denied", duration: 6000 });
+    } finally {
+      setRequestingCamera(false);
+    }
+  };
+
+  // Strict Access Gate: Do NOT display or start Section 1 until the user explicitly confirms camera access
+  if (!loading && questions.length > 0 && !cameraGranted) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4">
+        <div className="max-w-lg w-full bg-slate-900 border border-violet-500/30 rounded-2xl p-8 text-center space-y-6 shadow-2xl shadow-violet-500/10">
+          <div className="w-16 h-16 bg-violet-600/20 border border-violet-500/30 text-violet-400 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-violet-500/10">
+            <Video size={32} />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-extrabold text-white tracking-tight">
+              Strict Camera Gate Verification
+            </h2>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
+              Camera access is mandatory for live proctoring. Section 1 (Physics) will remain locked until camera access is explicitly confirmed.
+            </p>
+          </div>
+
+          {cameraDeniedMessage ? (
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-xs font-semibold text-red-400 text-left leading-relaxed flex items-start gap-3 shadow-inner">
+              <AlertOctagon className="shrink-0 text-red-400 mt-0.5" size={18} />
+              <span>{cameraDeniedMessage}</span>
+            </div>
+          ) : (
+            <div className="p-3 bg-violet-950/40 border border-violet-500/20 rounded-xl text-xs font-medium text-violet-300 text-center">
+              🔒 Section 1 (Physics) is locked. Click below to allow camera access.
+            </div>
+          )}
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={requestCameraPermission}
+              disabled={requestingCamera}
+              className="w-full py-3.5 px-6 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-violet-600/25 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {requestingCamera ? (
+                <>
+                  <Loader2 size={18} className="animate-spin text-white" />
+                  Verifying Camera Permission...
+                </>
+              ) : (
+                <>
+                  <Video size={18} />
+                  Confirm & Grant Camera Access
+                </>
+              )}
+            </button>
+            <p className="text-[11px] text-slate-500 font-medium">
+              You must allow camera access in your browser prompt to proceed.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (exam?.fullscreenRequired && !isFullscreen) {
     return (

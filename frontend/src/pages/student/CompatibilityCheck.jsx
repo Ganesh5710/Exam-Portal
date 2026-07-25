@@ -18,6 +18,7 @@ export const CompatibilityCheck = () => {
   const [browserPassed, setBrowserPassed] = useState(null);
   const [networkPassed, setNetworkPassed] = useState(null);
   const [cameraPassed, setCameraPassed] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
 
   useEffect(() => {
     /**
@@ -37,25 +38,21 @@ export const CompatibilityCheck = () => {
       await new Promise((resolve) => setTimeout(resolve, 1200));
       try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Attempt to get stream (safe mock fallback if fails)
-          await navigator.mediaDevices
-            .getUserMedia({ video: true })
-            .then((stream) => {
-              // stop stream track
-              stream.getTracks().forEach((track) => track.stop());
-              setCameraPassed(true);
-            })
-            .catch(() => {
-              loggerWarning(
-                "Camera permission denied. Proceeding with simulated camera...",
-              );
-              setCameraPassed(true); // Proceed anyway for dev demo robustness
-            });
-        } else {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach((track) => track.stop());
           setCameraPassed(true);
+          setCameraError(null);
+        } else {
+          setCameraPassed(false);
+          setCameraError(
+            "🚫 Access Denied: Camera access is required to take this exam. Please enable your camera in your browser settings and try again."
+          );
         }
       } catch (e) {
-        setCameraPassed(true);
+        setCameraPassed(false);
+        setCameraError(
+          "🚫 Access Denied: Camera access is required to take this exam. Please enable your camera in your browser settings and try again."
+        );
       }
     };
 
@@ -169,6 +166,13 @@ export const CompatibilityCheck = () => {
           </div>
         </div>
       </div>
+
+      {cameraError && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-xs font-semibold text-red-400 leading-relaxed shadow-lg flex items-start gap-3">
+          <ShieldAlert className="shrink-0 text-red-400 mt-0.5" size={18} />
+          <span>{cameraError}</span>
+        </div>
+      )}
 
       <button
         onClick={handleStartExam}
