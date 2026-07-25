@@ -54,6 +54,8 @@ const getExams = async (req, res, next) => {
                         percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
                         grade: submission.status === 'PUBLISHED' ? submission.grade : null,
                         isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+                        maxPossibleScore: a.exam.totalMarks || 300,
+                        totalMarks: a.exam.totalMarks || 300,
                     } : null
                 };
             });

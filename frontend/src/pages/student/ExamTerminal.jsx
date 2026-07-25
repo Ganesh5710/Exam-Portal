@@ -47,18 +47,20 @@ const CandidateWebcamPreview = ({
   socket,
   user,
   exam,
+  videoRef,
 }) => {
-  const vRef = useRef(null);
+  const localRef = useRef(null);
+  const activeVideoRef = videoRef || localRef;
 
   useEffect(() => {
     let active = true;
     const bindStream = () => {
-      if (vRef.current && streamRef.current && active) {
-        if (vRef.current.srcObject !== streamRef.current) {
-          vRef.current.srcObject = streamRef.current;
+      if (activeVideoRef.current && streamRef.current && active) {
+        if (activeVideoRef.current.srcObject !== streamRef.current) {
+          activeVideoRef.current.srcObject = streamRef.current;
         }
-        if (vRef.current.paused) {
-          vRef.current.play().catch(() => {});
+        if (activeVideoRef.current.paused) {
+          activeVideoRef.current.play().catch(() => {});
         }
       }
     };
@@ -70,21 +72,21 @@ const CandidateWebcamPreview = ({
       active = false;
       clearInterval(timer);
     };
-  }, [streamRef]);
+  }, [streamRef, activeVideoRef]);
 
   // Continuous frame emitter to Admin Proctoring Console
   useEffect(() => {
     if (!socket || !user) return;
 
     const frameTimer = setInterval(() => {
-      if (vRef.current && vRef.current.readyState === 4) {
+      if (activeVideoRef.current && activeVideoRef.current.readyState === 4) {
         try {
           const c = document.createElement("canvas");
           c.width = 480;
           c.height = 360;
           const ctx = c.getContext("2d");
           if (ctx) {
-            ctx.drawImage(vRef.current, 0, 0, 480, 360);
+            ctx.drawImage(activeVideoRef.current, 0, 0, 480, 360);
             const dataUrl = c.toDataURL("image/jpeg", 0.65);
             socket.emit("candidate-frame", {
               studentId: user.id || user._id,
@@ -99,12 +101,12 @@ const CandidateWebcamPreview = ({
     }, 250);
 
     return () => clearInterval(frameTimer);
-  }, [socket, user, exam?.id]);
+  }, [socket, user, exam?.id, activeVideoRef]);
 
   return (
     <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
       <video
-        ref={vRef}
+        ref={activeVideoRef}
         autoPlay
         playsInline
         muted
@@ -467,6 +469,7 @@ export const ExamTerminal = () => {
             videoRef.current.play().catch(() => {});
           }
           setCameraGranted(true);
+          setFaceCount(1);
           setCameraDeniedMessage(null);
         } catch (camErr) {
           setCameraGranted(false);
@@ -1405,6 +1408,7 @@ export const ExamTerminal = () => {
             {/* Sleek, Clean Video Feed Frame */}
             <CandidateWebcamPreview
               streamRef={streamRef}
+              videoRef={videoRef}
               proctorActive={proctorActive}
               proctorWarning={proctorWarning}
               canvasRef={canvasRef}

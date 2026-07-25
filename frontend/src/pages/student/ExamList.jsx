@@ -121,7 +121,7 @@ export const ExamList = () => {
                     exam.submission?.status === "PUBLISHED" ? (
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-xs font-bold px-3 py-1.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                          Score: {exam.submission.totalScore} / {exam.submission.maxPossibleScore}
+                          Score: {exam.submission.totalScore ?? 0} / {exam.submission.maxPossibleScore || exam.submission.totalMarks || exam.totalMarks || 300}
                         </span>
                         <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-semibold">
                           Result Released
