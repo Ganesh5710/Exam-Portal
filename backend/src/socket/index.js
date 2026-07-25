@@ -93,6 +93,10 @@ const initSocketHandler = (io) => {
                 io.to(studentSocketId).emit('admin-requested-stream', { adminSocketId: socket.id });
             }
         });
+        socket.on('candidate-frame', (data) => {
+            const { studentId, frame } = data;
+            io.to('admin-room').emit(`candidate-frame::${studentId}`, { studentId, frame });
+        });
         // Student registers a security violation (tab-switch, fullscreen exit, face issues)
         socket.on('security-violation', async (data) => {
             const { studentId, examId, violationType, details } = data;

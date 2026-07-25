@@ -262,10 +262,11 @@ export const ExamTerminal = () => {
 
         if (!active) return;
 
-        // Initialize webcam
+        // Initialize webcam & audio stream
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: { width: 320, height: 240, facingMode: "user" },
+            audio: true,
           });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -299,6 +300,26 @@ export const ExamTerminal = () => {
 
                 const predictions = await model.estimateFaces(video, false);
                 setFaceCount(predictions.length);
+
+                // Broadcast live video stream frame to Admin Portal socket
+                if (socket && user) {
+                  try {
+                    const tempCanvas = document.createElement("canvas");
+                    tempCanvas.width = 160;
+                    tempCanvas.height = 120;
+                    const tCtx = tempCanvas.getContext("2d");
+                    if (tCtx) {
+                      tCtx.drawImage(video, 0, 0, 160, 120);
+                      socket.emit("candidate-frame", {
+                        studentId: user.id,
+                        examId: exam?.id,
+                        frame: tempCanvas.toDataURL("image/jpeg", 0.4),
+                      });
+                    }
+                  } catch (e) {
+                    // Frame emit fallback ignored
+                  }
+                }
 
                 let warning = null;
                 let violationType = null;
@@ -1183,19 +1204,8 @@ export const ExamTerminal = () => {
               />
             </div>
 
+            {/* Sleek, Clean Video Feed Frame */}
             <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
-              {/* Live Overlay Indicators inside Video Frame */}
-              <div className="absolute top-2 left-2 right-2 flex flex-col gap-1 z-10 pointer-events-none">
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md self-start flex items-center gap-1 shadow-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                  📹 Camera Stream: ACTIVE
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md self-start flex items-center gap-1 shadow-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  🎙️ Audio Monitor: LIVE / Decibel Level Normal
-                </span>
-              </div>
-
               <video
                 ref={videoRef}
                 autoPlay
@@ -1217,52 +1227,27 @@ export const ExamTerminal = () => {
               )}
 
               {proctorWarning && (
-                <div className="absolute inset-x-0 bottom-0 bg-red-600/90 text-white text-[10px] font-bold text-center py-1 uppercase tracking-wider animate-pulse">
+                <div className="absolute inset-x-0 bottom-0 bg-red-600/90 text-white text-[10px] font-bold text-center py-1 uppercase tracking-wider animate-pulse z-10">
                   {proctorWarning}
                 </div>
               )}
             </div>
 
-            {/* Live Proctoring Dashboard Panel */}
-            <div className="space-y-1.5 pt-2 border-t border-slate-800/80 text-[11px]">
-              <div className="flex items-center justify-between text-slate-300 font-semibold bg-slate-950/60 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span>📹</span> Camera Stream:
+            {/* Decluttered Minimal Single Status Bar */}
+            <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  📹 Camera Active
                 </span>
-                <span className="font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  ACTIVE
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-slate-300 font-semibold bg-slate-950/60 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span>🎙️</span> Audio Monitor:
-                </span>
-                <span className="font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  LIVE / Decibel Level Normal
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  🎙️ Mic Active
                 </span>
               </div>
-              <div className="flex justify-between items-center px-1 pt-1 text-slate-500 text-[10px]">
-                <span className="flex items-center gap-1">
-                  <UserCheck
-                    size={12}
-                    className={
-                      proctorWarning ? "text-red-400" : "text-emerald-400"
-                    }
-                  />
-                  Face Count:{" "}
-                  <strong className="text-slate-200">{faceCount}</strong>
-                </span>
-                <span>
-                  Status:{" "}
-                  <strong
-                    className={
-                      proctorWarning ? "text-red-400" : "text-emerald-400"
-                    }
-                  >
-                    {proctorWarning ? "FLAGGED" : "NORMAL"}
-                  </strong>
-                </span>
-              </div>
+              <span className="text-[11px] font-bold text-slate-300">
+                Face Count: <strong className={proctorWarning ? "text-red-400" : "text-emerald-400"}>{faceCount}</strong>
+              </span>
             </div>
           </div>
 

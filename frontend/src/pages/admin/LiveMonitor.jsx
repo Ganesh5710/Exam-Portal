@@ -19,6 +19,72 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeStyle }) => {
+  const [frameSrc, setFrameSrc] = useState(null);
+
+  useEffect(() => {
+    if (!socket || !session?.studentId) return;
+
+    const handleFrame = (data) => {
+      if (data?.frame) {
+        setFrameSrc(data.frame);
+      }
+    };
+
+    socket.on(`candidate-frame::${session.studentId}`, handleFrame);
+
+    return () => {
+      socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+    };
+  }, [socket, session?.studentId]);
+
+  return (
+    <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
+      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10">
+        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          📹 Stream: ACTIVE
+        </span>
+        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeStyle(candStatus)} shadow-sm`}>
+          {candStatus}
+        </span>
+      </div>
+
+      {frameSrc ? (
+        <img
+          src={frameSrc}
+          alt={`Live Feed ${session.studentName}`}
+          className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+        />
+      ) : (
+        <div className="flex flex-col items-center gap-1.5 text-slate-400 text-xs">
+          <Video size={28} className="text-violet-400 animate-pulse" />
+          <span className="font-semibold text-white text-xs">{session.studentName}</span>
+          <span className="text-[10px] text-slate-500 font-mono">Connecting Real-time Live Stream...</span>
+        </div>
+      )}
+
+      {/* Audio Level Meter Overlay Footer */}
+      <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between backdrop-blur-md z-10">
+        <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1.5">
+          <Mic size={12} className="text-emerald-400 animate-pulse" />
+          Audio Level Meter:
+        </span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5">
+            <span className="w-1 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span className="w-1 h-4 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span className="w-1 h-2 bg-emerald-500/60 rounded-full"></span>
+          </div>
+          <span className="text-[10px] font-extrabold text-emerald-400">
+            {session.audioLevelMeter || "Normal (12 dB)"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const LiveMonitor = () => {
   const { socket, connected } = useSocket();
   const [sessions, setSessions] = useState([]);
@@ -189,43 +255,13 @@ export const LiveMonitor = () => {
                   `}
                 >
                   <div className="space-y-4">
-                    {/* Live Stream & Audio Level Frame */}
-                    <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
-                      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                          📹 Stream: ACTIVE
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeStyle(candStatus)} shadow-sm`}>
-                          {candStatus}
-                        </span>
-                      </div>
-
-                      {/* Simulated / WebRTC Video Canvas Feed */}
-                      <div className="flex flex-col items-center gap-1.5 text-slate-400 text-xs">
-                        <Video size={28} className="text-violet-400 animate-pulse" />
-                        <span className="font-semibold text-white text-xs">{session.studentName}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">WebRTC Feed Verified</span>
-                      </div>
-
-                      {/* Audio Level Meter Overlay Footer */}
-                      <div className="absolute bottom-0 inset-x-0 bg-slate-950/90 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between backdrop-blur-md">
-                        <span className="text-[10px] text-slate-300 font-bold flex items-center gap-1.5">
-                          <Mic size={12} className="text-emerald-400 animate-pulse" />
-                          Audio Level Meter:
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-0.5">
-                            <span className="w-1 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
-                            <span className="w-1 h-4 bg-emerald-400 rounded-full animate-pulse"></span>
-                            <span className="w-1 h-2 bg-emerald-500/60 rounded-full"></span>
-                          </div>
-                          <span className="text-[10px] font-extrabold text-emerald-400">
-                            {session.audioLevelMeter || "Normal (12 dB)"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Real Live Stream & Audio Level Frame */}
+                    <CandidateLiveStreamFrame
+                      session={session}
+                      socket={socket}
+                      candStatus={candStatus}
+                      getStatusBadgeStyle={getStatusBadgeStyle}
+                    />
 
                     {/* Student Info & Active Section */}
                     <div className="flex justify-between items-start">
