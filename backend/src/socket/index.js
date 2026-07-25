@@ -222,12 +222,21 @@ const initSocketHandler = (io) => {
             const sessionStore_1 = require('../modules/auth/sessionStore');
             for (const [key, session] of activeSessions.entries()) {
                 if (session.socketId === socket.id) {
-                    logger_1.logger.info(`Tab closed by candidate ${session.studentName} (${session.studentId}). Performing automatic logout & session cleanup.`);
-                    activeSessions.delete(key);
-                    if (session.studentId) {
-                        await sessionStore_1.clearUserSession(session.studentId);
-                    }
+                    session.candidateStatus = 'Hardware Disconnected';
                     io.to('admin-room').emit('live-sessions-update', Array.from(activeSessions.values()));
+
+                    // 15s grace period to distinguish F5 page refresh from actual tab closure
+                    setTimeout(async () => {
+                        const currentSession = activeSessions.get(key);
+                        if (currentSession && currentSession.socketId === socket.id && (Date.now() - currentSession.lastActive >= 15000)) {
+                            logger_1.logger.info(`Tab closed by candidate ${session.studentName} (${session.studentId}). Performing automatic session cleanup.`);
+                            activeSessions.delete(key);
+                            if (session.studentId) {
+                                await sessionStore_1.clearUserSession(session.studentId);
+                            }
+                            io.to('admin-room').emit('live-sessions-update', Array.from(activeSessions.values()));
+                        }
+                    }, 15000);
                     break;
                 }
             }
