@@ -86,16 +86,18 @@ export const Results = () => {
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
         const res = await api.get("/submissions", { params });
-        setSubmissions(res.data.data?.submissions || []);
-        setPagination(
-          res.data.data?.pagination || {
-            page: 1,
-            limit: currentLimit,
-            total: 0,
-            totalPages: 0,
-          },
-        );
-      } catch {
+        const subs = res.data.data?.submissions || res.data.submissions || res.data.data || [];
+        const pag = res.data.data?.pagination || res.data.pagination || {
+          page,
+          limit: currentLimit,
+          total: Array.isArray(subs) ? subs.length : 0,
+          totalPages: 1,
+        };
+
+        setSubmissions(Array.isArray(subs) ? subs : []);
+        setPagination(pag);
+      } catch (err) {
+        console.error("Error loading submissions:", err);
         toast.error("Failed to load submissions.");
       } finally {
         setLoading(false);

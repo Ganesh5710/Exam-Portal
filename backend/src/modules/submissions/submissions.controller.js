@@ -466,7 +466,7 @@ const gradeDescriptiveAnswer = async (req, res, next) => {
 exports.gradeDescriptiveAnswer = gradeDescriptiveAnswer;
 const getSubmissions = async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
     const status = req.query.status;
     const examId = req.query.examId;
     const search = req.query.search;
@@ -482,9 +482,9 @@ const getSubmissions = async (req, res, next) => {
         if (search) {
             where.student = {
                 OR: [
-                    { firstName: { contains: search } },
-                    { lastName: { contains: search } },
-                    { email: { contains: search } }
+                    { firstName: { contains: search, mode: 'insensitive' } },
+                    { lastName: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } }
                 ]
             };
         }
@@ -512,7 +512,7 @@ const getSubmissions = async (req, res, next) => {
                         }
                     }
                 },
-                orderBy: { submitTime: 'desc' },
+                orderBy: { updatedAt: 'desc' },
                 skip,
                 take: limit
             }),
@@ -526,12 +526,13 @@ const getSubmissions = async (req, res, next) => {
                     page,
                     limit,
                     total,
-                    totalPages: Math.ceil(total / limit)
+                    totalPages: Math.ceil(total / limit) || 1
                 }
             }
         });
     }
     catch (error) {
+        logger_1.logger.error(`Error fetching submissions: ${error.message}`);
         next(error);
     }
 };
