@@ -155,6 +155,15 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Background Cron Jobs
+// Explicit Periodic Garbage Collection trigger every 60 seconds
+setInterval(() => {
+    try {
+        if (global.gc) {
+            global.gc();
+        }
+    } catch (_) {}
+}, 60000);
+
 // Trigger database autosave sync every 30 seconds (safely wrapped)
 setInterval(async () => {
     try {

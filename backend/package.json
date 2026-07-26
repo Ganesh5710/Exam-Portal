@@ -4,7 +4,7 @@
   "description": "Enterprise Online Examination Portal Backend",
   "main": "src/index.js",
   "scripts": {
-    "start": "node --max-old-space-size=320 src/index.js",
+    "start": "node --max-old-space-size=450 --expose-gc src/index.js",
     "build": "prisma generate",
     "dev": "nodemon src/index.js",
     "prisma:generate": "prisma generate",
