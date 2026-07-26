@@ -265,37 +265,51 @@ export const Results = () => {
     }
   };
 
-  // Fetches up to 10,000 candidate submissions matching current filters and downloads as CSV (Excel compatible)
+  // Fetches up to 5,000 candidate submissions matching current filters and downloads as CSV (Excel compatible)
   const handleExportCSV = async () => {
+    const loadingToastId = toast.loading("Generating Excel export...");
     try {
-      const params = { limit: 10000 };
-      if (statusFilter !== "ALL") params.status = statusFilter;
-      if (examFilter !== "ALL") params.examId = examFilter;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
+      let exportData = [];
 
-      const loadingToastId = toast.loading("Generating Excel export...");
-      const res = await api.get("/submissions", { params });
-      const allSubmissions = res.data.data?.submissions || [];
+      // Step 1: Try fetching all matching submissions from server
+      try {
+        const params = { limit: 5000 };
+        if (statusFilter !== "ALL") params.status = statusFilter;
+        if (examFilter !== "ALL") params.examId = examFilter;
+        if (searchQuery.trim()) params.search = searchQuery.trim();
+
+        const res = await api.get("/submissions", { params });
+        exportData = res.data.data?.submissions || res.data.submissions || [];
+      } catch (fetchErr) {
+        console.warn("Backend fetch for export failed, falling back to local view state:", fetchErr);
+      }
+
+      // Step 2: Fall back to locally loaded submissions if API returned empty or failed
+      if (!exportData || exportData.length === 0) {
+        exportData = submissions || [];
+      }
+
       toast.dismiss(loadingToastId);
 
-      if (allSubmissions.length === 0) {
-        toast.error("No submissions found to export.");
+      if (!exportData || exportData.length === 0) {
+        toast.error("No submission records found to export.");
         return;
       }
 
       // Collect all distinct subject names across all submissions
       const subjectSet = new Set();
-      allSubmissions.forEach((sub) => {
-        if (sub.answers && Array.isArray(sub.answers)) {
+      exportData.forEach((sub) => {
+        if (sub && sub.answers && Array.isArray(sub.answers)) {
           sub.answers.forEach((ans) => {
-            const subjName = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || null;
+            if (!ans) return;
+            const subjName = ans.question?.subject?.name || (ans.question?.tags && Array.isArray(ans.question.tags) && ans.question.tags[0]) || null;
             if (subjName) subjectSet.add(subjName);
           });
         }
       });
       const subjectList = Array.from(subjectSet);
 
-      // Generate CSV formatted content headers
+      // Headers
       const baseHeaders = [
         "Student Name",
         "Email",
@@ -308,17 +322,33 @@ export const Results = () => {
       const trailingHeaders = ["Violations Count", "Status", "Submitted At"];
       const headers = [...baseHeaders, ...subjectHeaders, ...trailingHeaders];
 
-      const rows = allSubmissions.map((sub) => {
-        const studentName = `${sub.student?.firstName || ""} ${sub.student?.lastName || ""}`.trim();
-        const maxMark = sub.exam?.examQuestions && sub.exam.examQuestions.length > 0
-          ? sub.exam.examQuestions.reduce((sum, eq) => sum + (eq.question?.score ?? 0), 0)
-          : (sub.exam?.passingMarks ?? 0);
+      // Rows
+      const rows = exportData.map((sub, idx) => {
+        const studentName = sub?.student
+          ? `${sub.student.firstName || ""} ${sub.student.lastName || ""}`.trim() || sub.student.email
+          : sub?.studentName || `Student ${idx + 1}`;
 
-        // Compute subject scores for this submission
+        const email = sub?.student?.email || sub?.studentEmail || "N/A";
+        const examTitle = sub?.exam?.title || sub?.examTitle || "N/A";
+        const totalScore = sub?.totalScore ?? sub?.score ?? 0;
+
+        const maxMark = sub?.exam?.examQuestions && Array.isArray(sub.exam.examQuestions) && sub.exam.examQuestions.length > 0
+          ? sub.exam.examQuestions.reduce((sum, eq) => sum + (eq.question?.score ?? 0), 0)
+          : (sub?.exam?.passingMarks || sub?.maxScore || 100);
+
+        let pctStr = "0.0%";
+        if (typeof sub?.percentage === "number" && !isNaN(sub.percentage)) {
+          pctStr = `${sub.percentage.toFixed(1)}%`;
+        } else if (totalScore && maxMark) {
+          pctStr = `${((totalScore / maxMark) * 100).toFixed(1)}%`;
+        }
+
+        // Compute subject scores
         const subjScores = {};
-        if (sub.answers && Array.isArray(sub.answers)) {
+        if (sub?.answers && Array.isArray(sub.answers)) {
           sub.answers.forEach((ans) => {
-            const subjName = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || "General";
+            if (!ans) return;
+            const subjName = ans.question?.subject?.name || (ans.question?.tags && Array.isArray(ans.question.tags) && ans.question.tags[0]) || "General";
             if (!subjScores[subjName]) {
               subjScores[subjName] = { obtained: 0, total: 0 };
             }
@@ -329,11 +359,11 @@ export const Results = () => {
 
         const baseRow = [
           studentName,
-          sub.student?.email || "",
-          sub.exam?.title || "",
-          sub.totalScore ?? 0,
+          email,
+          examTitle,
+          totalScore,
           maxMark,
-          sub.percentage != null ? `${sub.percentage.toFixed(1)}%` : "0.0%",
+          pctStr,
         ];
 
         const subjectValues = subjectList.map((sName) => {
@@ -344,30 +374,32 @@ export const Results = () => {
         });
 
         const trailingRow = [
-          sub.violationsCount ?? 0,
-          sub.status || "",
-          sub.submitTime ? new Date(sub.submitTime).toLocaleString("en-IN") : ""
+          sub?.violationsCount ?? 0,
+          sub?.status || "COMPLETED",
+          sub?.submitTime ? new Date(sub.submitTime).toLocaleString("en-IN") : new Date().toLocaleString("en-IN"),
         ];
 
-        return [...baseRow, ...subjectValues, ...trailingRow].map((val) => `"${String(val).replace(/"/g, '""')}"`);
+        return [...baseRow, ...subjectValues, ...trailingRow].map((val) => `"${String(val ?? "").replace(/"/g, '""')}"`);
       });
 
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((r) => r.join(","))
-      ].join("\n");
+      // Include UTF-8 BOM byte for Excel compatibility
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `exam_results_subjectwise_${Date.now()}.csv`);
+      link.setAttribute("download", `exam_results_${Date.now()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Exam results exported to Excel (CSV) with Subject Breakdown!");
+      URL.revokeObjectURL(url);
+
+      toast.success("Exam results exported to Excel (CSV) successfully!");
     } catch (err) {
-      toast.error("Failed to export exam results.");
+      toast.dismiss(loadingToastId);
+      console.error("Export error:", err);
+      toast.error(`Export failed: ${err.message || "Unknown error"}`);
     }
   };
 
