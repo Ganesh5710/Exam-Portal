@@ -92,13 +92,36 @@ app.get('/', (req, res) => {
         timestamp: new Date()
     });
 });
-// Health check endpoint
+// Health check endpoint with live RAM & memory diagnostics
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date() });
+    const mem = process.memoryUsage();
+    const rssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const heapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+    const freeRAMMB = Math.round((512 - rssMB) * 10) / 10;
+    res.status(200).json({
+        status: 'OK',
+        memory: {
+            usedMB: rssMB,
+            heapUsedMB: heapUsedMB,
+            freeRAMMB: freeRAMMB > 0 ? freeRAMMB : 0,
+            totalRenderCapMB: 512,
+            percentFree: `${Math.round((freeRAMMB / 512) * 100)}%`
+        },
+        timestamp: new Date()
+    });
 });
 // /api/health alias for UptimeRobot and external monitors
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date() });
+    const mem = process.memoryUsage();
+    const rssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const freeRAMMB = Math.round((512 - rssMB) * 10) / 10;
+    res.status(200).json({
+        status: 'OK',
+        usedMB: rssMB,
+        freeRAMMB: freeRAMMB > 0 ? freeRAMMB : 0,
+        totalRenderCapMB: 512,
+        timestamp: new Date()
+    });
 });
 // Global Error Handler
 app.use(error_1.errorHandler);
