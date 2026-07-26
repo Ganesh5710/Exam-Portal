@@ -32,12 +32,12 @@ router.use(auth_1.protect);
 router.post('/save', (0, auth_1.restrictTo)('STUDENT'), (0, validate_1.validate)(answersSaveSchema), submissions_controller_1.saveAnswers);
 router.post('/submit', (0, auth_1.restrictTo)('STUDENT'), (0, validate_1.validate)(submitSchema), submissions_controller_1.submitExam);
 router.get('/my-submission/:examId', (0, auth_1.restrictTo)('STUDENT'), submissions_controller_1.getMySubmission);
-// Admin-only routing
-router.get('/', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.getSubmissions);
-router.put('/:id', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.updateSubmission);
-router.post('/bulk-publish', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.bulkPublishSubmissions);
-router.delete('/bulk', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.bulkDeleteSubmissions);
-router.delete('/:id', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.deleteSubmission);
-router.get('/exam/:examId', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.getSubmissionsForExam);
-router.post('/grade/:answerId', (0, auth_1.restrictTo)('ADMIN'), submissions_controller_1.gradeDescriptiveAnswer);
+// Admin & Super Admin routing
+router.get('/', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.getSubmissions);
+router.put('/:id', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.updateSubmission);
+router.post('/bulk-publish', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.bulkPublishSubmissions);
+router.delete('/bulk', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.bulkDeleteSubmissions);
+router.delete('/:id', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.deleteSubmission);
+router.get('/exam/:examId', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.getSubmissionsForExam);
+router.post('/grade/:answerId', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.gradeDescriptiveAnswer);
 exports.default = router;
