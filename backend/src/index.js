@@ -35,6 +35,7 @@ const autosave_job_1 = require("./modules/autosave/autosave.job");
 const seed_1 = require("./database/seed");
 const fix_1 = require("./database/fixCorruptQuestionOptions");
 const app = (0, express_1.default)();
+app.set('trust proxy', 1); // Trust reverse proxy headers from Render/Vercel for accurate client IP rate limiting
 const server = http_1.default.createServer(app);
 // Init Socket.io
 const io = new socket_io_1.Server(server, {

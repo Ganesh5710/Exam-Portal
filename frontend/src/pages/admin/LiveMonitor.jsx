@@ -246,10 +246,15 @@ export const LiveMonitor = () => {
     setAnnouncementText("");
   };
 
-  // Helper utility to format integer seconds remaining into mm:ss strings
+  // Helper utility to format integer seconds remaining into hh:mm:ss strings (e.g. 2h 45m 30s)
   const formatRemainingTime = (secs) => {
-    const mins = Math.floor(secs / 60);
+    if (!secs || secs <= 0) return "0m 0s";
+    const hrs = Math.floor(secs / 3600);
+    const mins = Math.floor((secs % 3600) / 60);
     const s = secs % 60;
+    if (hrs > 0) {
+      return `${hrs}h ${mins}m ${s}s`;
+    }
     return `${mins}m ${s}s`;
   };
 

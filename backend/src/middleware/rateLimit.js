@@ -7,7 +7,7 @@ exports.authLimiter = exports.apiLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 exports.apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300, // limit each IP to 300 requests per windowMs
+    max: 3000, // limit each IP to 3000 requests per windowMs
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -17,11 +17,11 @@ exports.apiLimiter = (0, express_rate_limit_1.default)({
 });
 exports.authLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 30, // limit each IP to 30 login requests per windowMs
+    max: 1000, // limit each IP to 1000 login requests per windowMs for computer labs / shared Wi-Fi
     standardHeaders: true,
     legacyHeaders: false,
     message: {
         success: false,
-        message: 'Too many login attempts, please try again after 15 minutes.'
+        message: 'Too many login attempts from this network. Please wait a minute and try again.'
     }
 });

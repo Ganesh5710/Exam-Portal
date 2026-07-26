@@ -52,24 +52,25 @@ const login = async (req, res, next) => {
         if (!user) {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
-        // Check account status and lock time
+        // Check account status
         if (user.status === 'BLOCKED') {
             return res.status(403).json({ success: false, message: 'Account blocked. Please contact administrator.' });
         }
-        if (user.lockUntil && user.lockUntil > new Date()) {
-            const waitTime = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
-            return res.status(403).json({
-                success: false,
-                message: `Account is temporarily locked. Try again in ${waitTime} minute(s).`
-            });
-        }
+
         const isMatch = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!isMatch) {
+            if (user.lockUntil && user.lockUntil > new Date()) {
+                const waitTime = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
+                return res.status(403).json({
+                    success: false,
+                    message: `Account is temporarily locked due to failed attempts. Try again in ${waitTime} minute(s).`
+                });
+            }
             // Increment login failures
-            const attempts = user.loginAttempts + 1;
+            const attempts = (user.loginAttempts || 0) + 1;
             let lockUntil = null;
-            if (attempts >= 5) {
-                lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins lock
+            if (attempts >= 15) {
+                lockUntil = new Date(Date.now() + 2 * 60 * 1000); // 2 mins lock
                 logger_1.logger.warn(`User ${email} locked due to failed attempts`);
             }
             await db_1.prisma.user.update({
@@ -78,8 +79,8 @@ const login = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
-                message: attempts >= 5
-                    ? 'Account locked for 15 minutes due to too many failed attempts.'
+                message: attempts >= 15
+                    ? 'Account temporarily locked for 2 minutes due to failed attempts.'
                     : 'Invalid email or password.'
             });
         }
