@@ -21,14 +21,6 @@ const initSocketHandler = (io) => {
             const roomName = `exam-${examId}`;
             socket.join(roomName);
             const sessionKey = `${examId}::${studentId}`;
-            const existingSession = activeSessions.get(sessionKey);
-            if (existingSession && existingSession.socketId !== socket.id && (Date.now() - existingSession.lastActive < 60000)) {
-                logger_1.logger.warn(`Duplicate tab detected for ${studentName} (${studentId}). Rejecting second socket connection.`);
-                socket.emit('duplicate-session-warning', {
-                    message: '🚫 Exam session active in another tab/window. Concurrent exam tabs are blocked!'
-                });
-                return;
-            }
             const initialSession = {
                 studentId,
                 studentName,

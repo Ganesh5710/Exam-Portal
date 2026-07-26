@@ -90,15 +90,6 @@ const login = async (req, res, next) => {
             data: { loginAttempts: 0, lockUntil: null }
         });
 
-        // Duplicate Login Prevention: Prevent concurrent logins ONLY for STUDENT candidates (allow ADMIN & SUPER_ADMIN multi-tab access)
-        const sessionStore_1 = require("./sessionStore");
-        if (user.role === 'STUDENT' && sessionStore_1.hasActiveSession(user.id)) {
-            return res.status(409).json({
-                success: false,
-                message: 'Account currently logged in on another device. Concurrent logins are not allowed during an exam.'
-            });
-        }
-
         const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
         const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
 
@@ -285,15 +276,6 @@ const verifyOtp = async (req, res, next) => {
         }
         if (user.otp !== otp) {
             return res.status(401).json({ success: false, message: 'Incorrect verification code.' });
-        }
-
-        // Duplicate Login Prevention: Prevent concurrent logins ONLY for STUDENT candidates (allow ADMIN & SUPER_ADMIN multi-tab access)
-        const sessionStore_1 = require("./sessionStore");
-        if (user.role === 'STUDENT' && sessionStore_1.hasActiveSession(user.id)) {
-            return res.status(409).json({
-                success: false,
-                message: 'Account currently logged in on another device. Concurrent logins are not allowed during an exam.'
-            });
         }
 
         // Clear OTP on successful validation
