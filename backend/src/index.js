@@ -123,13 +123,25 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date()
     });
 });
-// Global Error Handler
-app.use(error_1.errorHandler);
+// Process Global Crash Guards - Prevent Node.js process termination on background async errors
+process.on('uncaughtException', (err) => {
+    logger_1.logger.error(`Uncaught Exception caught: ${err.message}`, err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    logger_1.logger.error('Unhandled Rejection caught:', reason);
+});
+
 // Background Cron Jobs
-// Trigger database autosave sync every 30 seconds
+// Trigger database autosave sync every 30 seconds (safely wrapped)
 setInterval(async () => {
-    await (0, autosave_job_1.runAutosaveDatabaseSync)();
+    try {
+        await (0, autosave_job_1.runAutosaveDatabaseSync)();
+    } catch (err) {
+        logger_1.logger.error(`Autosave sync error: ${err.message}`);
+    }
 }, 30000);
+
+const PORT = process.env.PORT || 5000;
 
 // Self-Keepalive Ping to keep Render instance hot & active 24/7
 setInterval(() => {
@@ -137,11 +149,15 @@ setInterval(() => {
         fetch(`http://127.0.0.1:${PORT}/health`).catch(() => {});
     } catch (_) {}
 }, 180000);
-const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, async () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);
-    await (0, seed_1.seedDatabase)();
-    await (0, settings_controller_1.seedDefaultSettings)();
-    await (0, fix_1.fixCorruptQuestionOptions)();
+    try {
+        await (0, seed_1.seedDatabase)();
+        await (0, settings_controller_1.seedDefaultSettings)();
+        await (0, fix_1.fixCorruptQuestionOptions)();
+    } catch (err) {
+        logger_1.logger.error(`Startup seeding warning: ${err.message}`);
+    }
 });
 exports.default = server;
