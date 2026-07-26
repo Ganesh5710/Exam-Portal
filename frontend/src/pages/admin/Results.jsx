@@ -62,6 +62,8 @@ export const Results = () => {
   // Publish state
   const [publishing, setPublishing] = useState(null);
 
+  const [pageSize, setPageSize] = useState(100);
+
   // ─── Fetch exam options ─────────────────────────────────────────
   const fetchExams = useCallback(async () => {
     try {
@@ -75,10 +77,10 @@ export const Results = () => {
 
   // ─── Fetch submissions ─────────────────────────────────────────
   const fetchSubmissions = useCallback(
-    async (page = 1) => {
+    async (page = 1, currentLimit = pageSize) => {
       setLoading(true);
       try {
-        const params = { page, limit: 10 };
+        const params = { page, limit: currentLimit };
         if (statusFilter !== "ALL") params.status = statusFilter;
         if (examFilter !== "ALL") params.examId = examFilter;
         if (searchQuery.trim()) params.search = searchQuery.trim();
@@ -88,7 +90,7 @@ export const Results = () => {
         setPagination(
           res.data.data?.pagination || {
             page: 1,
-            limit: 10,
+            limit: currentLimit,
             total: 0,
             totalPages: 0,
           },
@@ -99,7 +101,7 @@ export const Results = () => {
         setLoading(false);
       }
     },
-    [statusFilter, examFilter, searchQuery],
+    [statusFilter, examFilter, searchQuery, pageSize],
   );
 
   useEffect(() => {
@@ -824,21 +826,38 @@ export const Results = () => {
           </div>
         )}
 
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800">
+        {/* Pagination & Rows Selector */}
+        <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-slate-800 bg-slate-900/30">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                const newLimit = parseInt(e.target.value);
+                setPageSize(newLimit);
+                fetchSubmissions(1, newLimit);
+              }}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-violet-500 transition-colors"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100 (Show All)</option>
+              <option value={250}>250</option>
+              <option value={500}>500</option>
+            </select>
             <p className="text-xs text-slate-500">
-              Page{" "}
-              <span className="text-slate-300 font-medium">
-                {pagination.page}
-              </span>{" "}
-              of{" "}
-              <span className="text-slate-300 font-medium">
-                {pagination.totalPages}
-              </span>{" "}
-              ({pagination.total} total)
+              Showing <span className="text-slate-300 font-medium">{submissions.length}</span> of{" "}
+              <span className="text-slate-300 font-medium">{pagination.total}</span> total results
             </p>
+          </div>
+
+          {pagination.totalPages > 1 && (
             <div className="flex items-center gap-2">
+              <p className="text-xs text-slate-400 mr-2">
+                Page <span className="text-white font-medium">{pagination.page}</span> of{" "}
+                <span className="text-white font-medium">{pagination.totalPages}</span>
+              </p>
               <button
                 disabled={pagination.page <= 1}
                 onClick={() => fetchSubmissions(pagination.page - 1)}
@@ -854,8 +873,8 @@ export const Results = () => {
                 <ChevronRight size={16} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Floating Bulk Action Bar ─────────────────────────────────── */}
