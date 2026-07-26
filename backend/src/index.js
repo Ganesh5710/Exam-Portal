@@ -68,19 +68,42 @@ if (!fs_1.default.existsSync(uploadsPath)) {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
 app.use('/uploads', express_1.default.static(uploadsPath));
-// API router binds
+// API router binds (support both /api/v1/ and /api/ for maximum client compatibility)
 app.use('/api/v1/auth', auth_routes_1.default);
+app.use('/api/auth', auth_routes_1.default);
+
 app.use('/api/v1/users', rateLimit_1.apiLimiter, users_routes_1.default);
+app.use('/api/users', rateLimit_1.apiLimiter, users_routes_1.default);
+
 app.use('/api/v1/departments', rateLimit_1.apiLimiter, departments_routes_1.default);
+app.use('/api/departments', rateLimit_1.apiLimiter, departments_routes_1.default);
+
 app.use('/api/v1/questions', rateLimit_1.apiLimiter, questions_routes_1.default);
+app.use('/api/questions', rateLimit_1.apiLimiter, questions_routes_1.default);
+
 app.use('/api/v1/exams', rateLimit_1.apiLimiter, exams_routes_1.default);
+app.use('/api/exams', rateLimit_1.apiLimiter, exams_routes_1.default);
+
 app.use('/api/v1/submissions', rateLimit_1.apiLimiter, submissions_routes_1.default);
+app.use('/api/submissions', rateLimit_1.apiLimiter, submissions_routes_1.default);
+
 app.use('/api/v1/analytics', rateLimit_1.apiLimiter, analytics_routes_1.default);
+app.use('/api/analytics', rateLimit_1.apiLimiter, analytics_routes_1.default);
+
 app.use('/api/v1/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
+app.use('/api/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
+
 app.use('/api/v1/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
+app.use('/api/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
+
 app.use('/api/v1/import', rateLimit_1.apiLimiter, import_routes_1.default);
+app.use('/api/import', rateLimit_1.apiLimiter, import_routes_1.default);
+
 app.use('/api/v1/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
+app.use('/api/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
+
 app.use('/api/v1/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
+app.use('/api/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
 // Welcome and status page for the root route
 app.get('/', (req, res) => {
     res.status(200).json({
