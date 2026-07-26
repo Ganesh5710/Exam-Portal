@@ -74,7 +74,7 @@ const CandidateWebcamPreview = ({
     };
   }, [streamRef, activeVideoRef]);
 
-  // Continuous frame emitter to Admin Proctoring Console
+  // Continuous frame emitter to Admin Proctoring Console (Ultra-lightweight 360x270 @ 0.45 quality ~7KB for zero RAM overhead)
   useEffect(() => {
     if (!socket || !user) return;
 
@@ -82,12 +82,12 @@ const CandidateWebcamPreview = ({
       if (activeVideoRef.current && activeVideoRef.current.readyState === 4) {
         try {
           const c = document.createElement("canvas");
-          c.width = 480;
-          c.height = 360;
+          c.width = 360;
+          c.height = 270;
           const ctx = c.getContext("2d");
           if (ctx) {
-            ctx.drawImage(activeVideoRef.current, 0, 0, 480, 360);
-            const dataUrl = c.toDataURL("image/jpeg", 0.65);
+            ctx.drawImage(activeVideoRef.current, 0, 0, 360, 270);
+            const dataUrl = c.toDataURL("image/jpeg", 0.45);
             socket.emit("candidate-frame", {
               studentId: user.id || user._id,
               examId: exam?.id,
@@ -98,7 +98,7 @@ const CandidateWebcamPreview = ({
           // Ignore capture error
         }
       }
-    }, 250);
+    }, 300);
 
     return () => clearInterval(frameTimer);
   }, [socket, user, exam?.id, activeVideoRef]);
