@@ -39,10 +39,17 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Retry once on network error / 503 (Render waking up from sleep)
-    if ((error.code === 'ERR_NETWORK' || error.response?.status === 503) && !originalRequest._networkRetry) {
-      originalRequest._networkRetry = true;
-      await new Promise(resolve => setTimeout(resolve, 3000));
+    // Retry automatically on 502 Bad Gateway, 503, 504, network error, or HTML error page (Render booting/restarting)
+    const isServerWakingOrDeploying =
+      error.code === 'ERR_NETWORK' ||
+      error.response?.status === 502 ||
+      error.response?.status === 503 ||
+      error.response?.status === 504 ||
+      (typeof error.response?.data === 'string' && error.response.data.includes('DOCTYPE'));
+
+    if (isServerWakingOrDeploying && (originalRequest._retryCount || 0) < 4) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      await new Promise(resolve => setTimeout(resolve, 2500));
       return api(originalRequest);
     }
 
