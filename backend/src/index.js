@@ -44,7 +44,8 @@ const io = new socket_io_1.Server(server, {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         credentials: true
     },
-    pingTimeout: 60000,
+    pingTimeout: 30000,
+    maxHttpBufferSize: 1e6, // 1MB buffer cap to prevent RAM memory spikes
     connectionStateRecovery: {} // Automatically recover connection states
 });
 (0, index_1.initSocketHandler)(io);
