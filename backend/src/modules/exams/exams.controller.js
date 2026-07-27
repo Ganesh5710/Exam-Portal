@@ -6,7 +6,7 @@ const getExams = async (req, res, next) => {
     const role = req.user?.role;
     const userId = req.user?.id;
     try {
-        if (role === 'ADMIN') {
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
             const exams = await db_1.prisma.exam.findMany({
                 include: {
                     department: { select: { name: true, code: true } },

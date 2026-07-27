@@ -494,21 +494,11 @@ const getSubmissions = async (req, res, next) => {
                 include: {
                     student: { select: { firstName: true, lastName: true, email: true } },
                     exam: {
-                        include: {
-                            examQuestions: {
-                                include: {
-                                    question: {
-                                        select: { score: true }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    answers: {
-                        include: {
-                            question: {
-                                include: { subject: true }
-                            }
+                        select: {
+                            title: true,
+                            totalMarks: true,
+                            passingMarks: true,
+                            duration: true
                         }
                     }
                 },

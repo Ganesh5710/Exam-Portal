@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeStyle, candidateQuality, onQualityToggle }) => {
+const CandidateLiveStreamFrame = React.memo(({ session, socket, candStatus, getStatusBadgeStyle, candidateQuality, onQualityToggle }) => {
   const [frameSrc, setFrameSrc] = useState(null);
   const [currentQuality, setCurrentQuality] = useState(candidateQuality || "STANDARD");
   const [remoteStream, setRemoteStream] = useState(null);
@@ -48,6 +48,7 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
+
       pcRef.current = pc;
 
       pc.ontrack = (event) => {
@@ -55,69 +56,97 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
           setRemoteStream(event.streams[0]);
           if (adminVideoRef.current) {
             adminVideoRef.current.srcObject = event.streams[0];
-            adminVideoRef.current.play().catch(() => {});
           }
         }
       };
 
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          socket.emit("webrtc-candidate", {
-            targetSocketId: session.socketId,
+          socket.emit("webrtc-ice-candidate", {
+            targetId: session.studentId,
             candidate: event.candidate,
           });
         }
       };
 
-      // Request stream from candidate socket
-      socket.emit("request-webrtc-stream", { studentSocketId: session.socketId });
-    } catch (e) {
-      console.warn("WebRTC init fallback:", e);
-    }
+      const handleAnswer = async (data) => {
+        if (data.from === session.studentId && pcRef.current) {
+          try {
+            await pcRef.current.setRemoteDescription(
+              new RTCSessionDescription(data.answer),
+            );
+          } catch (err) {
+            console.error("WebRTC setRemoteDescription answer error:", err);
+          }
+        }
+      };
 
-    return () => {
-      socket.off(`candidate-frame::${session.studentId}`, handleFrame);
-      if (pcRef.current) {
-        pcRef.current.close();
-      }
-    };
-  }, [socket, session?.studentId, session?.socketId]);
+      const handleIceCandidate = async (data) => {
+        if (data.from === session.studentId && pcRef.current) {
+          try {
+            await pcRef.current.addIceCandidate(
+              new RTCIceCandidate(data.candidate),
+            );
+          } catch (err) {
+            console.error("WebRTC addIceCandidate error:", err);
+          }
+        }
+      };
 
-  useEffect(() => {
-    if (remoteStream && adminVideoRef.current) {
-      adminVideoRef.current.srcObject = remoteStream;
-      adminVideoRef.current.play().catch(() => {});
+      socket.on("webrtc-answer", handleAnswer);
+      socket.on("webrtc-ice-candidate", handleIceCandidate);
+
+      return () => {
+        socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+        socket.off("webrtc-answer", handleAnswer);
+        socket.off("webrtc-ice-candidate", handleIceCandidate);
+        if (pcRef.current) {
+          pcRef.current.close();
+          pcRef.current = null;
+        }
+      };
+    } catch (err) {
+      console.warn("WebRTC initialization error:", err);
+      return () => {
+        socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+      };
     }
-  }, [remoteStream]);
+  }, [socket, session?.studentId]);
+
+  const isMaxHD = (candidateQuality || currentQuality) === "MAX_HD";
 
   return (
-    <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
-      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10 gap-1">
-        <div className="flex items-center gap-1.5">
-          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            Stream: ACTIVE
-          </span>
-          <button
-            onClick={() => onQualityToggle && onQualityToggle(session.studentId, currentQuality === "MAX_HD" ? "STANDARD" : "MAX_HD")}
-            className={`px-2 py-0.5 rounded text-[10px] font-black border backdrop-blur-md transition-all flex items-center gap-1 cursor-pointer ${
-              currentQuality === "MAX_HD"
-                ? "bg-fuchsia-600/90 text-white border-fuchsia-400 shadow-md shadow-fuchsia-500/40 animate-pulse"
-                : "bg-slate-950/80 text-slate-300 border-slate-700 hover:border-violet-400 hover:text-white"
-            }`}
-            title="Toggle Maximum Video Quality (720p HD)"
-          >
-            {currentQuality === "MAX_HD" ? (
-              <>
-                <Sparkles size={11} className="text-amber-300" /> 720p MAX HD
-              </>
-            ) : (
-              <>
-                <Video size={11} className="text-violet-400" /> Max Quality
-              </>
-            )}
-          </button>
-        </div>
+    <div className="relative aspect-video bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-inner">
+      {/* Top Floating Badge bar */}
+      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10">
+        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-900/90 text-white border border-slate-700/80 shadow flex items-center gap-1 backdrop-blur-md">
+          {isMaxHD ? (
+            <span className="text-amber-300 flex items-center gap-1 font-black animate-pulse">
+              <Sparkles size={11} className="text-amber-300" /> ✨ 720p MAX HD
+            </span>
+          ) : (
+            <span className="text-sky-400 font-semibold flex items-center gap-1">
+              <Video size={11} /> 360p Standard
+            </span>
+          )}
+        </span>
+
+        {/* Quality Switch Toggle for Single Candidate */}
+        <button
+          onClick={() =>
+            onQualityToggle &&
+            onQualityToggle(session.studentId, isMaxHD ? "STANDARD" : "MAX_HD")
+          }
+          className={`px-2 py-0.5 rounded text-[10px] font-black transition-all cursor-pointer shadow backdrop-blur-md border ${
+            isMaxHD
+              ? "bg-fuchsia-600/90 hover:bg-fuchsia-500 text-white border-fuchsia-400"
+              : "bg-slate-900/90 hover:bg-violet-600/90 text-slate-300 hover:text-white border-slate-700"
+          }`}
+          title="Toggle Max HD 720p Quality for this candidate"
+        >
+          {isMaxHD ? "⚡ Set 360p" : "✨ Max HD"}
+        </button>
+
         <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeStyle(candStatus)} shadow-sm`}>
           {candStatus}
         </span>
@@ -171,7 +200,7 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
       </div>
     </div>
   );
-};
+});
 
 export const LiveMonitor = () => {
   const { socket, connected } = useSocket();
