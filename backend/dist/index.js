@@ -220,7 +220,7 @@ setInterval(() => {
     } catch (_) {}
 }, 180000);
 
-server.listen(PORT, async () => {
+server.listen(PORT, '0.0.0.0', async () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);
     try {
         await (0, seed_1.seedDatabase)();
