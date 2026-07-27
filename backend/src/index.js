@@ -127,34 +127,48 @@ app.get('/', (req, res) => {
         timestamp: new Date()
     });
 });
-// Health check endpoint with live RAM & memory diagnostics
+// Health check endpoint with live Railway RAM & memory diagnostics
+const os_1 = __importDefault(require("os"));
+
 app.get('/health', (req, res) => {
     const mem = process.memoryUsage();
-    const rssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
-    const heapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
-    const freeRAMMB = Math.round((512 - rssMB) * 10) / 10;
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapTotalMB = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
     res.status(200).json({
         status: 'OK',
+        platform: 'Railway Cloud Engine',
         memory: {
-            usedMB: rssMB,
-            heapUsedMB: heapUsedMB,
-            freeRAMMB: freeRAMMB > 0 ? freeRAMMB : 0,
-            totalRenderCapMB: 512,
-            percentFree: `${Math.round((freeRAMMB / 512) * 100)}%`
+            processRssMB: `${processRssMB} MB`,
+            processHeapTotalMB: `${processHeapTotalMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAMMB: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAMMB: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
         },
         timestamp: new Date()
     });
 });
-// /api/health alias for UptimeRobot and external monitors
+
+// /api/health alias
 app.get('/api/health', (req, res) => {
     const mem = process.memoryUsage();
-    const rssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
-    const freeRAMMB = Math.round((512 - rssMB) * 10) / 10;
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
     res.status(200).json({
         status: 'OK',
-        usedMB: rssMB,
-        freeRAMMB: freeRAMMB > 0 ? freeRAMMB : 0,
-        totalRenderCapMB: 512,
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAMMB: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAMMB: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
         timestamp: new Date()
     });
 });
