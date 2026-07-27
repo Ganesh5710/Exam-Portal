@@ -17,11 +17,13 @@ import {
   Activity,
   Layers,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeStyle }) => {
+const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeStyle, candidateQuality, onQualityToggle }) => {
   const [frameSrc, setFrameSrc] = useState(null);
+  const [currentQuality, setCurrentQuality] = useState(candidateQuality || "STANDARD");
   const [remoteStream, setRemoteStream] = useState(null);
   const adminVideoRef = useRef(null);
   const pcRef = useRef(null);
@@ -33,6 +35,9 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
     const handleFrame = (data) => {
       if (data?.frame) {
         setFrameSrc(data.frame);
+      }
+      if (data?.quality) {
+        setCurrentQuality(data.quality);
       }
     };
 
@@ -87,11 +92,32 @@ const CandidateLiveStreamFrame = ({ session, socket, candStatus, getStatusBadgeS
 
   return (
     <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center group shadow-md">
-      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10">
-        <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-          📹 Stream: ACTIVE
-        </span>
+      <div className="absolute top-2 left-2 right-2 flex justify-between items-center z-10 gap-1">
+        <div className="flex items-center gap-1.5">
+          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-950/80 border border-emerald-500/40 text-emerald-400 backdrop-blur-md flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            Stream: ACTIVE
+          </span>
+          <button
+            onClick={() => onQualityToggle && onQualityToggle(session.studentId, currentQuality === "MAX_HD" ? "STANDARD" : "MAX_HD")}
+            className={`px-2 py-0.5 rounded text-[10px] font-black border backdrop-blur-md transition-all flex items-center gap-1 cursor-pointer ${
+              currentQuality === "MAX_HD"
+                ? "bg-fuchsia-600/90 text-white border-fuchsia-400 shadow-md shadow-fuchsia-500/40 animate-pulse"
+                : "bg-slate-950/80 text-slate-300 border-slate-700 hover:border-violet-400 hover:text-white"
+            }`}
+            title="Toggle Maximum Video Quality (720p HD)"
+          >
+            {currentQuality === "MAX_HD" ? (
+              <>
+                <Sparkles size={11} className="text-amber-300" /> 720p MAX HD
+              </>
+            ) : (
+              <>
+                <Video size={11} className="text-violet-400" /> Max Quality
+              </>
+            )}
+          </button>
+        </div>
         <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeStyle(candStatus)} shadow-sm`}>
           {candStatus}
         </span>
@@ -156,6 +182,33 @@ export const LiveMonitor = () => {
   const [globalMessage, setGlobalMessage] = useState("");
   const [gridDensity, setGridDensity] = useState("compact"); // 'compact' for 100 candidate monitoring, 'standard'
   const [selectedExtension, setSelectedExtension] = useState(10); // 10 minutes default
+  const [globalVideoQuality, setGlobalVideoQuality] = useState("STANDARD"); // 'LOW', 'STANDARD', 'MAX_HD'
+  const [candidateQualityMap, setCandidateQualityMap] = useState({});
+
+  const handleGlobalQualityChange = (quality) => {
+    setGlobalVideoQuality(quality);
+    if (socket) {
+      socket.emit("set-video-quality", { quality });
+      toast.success(
+        quality === "MAX_HD"
+          ? "🚀 Switched to MAX HD Video Quality (720p @ 0.90) for all feeds!"
+          : quality === "LOW"
+            ? "⚡ Switched to Low Bandwidth Mode (240p @ 0.40)."
+            : "⚖️ Switched to Standard Quality Mode (360p @ 0.65).",
+        { icon: quality === "MAX_HD" ? "✨" : "📹" },
+      );
+    }
+  };
+
+  const handleSingleCandidateQualityChange = (studentId, quality) => {
+    setCandidateQualityMap((prev) => ({ ...prev, [studentId]: quality }));
+    if (socket) {
+      socket.emit("set-video-quality", { studentId, quality });
+      toast.success(
+        `Video quality set to ${quality === "MAX_HD" ? "✨ MAX HD 720p" : quality} for candidate.`,
+      );
+    }
+  };
 
   const handleGlobalBroadcast = (e) => {
     e.preventDefault();
@@ -271,7 +324,47 @@ export const LiveMonitor = () => {
             Real-time candidate monitoring dashboard.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Global Video Quality Selector Mode */}
+          <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold">
+            <span className="px-2 text-[11px] font-extrabold text-slate-400 flex items-center gap-1">
+              <Video size={12} className="text-violet-400" /> Quality:
+            </span>
+            <button
+              onClick={() => handleGlobalQualityChange("LOW")}
+              className={`px-2.5 py-1 rounded-md transition-all text-[11px] cursor-pointer ${
+                globalVideoQuality === "LOW"
+                  ? "bg-slate-800 text-amber-400 font-extrabold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Low Bandwidth (240p @ 0.40)"
+            >
+              Low (240p)
+            </button>
+            <button
+              onClick={() => handleGlobalQualityChange("STANDARD")}
+              className={`px-2.5 py-1 rounded-md transition-all text-[11px] cursor-pointer ${
+                globalVideoQuality === "STANDARD"
+                  ? "bg-slate-800 text-sky-400 font-extrabold shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Standard Quality (360p @ 0.65)"
+            >
+              Standard
+            </button>
+            <button
+              onClick={() => handleGlobalQualityChange("MAX_HD")}
+              className={`px-3 py-1 rounded-md transition-all text-[11px] flex items-center gap-1 cursor-pointer ${
+                globalVideoQuality === "MAX_HD"
+                  ? "bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-black shadow-md shadow-fuchsia-500/20 animate-pulse"
+                  : "text-fuchsia-400 hover:text-white hover:bg-fuchsia-950/40"
+              }`}
+              title="Maximum Video Quality (720p HD @ 0.90)"
+            >
+              <Sparkles size={12} className="text-amber-300 animate-spin" /> MAX HD (720p)
+            </button>
+          </div>
+
           {/* View Density Switcher for 100 Candidate Monitoring */}
           <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold">
             <button
@@ -400,6 +493,8 @@ export const LiveMonitor = () => {
                       socket={socket}
                       candStatus={candStatus}
                       getStatusBadgeStyle={getStatusBadgeStyle}
+                      candidateQuality={candidateQualityMap[session.studentId] || globalVideoQuality}
+                      onQualityToggle={handleSingleCandidateQualityChange}
                     />
 
                     {/* Header: Candidate Name & Active Section */}
@@ -474,6 +569,8 @@ export const LiveMonitor = () => {
                       socket={socket}
                       candStatus={candStatus}
                       getStatusBadgeStyle={getStatusBadgeStyle}
+                      candidateQuality={candidateQualityMap[session.studentId] || globalVideoQuality}
+                      onQualityToggle={handleSingleCandidateQualityChange}
                     />
 
                     {/* Student Info & Active Section */}

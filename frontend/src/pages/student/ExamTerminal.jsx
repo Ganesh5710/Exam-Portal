@@ -154,13 +154,42 @@ export const ExamTerminal = () => {
   const [customInput, setCustomInput] = useState("");
   const [selectedLang, setSelectedLang] = useState("python");
 
-  // AI Webcam Proctoring States
+  // AI Webcam Proctoring & Dynamic Video Quality States
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const streamQualityRef = useRef("STANDARD");
+  const [streamQualityMode, setStreamQualityMode] = useState("STANDARD");
   const [proctorActive, setProctorActive] = useState(false);
   const [proctorWarning, setProctorWarning] = useState(null);
   const [faceCount, setFaceCount] = useState(0);
   const violationSustainedSeconds = useRef({});
+
+  // Listen to live quality changes from Admin Proctoring Console
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handlePersonalQuality = (data) => {
+      if (data?.quality) {
+        streamQualityRef.current = data.quality;
+        setStreamQualityMode(data.quality);
+      }
+    };
+
+    const handleGlobalQuality = (data) => {
+      if (data?.quality) {
+        streamQualityRef.current = data.quality;
+        setStreamQualityMode(data.quality);
+      }
+    };
+
+    socket.on(`video-quality-mode::${user.id}`, handlePersonalQuality);
+    socket.on("video-quality-mode-global", handleGlobalQuality);
+
+    return () => {
+      socket.off(`video-quality-mode::${user.id}`, handlePersonalQuality);
+      socket.off("video-quality-mode-global", handleGlobalQuality);
+    };
+  }, [socket, user]);
 
   // Strict Camera Gate & Denial Protocol States
   const [cameraGranted, setCameraGranted] = useState(false);
@@ -499,19 +528,36 @@ export const ExamTerminal = () => {
                 const predictions = await model.estimateFaces(video, false);
                 setFaceCount(predictions.length);
 
-                // Broadcast live video stream frame to Admin Portal socket
+                // Broadcast live video stream frame to Admin Portal socket with dynamic quality
                 if (socket && user && video) {
                   try {
                     const tempCanvas = document.createElement("canvas");
-                    tempCanvas.width = 240;
-                    tempCanvas.height = 180;
+                    const currentQualityMode = streamQualityRef.current || "STANDARD";
+                    
+                    let frameWidth = 360;
+                    let frameHeight = 270;
+                    let frameJpegQuality = 0.65;
+
+                    if (currentQualityMode === "MAX_HD") {
+                      frameWidth = 720;
+                      frameHeight = 540;
+                      frameJpegQuality = 0.90;
+                    } else if (currentQualityMode === "LOW") {
+                      frameWidth = 240;
+                      frameHeight = 180;
+                      frameJpegQuality = 0.40;
+                    }
+
+                    tempCanvas.width = frameWidth;
+                    tempCanvas.height = frameHeight;
                     const tCtx = tempCanvas.getContext("2d");
                     if (tCtx) {
-                      tCtx.drawImage(video, 0, 0, 240, 180);
+                      tCtx.drawImage(video, 0, 0, frameWidth, frameHeight);
                       socket.emit("candidate-frame", {
                         studentId: user.id,
                         examId: exam?.id,
-                        frame: tempCanvas.toDataURL("image/jpeg", 0.5),
+                        quality: currentQualityMode,
+                        frame: tempCanvas.toDataURL("image/jpeg", frameJpegQuality),
                       });
                     }
                   } catch (e) {

@@ -94,10 +94,22 @@ const initSocketHandler = (io) => {
             }
         });
         socket.on('candidate-frame', (data) => {
-            const { studentId, frame } = data;
+            const { studentId, frame, quality } = data;
             // Use volatile emit so frames are dropped if buffer is busy, eliminating memory queuing
-            socket.volatile.to('admin-room').emit('candidate-frame-broadcast', { studentId, frame });
-            socket.volatile.to('admin-room').emit(`candidate-frame::${studentId}`, { studentId, frame });
+            socket.volatile.to('admin-room').emit('candidate-frame-broadcast', { studentId, frame, quality });
+            socket.volatile.to('admin-room').emit(`candidate-frame::${studentId}`, { studentId, frame, quality });
+        });
+        // Admin controls video quality mode (LOW, STANDARD, MAX_HD)
+        socket.on('set-video-quality', (data) => {
+            const { quality, studentId } = data;
+            if (studentId) {
+                io.emit(`video-quality-mode::${studentId}`, { quality });
+                io.to('admin-room').emit('video-quality-changed', { studentId, quality });
+            } else {
+                io.emit('video-quality-mode-global', { quality });
+                io.to('admin-room').emit('video-quality-changed', { quality });
+            }
+            logger_1.logger.info(`Video quality mode changed to ${quality} for ${studentId || 'all candidates'}`);
         });
         // Student registers a security violation (tab-switch, fullscreen exit, face issues)
         socket.on('security-violation', async (data) => {
