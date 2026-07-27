@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "build": "npx prisma generate --schema=prisma/schema.prisma || true",
+    "build": "npx prisma generate --schema=prisma/schema.prisma && node -e \"const fs=require('fs'),path=require('path');function c(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});fs.readdirSync(s).forEach(i=>{const sp=path.join(s,i),dp=path.join(d,i);if(fs.statSync(sp).isDirectory())c(sp,dp);else fs.copyFileSync(sp,dp);})}c('./src','./dist');\"",
     "dev": "nodemon src/index.js",
     "prisma:generate": "npx prisma generate --schema=prisma/schema.prisma || true",
     "prisma:migrate": "npx prisma migrate dev",

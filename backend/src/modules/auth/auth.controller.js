@@ -17,8 +17,22 @@ try {
     } catch (_) {
         console.warn("Email utility module import fallback engaged.");
     }
+let sessionStore_1 = {
+    registerUserSession: () => {},
+    clearUserSession: () => {},
+    hasActiveSession: () => false,
+    getUserSession: () => null,
+    userActiveSessions: new Map()
+};
+try {
+    sessionStore_1 = require("./sessionStore");
+} catch (e) {
+    try {
+        sessionStore_1 = require("../auth/sessionStore");
+    } catch (_) {
+        console.warn("SessionStore module import fallback engaged.");
+    }
 }
-const sessionStore_1 = require("./sessionStore");
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026-portal';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'super-secret-refresh-token-key-2026-portal';
 const ACCESS_EXP = process.env.JWT_ACCESS_EXPIRATION || '15m';
