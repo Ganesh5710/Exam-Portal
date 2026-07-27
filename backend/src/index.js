@@ -67,7 +67,19 @@ const uploadsPath = path_1.default.join(__dirname, '../../uploads');
 if (!fs_1.default.existsSync(uploadsPath)) {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
-app.use('/uploads', express_1.default.static(uploadsPath));
+// Welcome and status response for root route
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Welcome to the SecureExam Enterprise Online Examination Portal API!',
+        version: '1.0.0',
+        status: 'ONLINE',
+        platform: 'Railway High-Performance Engine',
+        health: '/health',
+        timestamp: new Date()
+    });
+});
+
 // API router binds (support both /api/v1/ and /api/ for maximum client compatibility)
 app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/auth', auth_routes_1.default);
