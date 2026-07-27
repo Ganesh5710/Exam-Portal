@@ -8,7 +8,16 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("../../database/db");
 const logger_1 = require("../../config/logger");
-const email_1 = require("../../utils/email");
+let email_1 = { sendEmail: async () => ({ success: false, message: "Email utility inactive" }) };
+try {
+    email_1 = require("../../utils/email");
+} catch (e) {
+    try {
+        email_1 = require("../utils/email");
+    } catch (_) {
+        console.warn("Email utility module import fallback engaged.");
+    }
+}
 const sessionStore_1 = require("./sessionStore");
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026-portal';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'super-secret-refresh-token-key-2026-portal';
