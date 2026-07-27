@@ -220,14 +220,16 @@ setInterval(() => {
     } catch (_) {}
 }, 180000);
 
-server.listen(PORT, '0.0.0.0', async () => {
+server.listen(PORT, '0.0.0.0', () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);
-    try {
-        await (0, seed_1.seedDatabase)();
-        await (0, settings_controller_1.seedDefaultSettings)();
-        await (0, fix_1.fixCorruptQuestionOptions)();
-    } catch (err) {
-        logger_1.logger.error(`Startup seeding warning: ${err.message}`);
-    }
+    setTimeout(async () => {
+        try {
+            await (0, seed_1.seedDatabase)();
+            await (0, settings_controller_1.seedDefaultSettings)();
+            await (0, fix_1.fixCorruptQuestionOptions)();
+        } catch (err) {
+            logger_1.logger.error(`Startup seeding warning: ${err.message}`);
+        }
+    }, 100);
 });
 exports.default = server;
