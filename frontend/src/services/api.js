@@ -9,7 +9,7 @@ import axios from "axios";
 
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  return "/api/v1";
+  return "https://exam-portal-production-9abb.up.railway.app/api/v1";
 };
 
 const api = axios.create({
