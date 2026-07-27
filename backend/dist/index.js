@@ -1,4 +1,7 @@
 "use strict";
+// ⚠️ Load environment variables FIRST — before any other imports
+require('dotenv').config();
+
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,7 +21,6 @@ const rateLimit_1 = require("./middleware/rateLimit");
 const auth_routes_1 = __importDefault(require("./modules/auth/auth.routes"));
 const users_routes_1 = __importDefault(require("./modules/users/users.routes"));
 const departments_routes_1 = __importDefault(require("./modules/departments/departments.routes"));
-const subjects_routes_1 = __importDefault(require("./modules/subjects/subjects.routes"));
 const questions_routes_1 = __importDefault(require("./modules/questions/questions.routes"));
 const exams_routes_1 = __importDefault(require("./modules/exams/exams.routes"));
 const submissions_routes_1 = __importDefault(require("./modules/submissions/submissions.routes"));
@@ -26,10 +28,14 @@ const analytics_routes_1 = __importDefault(require("./modules/analytics/analytic
 const backup_routes_1 = __importDefault(require("./modules/backup/backup.routes"));
 const settings_routes_1 = __importDefault(require("./modules/settings/settings.routes"));
 const import_routes_1 = __importDefault(require("./modules/import/import.routes"));
+const superadmin_routes_1 = __importDefault(require("./modules/superadmin/superadmin.routes"));
+const subjects_routes_1 = __importDefault(require("./modules/subjects/subject.routes"));
 const settings_controller_1 = require("./modules/settings/settings.controller");
 const autosave_job_1 = require("./modules/autosave/autosave.job");
 const seed_1 = require("./database/seed");
+const fix_1 = require("./database/fixCorruptQuestionOptions");
 const app = (0, express_1.default)();
+app.set('trust proxy', 1); // Trust reverse proxy headers from Render/Vercel for accurate client IP rate limiting
 const server = http_1.default.createServer(app);
 // Init Socket.io
 const io = new socket_io_1.Server(server, {
@@ -38,7 +44,8 @@ const io = new socket_io_1.Server(server, {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
         credentials: true
     },
-    pingTimeout: 60000,
+    pingTimeout: 30000,
+    maxHttpBufferSize: 1e6, // 1MB buffer cap to prevent RAM memory spikes
     connectionStateRecovery: {} // Automatically recover connection states
 });
 (0, index_1.initSocketHandler)(io);
@@ -47,45 +54,180 @@ app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: false // Allow loading local uploads files on client
 }));
 app.use((0, cors_1.default)({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'x-gemini-api-key', 'X-Gemini-Api-Key', 'x-offline-import', 'X-Offline-Import'],
     credentials: true
 }));
-app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+app.options('*', (0, cors_1.default)());
+app.use(express_1.default.json({ limit: '50mb' }));
+app.use(express_1.default.urlencoded({ limit: '50mb', extended: true }));
 // Local media folder static route
 const uploadsPath = path_1.default.join(__dirname, '../../uploads');
 if (!fs_1.default.existsSync(uploadsPath)) {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
-app.use('/uploads', express_1.default.static(uploadsPath));
-// API router binds
-app.use('/api/v1/auth', auth_routes_1.default);
-app.use('/api/v1/users', rateLimit_1.apiLimiter, users_routes_1.default);
-app.use('/api/v1/departments', rateLimit_1.apiLimiter, departments_routes_1.default);
-app.use('/api/v1/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
-app.use('/api/v1/questions', rateLimit_1.apiLimiter, questions_routes_1.default);
-app.use('/api/v1/exams', rateLimit_1.apiLimiter, exams_routes_1.default);
-app.use('/api/v1/submissions', rateLimit_1.apiLimiter, submissions_routes_1.default);
-app.use('/api/v1/analytics', rateLimit_1.apiLimiter, analytics_routes_1.default);
-app.use('/api/v1/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
-app.use('/api/v1/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
-app.use('/api/v1/import', rateLimit_1.apiLimiter, import_routes_1.default);
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date() });
+// Welcome and status response for root route
+app.get('/', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Welcome to the SecureExam Enterprise Online Examination Portal API!',
+        version: '1.0.0',
+        status: 'ONLINE',
+        platform: 'Railway High-Performance Engine',
+        health: '/health',
+        timestamp: new Date()
+    });
 });
-// Global Error Handler
-app.use(error_1.errorHandler);
+
+const os_1 = __importDefault(require("os"));
+
+// Health check endpoint with live Railway RAM & memory diagnostics
+app.get('/ram-status', (req, res) => {
+    const mem = process.memoryUsage();
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapTotalMB = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
+    res.status(200).json({
+        status: 'OK',
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
+            processHeapTotalMB: `${processHeapTotalMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
+        timestamp: new Date()
+    });
+});
+
+app.get('/health', (req, res) => {
+    const mem = process.memoryUsage();
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapTotalMB = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
+    res.status(200).json({
+        status: 'OK',
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
+            processHeapTotalMB: `${processHeapTotalMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
+        timestamp: new Date()
+    });
+});
+
+app.get('/api/health', (req, res) => {
+    const mem = process.memoryUsage();
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
+    res.status(200).json({
+        status: 'OK',
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
+        timestamp: new Date()
+    });
+});
+
+// API router binds (support both /api/v1/ and /api/ for maximum client compatibility)
+app.use('/api/v1/auth', auth_routes_1.default);
+app.use('/api/auth', auth_routes_1.default);
+
+app.use('/api/v1/users', rateLimit_1.apiLimiter, users_routes_1.default);
+app.use('/api/users', rateLimit_1.apiLimiter, users_routes_1.default);
+
+app.use('/api/v1/departments', rateLimit_1.apiLimiter, departments_routes_1.default);
+app.use('/api/departments', rateLimit_1.apiLimiter, departments_routes_1.default);
+
+app.use('/api/v1/questions', rateLimit_1.apiLimiter, questions_routes_1.default);
+app.use('/api/questions', rateLimit_1.apiLimiter, questions_routes_1.default);
+
+app.use('/api/v1/exams', rateLimit_1.apiLimiter, exams_routes_1.default);
+app.use('/api/exams', rateLimit_1.apiLimiter, exams_routes_1.default);
+
+app.use('/api/v1/submissions', rateLimit_1.apiLimiter, submissions_routes_1.default);
+app.use('/api/submissions', rateLimit_1.apiLimiter, submissions_routes_1.default);
+
+app.use('/api/v1/analytics', rateLimit_1.apiLimiter, analytics_routes_1.default);
+app.use('/api/analytics', rateLimit_1.apiLimiter, analytics_routes_1.default);
+
+app.use('/api/v1/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
+app.use('/api/backups', rateLimit_1.apiLimiter, backup_routes_1.default);
+
+app.use('/api/v1/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
+app.use('/api/settings', rateLimit_1.apiLimiter, settings_routes_1.default);
+
+app.use('/api/v1/import', rateLimit_1.apiLimiter, import_routes_1.default);
+app.use('/api/import', rateLimit_1.apiLimiter, import_routes_1.default);
+
+app.use('/api/v1/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
+app.use('/api/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
+
+app.use('/api/v1/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
+app.use('/api/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
+
+// Process Global Crash Guards - Prevent Node.js process termination on background async errors
+process.on('uncaughtException', (err) => {
+    logger_1.logger.error(`Uncaught Exception caught: ${err.message}`, err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    logger_1.logger.error('Unhandled Rejection caught:', reason);
+});
+
 // Background Cron Jobs
-// Trigger database autosave sync every 30 seconds
+// Explicit Periodic Garbage Collection trigger every 60 seconds
+setInterval(() => {
+    try {
+        if (global.gc) {
+            global.gc();
+        }
+    } catch (_) {}
+}, 60000);
+
+// Trigger database autosave sync every 30 seconds (safely wrapped)
 setInterval(async () => {
-    await (0, autosave_job_1.runAutosaveDatabaseSync)();
+    try {
+        await (0, autosave_job_1.runAutosaveDatabaseSync)();
+    } catch (err) {
+        logger_1.logger.error(`Autosave sync error: ${err.message}`);
+    }
 }, 30000);
+
 const PORT = process.env.PORT || 5000;
+
+// Self-Keepalive Ping to keep Render instance hot & active 24/7
+setInterval(() => {
+    try {
+        fetch(`http://127.0.0.1:${PORT}/health`).catch(() => {});
+    } catch (_) {}
+}, 180000);
+
 server.listen(PORT, async () => {
     logger_1.logger.info(`Server boot completed. Running on port ${PORT}`);
-    await (0, seed_1.seedDatabase)();
-    await (0, settings_controller_1.seedDefaultSettings)();
+    try {
+        await (0, seed_1.seedDatabase)();
+        await (0, settings_controller_1.seedDefaultSettings)();
+        await (0, fix_1.fixCorruptQuestionOptions)();
+    } catch (err) {
+        logger_1.logger.error(`Startup seeding warning: ${err.message}`);
+    }
 });
 exports.default = server;
