@@ -80,6 +80,8 @@ app.get('/', (req, res) => {
     });
 });
 
+const os_1 = __importDefault(require("os"));
+
 // Health check endpoint with live Railway RAM & memory diagnostics
 app.get('/health', (req, res) => {
     const mem = process.memoryUsage();
@@ -95,6 +97,26 @@ app.get('/health', (req, res) => {
         memory: {
             processRssMB: `${processRssMB} MB`,
             processHeapTotalMB: `${processHeapTotalMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
+        timestamp: new Date()
+    });
+});
+
+app.get('/api/health', (req, res) => {
+    const mem = process.memoryUsage();
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
+    res.status(200).json({
+        status: 'OK',
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
             processHeapUsedMB: `${processHeapUsedMB} MB`,
             systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
             systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
@@ -139,62 +161,7 @@ app.use('/api/superadmin', rateLimit_1.apiLimiter, superadmin_routes_1.default);
 
 app.use('/api/v1/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
 app.use('/api/subjects', rateLimit_1.apiLimiter, subjects_routes_1.default);
-// Welcome and status page for the root route
-app.get('/', (req, res) => {
-    res.status(200).json({
-        message: 'Welcome to the SecureExam Enterprise Online Examination Portal API!',
-        version: '1.0.0',
-        status: 'ONLINE',
-        documentation: '/api-docs (if configured)',
-        health: '/health',
-        timestamp: new Date()
-    });
-});
-// Health check endpoint with live Railway RAM & memory diagnostics
-const os_1 = __importDefault(require("os"));
 
-app.get('/health', (req, res) => {
-    const mem = process.memoryUsage();
-    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
-    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
-    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
-    const processHeapTotalMB = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
-    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
-
-    res.status(200).json({
-        status: 'OK',
-        platform: 'Railway Cloud Engine',
-        memory: {
-            processRssMB: `${processRssMB} MB`,
-            processHeapTotalMB: `${processHeapTotalMB} MB`,
-            processHeapUsedMB: `${processHeapUsedMB} MB`,
-            systemTotalRAMMB: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
-            systemFreeRAMMB: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
-        },
-        timestamp: new Date()
-    });
-});
-
-// /api/health alias
-app.get('/api/health', (req, res) => {
-    const mem = process.memoryUsage();
-    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
-    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
-    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
-    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
-
-    res.status(200).json({
-        status: 'OK',
-        platform: 'Railway Cloud Engine',
-        memory: {
-            processRssMB: `${processRssMB} MB`,
-            processHeapUsedMB: `${processHeapUsedMB} MB`,
-            systemTotalRAMMB: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
-            systemFreeRAMMB: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
-        },
-        timestamp: new Date()
-    });
-});
 // Process Global Crash Guards - Prevent Node.js process termination on background async errors
 process.on('uncaughtException', (err) => {
     logger_1.logger.error(`Uncaught Exception caught: ${err.message}`, err);
