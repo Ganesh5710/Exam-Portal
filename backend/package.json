@@ -5,13 +5,13 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node --max-old-space-size=450 --expose-gc src/index.js",
-    "build": "npx prisma generate",
+    "build": "npx prisma generate --schema=prisma/schema.prisma || true",
     "dev": "nodemon src/index.js",
-    "prisma:generate": "npx prisma generate",
+    "prisma:generate": "npx prisma generate --schema=prisma/schema.prisma || true",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:studio": "npx prisma studio",
     "prisma:seed": "node src/database/seed.js",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate --schema=prisma/schema.prisma || true"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
