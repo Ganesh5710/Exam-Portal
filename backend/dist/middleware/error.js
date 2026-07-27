@@ -14,10 +14,8 @@ const errorHandler = (err, req, res, next) => {
     });
     return res.status(statusCode).json({
         success: false,
-        message: process.env.NODE_ENV === 'production' && statusCode === 500
-            ? 'An unexpected error occurred. Please try again later.'
-            : message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+        message: message,
+        stack: err.stack,
     });
 };
 exports.errorHandler = errorHandler;

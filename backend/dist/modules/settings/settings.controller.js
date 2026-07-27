@@ -1,7 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seedDefaultSettings = exports.updateSettings = exports.getSettings = void 0;
+exports.seedDefaultSettings = exports.clearAllData = exports.updateSettings = exports.getSettings = void 0;
+const bcryptjs_1 = require("bcryptjs");
 const db_1 = require("../../database/db");
+/**
+ * Fetches all system configuration parameters from systemSettings table
+ * and converts array records into a simple key-value keymap object.
+ */
 const getSettings = async (req, res, next) => {
     try {
         const settings = await db_1.prisma.systemSettings.findMany();
@@ -24,12 +29,14 @@ const updateSettings = async (req, res, next) => {
         if (keys.length === 0) {
             return res.status(400).json({ success: false, message: 'Settings payload is empty.' });
         }
-        // Update settings in transaction
-        await db_1.prisma.$transaction(keys.map(key => db_1.prisma.systemSettings.upsert({
-            where: { key },
-            update: { value: String(updates[key]) },
-            create: { key, value: String(updates[key]) }
-        })));
+        // Update settings sequentially without transaction for pooler compatibility
+        for (const key of keys) {
+            await db_1.prisma.systemSettings.upsert({
+                where: { key },
+                update: { value: String(updates[key]) },
+                create: { key, value: String(updates[key]) }
+            });
+        }
         await db_1.prisma.auditLog.create({
             data: {
                 userId: req.user?.id,
@@ -45,6 +52,46 @@ const updateSettings = async (req, res, next) => {
     }
 };
 exports.updateSettings = updateSettings;
+const clearAllData = async (req, res, next) => {
+    try {
+        // Delete all dependent records in correct order
+        await db_1.prisma.examQuestion.deleteMany({});
+        await db_1.prisma.examAssignment.deleteMany({});
+        await db_1.prisma.answer.deleteMany({});
+        await db_1.prisma.submission.deleteMany({});
+        await db_1.prisma.question.deleteMany({});
+        await db_1.prisma.exam.deleteMany({});
+        await db_1.prisma.refreshToken.deleteMany({});
+        await db_1.prisma.passwordResetToken.deleteMany({});
+        await db_1.prisma.emailVerificationToken.deleteMany({});
+        await db_1.prisma.auditLog.deleteMany({});
+        // Delete all non-admin users
+        await db_1.prisma.user.deleteMany({
+            where: {
+                role: { not: 'ADMIN' }
+            }
+        });
+        // Delete all departments
+        await db_1.prisma.department.deleteMany({});
+        // Reset admin password
+        const adminEmail = req.user?.email;
+        if (adminEmail) {
+            const hash = await bcryptjs_1.hash('Admin@123', 10);
+            await db_1.prisma.user.updateMany({
+                where: { role: 'ADMIN' },
+                data: { passwordHash: hash, loginAttempts: 0, lockUntil: null }
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'All data cleared successfully. Only admin account is preserved.'
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.clearAllData = clearAllData;
 // Seed helper to trigger on server startup
 const seedDefaultSettings = async () => {
     const defaults = [

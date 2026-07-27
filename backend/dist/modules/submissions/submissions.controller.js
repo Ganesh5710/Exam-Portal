@@ -1,17 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gradeDescriptiveAnswer = exports.getSubmissionsForExam = exports.submitExam = exports.saveAnswers = void 0;
+exports.bulkPublishSubmissions = exports.getMySubmission = exports.bulkDeleteSubmissions = exports.deleteSubmission = exports.updateSubmission = exports.getSubmissions = exports.gradeDescriptiveAnswer = exports.getSubmissionsForExam = exports.submitExam = exports.saveAnswers = void 0;
 const db_1 = require("../../database/db");
 const codeExecution_service_1 = require("../questions/codeExecution.service");
+/**
+ * Periodically upserts candidate answer entries into the database during active exam sessions,
+ * ensuring answer state persistence against browser crashes or network interruptions.
+ */
 const saveAnswers = async (req, res, next) => {
     const { examId, answers } = req.body; // answers is an array of { questionId, studentAnswer }
     const studentId = req.user?.id || '';
     try {
-        const assignment = await db_1.prisma.examAssignment.findUnique({
+        let assignment = await db_1.prisma.examAssignment.findUnique({
             where: { examId_studentId: { examId, studentId } }
         });
-        if (!assignment || assignment.status !== 'STARTED') {
-            return res.status(403).json({ success: false, message: 'Exam has not been started or already submitted.' });
+        if (!assignment || assignment.status === 'BLOCKED') {
+            return res.status(403).json({ success: false, message: 'Exam access is blocked or unassigned.' });
+        }
+        if (assignment.status === 'ASSIGNED') {
+            assignment = await db_1.prisma.examAssignment.update({
+                where: { id: assignment.id },
+                data: { status: 'STARTED', startTime: new Date() }
+            });
         }
         // Initialize or get submission
         let submission = await db_1.prisma.submission.findUnique({
@@ -27,24 +37,27 @@ const saveAnswers = async (req, res, next) => {
             });
         }
         // Save individual answers
-        for (const ans of answers) {
-            const { questionId, studentAnswer } = ans;
-            await db_1.prisma.answer.upsert({
-                where: {
-                    submissionId_questionId: {
+        if (Array.isArray(answers)) {
+            for (const ans of answers) {
+                const { questionId, studentAnswer } = ans;
+                if (!questionId) continue;
+                await db_1.prisma.answer.upsert({
+                    where: {
+                        submissionId_questionId: {
+                            submissionId: submission.id,
+                            questionId
+                        }
+                    },
+                    create: {
                         submissionId: submission.id,
-                        questionId
+                        questionId,
+                        studentAnswer
+                    },
+                    update: {
+                        studentAnswer
                     }
-                },
-                create: {
-                    submissionId: submission.id,
-                    questionId,
-                    studentAnswer
-                },
-                update: {
-                    studentAnswer
-                }
-            });
+                });
+            }
         }
         return res.status(200).json({ success: true, message: 'Answers saved successfully.' });
     }
@@ -57,13 +70,50 @@ const submitExam = async (req, res, next) => {
     const { examId, tabSwitchCount, exitFullscreenCount } = req.body;
     const studentId = req.user?.id || '';
     try {
+        // Include linked subjects for questions
         const assignment = await db_1.prisma.examAssignment.findUnique({
             where: { examId_studentId: { examId, studentId } },
-            include: { exam: { include: { examQuestions: { include: { question: true } } } } }
+            include: {
+                exam: {
+                    include: {
+                        examQuestions: {
+                            include: {
+                                question: {
+                                    include: { subject: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
-        if (!assignment || assignment.status !== 'STARTED') {
-            return res.status(400).json({ success: false, message: 'Exam is not in a submittable state.' });
+
+        if (!assignment) {
+            return res.status(404).json({ success: false, message: 'Exam assignment not found.' });
         }
+
+        if (assignment.status === 'SUBMITTED' || assignment.status === 'COMPLETED') {
+            const submission = await db_1.prisma.submission.findUnique({
+                where: { examId_studentId: { examId, studentId } }
+            });
+            return res.status(200).json({
+                success: true,
+                message: 'Exam already submitted.',
+                data: submission ? {
+                    totalScore: submission.totalScore,
+                    percentage: submission.percentage,
+                    isPassed: submission.isPassed,
+                    grade: submission.grade,
+                    sectionScores: submission.sectionScores,
+                    status: submission.status
+                } : null
+            });
+        }
+
+        if (assignment.status === 'BLOCKED') {
+            return res.status(403).json({ success: false, message: 'Exam access blocked by proctor.' });
+        }
+
         // Update assignment status
         await db_1.prisma.examAssignment.update({
             where: { id: assignment.id },
@@ -74,115 +124,221 @@ const submitExam = async (req, res, next) => {
                 exitFullscreenCount: exitFullscreenCount || 0
             }
         });
+
+        // Automatic Session Cleanup: Clear active candidate session upon exam submission
+        const sessionStore_1 = require("../auth/sessionStore");
+        await sessionStore_1.clearUserSession(studentId);
+
         // Fetch submission
         let submission = await db_1.prisma.submission.findUnique({
             where: { examId_studentId: { examId, studentId } },
             include: { answers: true }
         });
+
         if (!submission) {
             submission = await db_1.prisma.submission.create({
                 data: { examId, studentId, status: 'PENDING' },
                 include: { answers: true }
             });
         }
+
+        // 1. Bulk Upsert Answers passed in submission payload if any
+        const payloadAnswers = req.body.answers;
+        if (Array.isArray(payloadAnswers) && payloadAnswers.length > 0) {
+            await Promise.all(
+                payloadAnswers.map(ans => {
+                    const { questionId, studentAnswer } = ans;
+                    if (!questionId) return null;
+                    return db_1.prisma.answer.upsert({
+                        where: {
+                            submissionId_questionId: {
+                                submissionId: submission.id,
+                                questionId
+                            }
+                        },
+                        create: {
+                            submissionId: submission.id,
+                            questionId,
+                            studentAnswer
+                        },
+                        update: {
+                            studentAnswer
+                        }
+                    });
+                }).filter(Boolean)
+            );
+        }
+
+        // Refresh submission answers in memory
+        submission = await db_1.prisma.submission.findUnique({
+            where: { id: submission.id },
+            include: { answers: true }
+        });
+
+        // ── Helper: normalize answer text for comparison ─────────────────────
+        const norm = (v) => String(v ?? '').trim().toLowerCase();
+
+        // ── Extract correct answers as a string array ─────────────────────────
+        const getCorrectArray = (rawAnswers) => {
+            if (Array.isArray(rawAnswers))
+                return rawAnswers.map(norm);
+            if (typeof rawAnswers === 'string')
+                return [norm(rawAnswers)];
+            if (rawAnswers && typeof rawAnswers === 'object') {
+                const v = rawAnswers.answer ?? rawAnswers.correct ?? rawAnswers.key ?? null;
+                return v !== null ? [norm(v)] : [];
+            }
+            return [];
+        };
+
+        // ── Helper: normalize student response string ──────────────────────────
+        const extractResponseVal = (resp) => {
+            if (!resp) return '';
+            if (typeof resp === 'string') return norm(resp);
+            if (typeof resp === 'object') {
+                const v = resp.selectedOption ?? resp.value ?? resp.answer ?? null;
+                if (v !== null) return norm(v);
+            }
+            return norm(resp);
+        };
+
         // Start auto-evaluation
         const examQuestions = assignment.exam.examQuestions.map(eq => eq.question);
         let totalScore = 0;
         let autoGradingComplete = true;
+        const sectionBreakdown = {};
+        const answerUpdates = [];
+
         for (const question of examQuestions) {
+            const subjectName = question.subject?.name || 'General';
+            if (!sectionBreakdown[subjectName]) {
+                sectionBreakdown[subjectName] = { score: 0, maxScore: 0, correctCount: 0, totalQuestions: 0 };
+            }
+            sectionBreakdown[subjectName].totalQuestions += 1;
+            sectionBreakdown[subjectName].maxScore += question.score;
+
             const savedAns = submission.answers.find(a => a.questionId === question.id);
             const studentResponse = savedAns?.studentAnswer;
             let isCorrect = false;
             let scoreAwarded = 0;
+
             if (!studentResponse) {
-                // Unanswered
-                isCorrect = false;
-                scoreAwarded = 0;
+                // Unanswered — skip
             }
             else if (question.type === 'MCQ') {
-                const correctOpt = question.answers; // Key of correct option
-                const responseString = studentResponse.selectedOption;
-                isCorrect = correctOpt === responseString;
-                scoreAwarded = isCorrect ? question.score : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
+                const correctList = getCorrectArray(question.answers);
+                const studentChoice = extractResponseVal(studentResponse);
+                isCorrect = correctList.length > 0 && correctList.includes(studentChoice);
+                scoreAwarded = isCorrect
+                    ? question.score
+                    : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
             }
             else if (question.type === 'TRUE_FALSE') {
-                const correctVal = String(question.answers).toLowerCase();
-                const studentVal = String(studentResponse.value).toLowerCase();
-                isCorrect = correctVal === studentVal;
-                scoreAwarded = isCorrect ? question.score : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
+                const correctList = getCorrectArray(question.answers);
+                const studentVal = extractResponseVal(studentResponse);
+                isCorrect = correctList.includes(studentVal);
+                scoreAwarded = isCorrect
+                    ? question.score
+                    : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
             }
             else if (question.type === 'FILL_BLANK') {
-                const correctAnswers = Array.isArray(question.answers)
-                    ? question.answers.map(a => String(a).trim().toLowerCase())
-                    : [String(question.answers).trim().toLowerCase()];
-                const studentVal = String(studentResponse.value).trim().toLowerCase();
-                isCorrect = correctAnswers.includes(studentVal);
-                scoreAwarded = isCorrect ? question.score : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
+                const correctList = getCorrectArray(question.answers);
+                const studentVal = extractResponseVal(studentResponse);
+                isCorrect = correctList.includes(studentVal);
+                scoreAwarded = isCorrect
+                    ? question.score
+                    : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
             }
             else if (question.type === 'MULTI_CORRECT') {
-                const correctOpts = question.answers; // Array of correct options keys
-                const selectedOpts = studentResponse.selectedOptions;
-                isCorrect = Array.isArray(selectedOpts) &&
-                    correctOpts.length === selectedOpts.length &&
-                    correctOpts.every(o => selectedOpts.includes(o));
-                scoreAwarded = isCorrect ? question.score : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
+                const correctSet = new Set(getCorrectArray(question.answers));
+                const selectedOpts = Array.isArray(studentResponse.selectedOptions)
+                    ? studentResponse.selectedOptions.map(norm)
+                    : [];
+                isCorrect = correctSet.size === selectedOpts.length &&
+                    selectedOpts.every(o => correctSet.has(o));
+                if (!isCorrect && correctSet.size > 0) {
+                    const correctCount = selectedOpts.filter(o => correctSet.has(o)).length;
+                    const wrongCount = selectedOpts.filter(o => !correctSet.has(o)).length;
+                    const partialFraction = Math.max(0, (correctCount - wrongCount)) / correctSet.size;
+                    scoreAwarded = parseFloat((partialFraction * question.score).toFixed(2));
+                }
+                else {
+                    scoreAwarded = isCorrect
+                        ? question.score
+                        : (assignment.exam.allowNegativeMarking ? -question.negativeMarks : 0);
+                }
             }
             else if (question.type === 'CODING') {
                 const studentCode = studentResponse.value || '';
                 const studentLanguage = studentResponse.language || 'python';
-                let testCases = [];
                 const answersObj = question.answers;
-                if (answersObj && Array.isArray(answersObj.testCases)) {
-                    testCases = answersObj.testCases;
-                }
+                const testCases = Array.isArray(answersObj?.testCases) ? answersObj.testCases : [];
                 if (studentCode.trim() && testCases.length > 0) {
                     try {
                         const report = await (0, codeExecution_service_1.executeCode)(studentLanguage, studentCode, testCases);
                         const totalCases = testCases.length;
-                        const passedCases = report.results.filter(r => r.passed).length;
+                        const passedCases = report.results.filter((r) => r.passed).length;
                         isCorrect = passedCases === totalCases;
-                        scoreAwarded = totalCases > 0 ? parseFloat(((passedCases / totalCases) * question.score).toFixed(2)) : 0;
+                        scoreAwarded = totalCases > 0
+                            ? parseFloat(((passedCases / totalCases) * question.score).toFixed(2))
+                            : 0;
                     }
-                    catch (execErr) {
+                    catch {
                         isCorrect = false;
                         scoreAwarded = 0;
                     }
                 }
-                else {
-                    isCorrect = false;
-                    scoreAwarded = 0;
-                }
             }
             else {
-                // Descriptive requires manual grading
                 autoGradingComplete = false;
                 continue;
             }
+
             if (savedAns) {
-                await db_1.prisma.answer.update({
-                    where: { id: savedAns.id },
-                    data: { isCorrect, scoreAwarded }
-                });
                 totalScore += scoreAwarded;
+                sectionBreakdown[subjectName].score += scoreAwarded;
+                if (isCorrect) sectionBreakdown[subjectName].correctCount += 1;
+
+                answerUpdates.push(
+                    db_1.prisma.answer.update({
+                        where: { id: savedAns.id },
+                        data: { isCorrect, scoreAwarded }
+                    })
+                );
             }
         }
-        // Calculate percentages
+
+        // Execute all answer updates in parallel
+        if (answerUpdates.length > 0) {
+            await Promise.all(answerUpdates);
+        }
+
+        // ── Format section scores ─────────────────────────────────────────────
+        const sectionScores = {
+            Physics: sectionBreakdown['Physics']?.score || 0,
+            Chemistry: sectionBreakdown['Chemistry']?.score || 0,
+            Mathematics: sectionBreakdown['Mathematics']?.score || 0,
+            Descriptive: sectionBreakdown['Descriptive']?.score || 0,
+            totalCombined: totalScore,
+            details: sectionBreakdown
+        };
+
+        // ── Calculate percentage & grade ───────────────────────────────────────
         const maxPossibleScore = examQuestions.reduce((acc, q) => acc + q.score, 0);
         const percentage = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
-        const isPassed = percentage >= assignment.exam.passingMarks;
+        const isPassed = totalScore >= assignment.exam.passingMarks;
         let grade = 'F';
-        if (isPassed) {
-            if (percentage >= 90)
-                grade = 'A+';
-            else if (percentage >= 80)
-                grade = 'A';
-            else if (percentage >= 70)
-                grade = 'B';
-            else if (percentage >= 60)
-                grade = 'C';
-            else
-                grade = 'D';
-        }
+        if (percentage >= 90)
+            grade = 'A+';
+        else if (percentage >= 80)
+            grade = 'A';
+        else if (percentage >= 70)
+            grade = 'B';
+        else if (percentage >= 60)
+            grade = 'C';
+        else if (percentage >= 40)
+            grade = 'D';
+
         await db_1.prisma.submission.update({
             where: { id: submission.id },
             data: {
@@ -190,6 +346,7 @@ const submitExam = async (req, res, next) => {
                 percentage,
                 isPassed,
                 grade,
+                sectionScores,
                 status: autoGradingComplete ? 'COMPLETED' : 'PENDING',
                 violationsCount: (tabSwitchCount || 0) + (exitFullscreenCount || 0),
                 submitTime: new Date()
@@ -208,7 +365,8 @@ const submitExam = async (req, res, next) => {
             message: 'Exam submitted successfully.',
             data: {
                 totalScore,
-                percentage,
+                maxPossibleScore,
+                percentage: parseFloat(percentage.toFixed(2)),
                 isPassed,
                 grade,
                 status: autoGradingComplete ? 'COMPLETED' : 'PENDING'
@@ -275,7 +433,18 @@ const gradeDescriptiveAnswer = async (req, res, next) => {
         const percentage = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
         const exam = await db_1.prisma.exam.findUnique({ where: { id: answer.submission.examId } });
         const passingMarks = exam?.passingMarks || 40;
-        const isPassed = percentage >= passingMarks;
+        const isPassed = totalScore >= passingMarks;
+        let grade = 'F';
+        if (percentage >= 90)
+            grade = 'A+';
+        else if (percentage >= 80)
+            grade = 'A';
+        else if (percentage >= 70)
+            grade = 'B';
+        else if (percentage >= 60)
+            grade = 'C';
+        else if (percentage >= 40)
+            grade = 'D';
         // Check if other descriptive questions in this submission are still un-evaluated
         const pendingQuestionsCount = submissionAnswers.filter(a => a.scoreAwarded === null).length;
         await db_1.prisma.submission.update({
@@ -284,6 +453,7 @@ const gradeDescriptiveAnswer = async (req, res, next) => {
                 totalScore,
                 percentage,
                 isPassed,
+                grade,
                 status: pendingQuestionsCount === 0 ? 'COMPLETED' : 'PENDING'
             }
         });
@@ -294,3 +464,247 @@ const gradeDescriptiveAnswer = async (req, res, next) => {
     }
 };
 exports.gradeDescriptiveAnswer = gradeDescriptiveAnswer;
+const getSubmissions = async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
+    const status = req.query.status;
+    const examId = req.query.examId;
+    const search = req.query.search;
+    try {
+        const skip = (page - 1) * limit;
+        const where = {};
+        if (status && status !== 'ALL') {
+            where.status = status;
+        }
+        if (examId && examId !== 'ALL') {
+            where.examId = examId;
+        }
+        if (search) {
+            where.student = {
+                OR: [
+                    { firstName: { contains: search, mode: 'insensitive' } },
+                    { lastName: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } }
+                ]
+            };
+        }
+        const [submissions, total] = await Promise.all([
+            db_1.prisma.submission.findMany({
+                where,
+                include: {
+                    student: { select: { firstName: true, lastName: true, email: true } },
+                    exam: {
+                        select: {
+                            title: true,
+                            totalMarks: true,
+                            passingMarks: true,
+                            duration: true
+                        }
+                    }
+                },
+                orderBy: { updatedAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            db_1.prisma.submission.count({ where })
+        ]);
+        return res.status(200).json({
+            success: true,
+            data: {
+                submissions,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit) || 1
+                }
+            }
+        });
+    }
+    catch (error) {
+        logger_1.logger.error(`Error fetching submissions: ${error.message}`);
+        next(error);
+    }
+};
+exports.getSubmissions = getSubmissions;
+const updateSubmission = async (req, res, next) => {
+    const { id } = req.params;
+    const { status, totalScore, percentage, grade, isPassed } = req.body;
+    try {
+        const submission = await db_1.prisma.submission.findUnique({
+            where: { id },
+            include: {
+                exam: {
+                    include: {
+                        examQuestions: {
+                            include: { question: true }
+                        }
+                    }
+                }
+            }
+        });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Submission not found.' });
+        }
+        const updateData = {};
+        if (status !== undefined)
+            updateData.status = status;
+        if (totalScore !== undefined) {
+            const score = parseFloat(totalScore);
+            updateData.totalScore = score;
+            const maxPossibleScore = submission.exam.examQuestions.reduce((acc, eq) => acc + eq.question.score, 0);
+            const percentage = maxPossibleScore > 0 ? (score / maxPossibleScore) * 100 : 0;
+            updateData.percentage = percentage;
+            let gradeVal = 'F';
+            if (percentage >= 90)
+                gradeVal = 'A+';
+            else if (percentage >= 80)
+                gradeVal = 'A';
+            else if (percentage >= 70)
+                gradeVal = 'B';
+            else if (percentage >= 60)
+                gradeVal = 'C';
+            else if (percentage >= 40)
+                gradeVal = 'D';
+            updateData.grade = gradeVal;
+            updateData.isPassed = score >= submission.exam.passingMarks;
+        }
+        else {
+            if (percentage !== undefined)
+                updateData.percentage = parseFloat(percentage);
+            if (grade !== undefined)
+                updateData.grade = grade;
+            if (isPassed !== undefined)
+                updateData.isPassed = isPassed;
+        }
+        const updated = await db_1.prisma.submission.update({ where: { id }, data: updateData });
+        return res.status(200).json({ success: true, data: updated });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.updateSubmission = updateSubmission;
+const deleteSubmission = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const submission = await db_1.prisma.submission.findUnique({ where: { id } });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Submission not found.' });
+        }
+        // Reset ExamAssignment
+        await db_1.prisma.examAssignment.updateMany({
+            where: { examId: submission.examId, studentId: submission.studentId },
+            data: {
+                status: 'ASSIGNED',
+                startTime: null,
+                submitTime: null,
+                tabSwitchCount: 0,
+                exitFullscreenCount: 0
+            }
+        });
+        await db_1.prisma.submission.delete({ where: { id } });
+        return res.status(200).json({ success: true, message: 'Submission deleted successfully.' });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.deleteSubmission = deleteSubmission;
+const bulkDeleteSubmissions = async (req, res, next) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0)
+        return res.status(400).json({ success: false, message: 'Provide an array of submission IDs.' });
+    try {
+        const submissions = await db_1.prisma.submission.findMany({
+            where: { id: { in: ids } }
+        });
+        for (const sub of submissions) {
+            await db_1.prisma.examAssignment.updateMany({
+                where: { examId: sub.examId, studentId: sub.studentId },
+                data: {
+                    status: 'ASSIGNED',
+                    startTime: null,
+                    submitTime: null,
+                    tabSwitchCount: 0,
+                    exitFullscreenCount: 0
+                }
+            });
+        }
+        await db_1.prisma.answer.deleteMany({ where: { submissionId: { in: ids } } });
+        const { count } = await db_1.prisma.submission.deleteMany({ where: { id: { in: ids } } });
+        return res.status(200).json({ success: true, message: `Deleted ${count} submission(s).` });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.bulkDeleteSubmissions = bulkDeleteSubmissions;
+const getMySubmission = async (req, res, next) => {
+    const { examId } = req.params;
+    const studentId = req.user?.id || '';
+    try {
+        const submission = await db_1.prisma.submission.findUnique({
+            where: { examId_studentId: { examId, studentId } },
+            include: {
+                exam: {
+                    include: {
+                        examQuestions: {
+                            include: { question: true }
+                        }
+                    }
+                }
+            }
+        });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Submission not found.' });
+        }
+        const maxPossibleScore = submission.exam.examQuestions.reduce((acc, eq) => acc + eq.question.score, 0);
+        return res.status(200).json({
+            success: true,
+            data: {
+                id: submission.id,
+                status: submission.status,
+                totalScore: submission.status === 'PUBLISHED' ? submission.totalScore : null,
+                percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
+                grade: submission.status === 'PUBLISHED' ? submission.grade : null,
+                isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+                sectionScores: submission.status === 'PUBLISHED' ? submission.sectionScores : null,
+                maxPossibleScore
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getMySubmission = getMySubmission;
+const bulkPublishSubmissions = async (req, res, next) => {
+    const { ids } = req.body;
+    try {
+        const whereClause = {};
+        if (Array.isArray(ids) && ids.length > 0) {
+            whereClause.id = { in: ids };
+        }
+        else {
+            whereClause.status = { in: ['COMPLETED', 'GRADED', 'PENDING'] };
+        }
+        const { count } = await db_1.prisma.submission.updateMany({
+            where: whereClause,
+            data: { status: 'PUBLISHED' }
+        });
+        await db_1.prisma.auditLog.create({
+            data: {
+                userId: req.user?.id,
+                action: 'BULK_PUBLISH_SUBMISSIONS',
+                target: `Published ${count} submissions`,
+                ipAddress: req.ip
+            }
+        });
+        return res.status(200).json({ success: true, message: `Successfully published ${count} result(s).` });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.bulkPublishSubmissions = bulkPublishSubmissions;

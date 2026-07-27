@@ -13,7 +13,7 @@ const examCreateSchema = zod_1.z.object({
         passingMarks: zod_1.z.number().positive(),
         startTime: zod_1.z.string(),
         endTime: zod_1.z.string(),
-        subjectId: zod_1.z.string().uuid('Subject must be assigned'),
+        departmentId: zod_1.z.string().uuid('Department must be assigned'),
         questionIds: zod_1.z.array(zod_1.z.string()).optional()
     })
 });
@@ -23,6 +23,7 @@ router.get('/:id/questions', (0, auth_1.restrictTo)('STUDENT'), exams_controller
 // Admin-only operations
 router.post('/', (0, auth_1.restrictTo)('ADMIN'), (0, validate_1.validate)(examCreateSchema), exams_controller_1.createExam);
 router.put('/:id', (0, auth_1.restrictTo)('ADMIN'), exams_controller_1.updateExam);
+router.delete('/bulk', (0, auth_1.restrictTo)('ADMIN'), exams_controller_1.bulkDeleteExams);
 router.delete('/:id', (0, auth_1.restrictTo)('ADMIN'), exams_controller_1.deleteExam);
 router.post('/assign', (0, auth_1.restrictTo)('ADMIN'), exams_controller_1.assignExam);
 exports.default = router;

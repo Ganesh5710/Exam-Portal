@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getExamQuestionsForStudent = exports.assignExam = exports.deleteExam = exports.updateExam = exports.createExam = exports.getExams = void 0;
+exports.bulkDeleteExams = exports.getExamQuestionsForStudent = exports.assignExam = exports.deleteExam = exports.updateExam = exports.createExam = exports.getExams = void 0;
 const db_1 = require("../../database/db");
 const getExams = async (req, res, next) => {
     const role = req.user?.role;
     const userId = req.user?.id;
     try {
-        if (role === 'ADMIN') {
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
             const exams = await db_1.prisma.exam.findMany({
                 include: {
-                    subject: { select: { name: true, code: true } },
+                    department: { select: { name: true, code: true } },
                     _count: { select: { examQuestions: true, assignments: true } }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -18,29 +18,47 @@ const getExams = async (req, res, next) => {
         }
         else {
             // Students see only exams assigned to them that are currently published
-            const assignments = await db_1.prisma.examAssignment.findMany({
-                where: {
-                    studentId: userId,
-                    exam: {
-                        status: 'PUBLISHED'
+            const [assignments, studentSubmissions] = await Promise.all([
+                db_1.prisma.examAssignment.findMany({
+                    where: { studentId: userId, exam: { status: 'PUBLISHED' } },
+                    include: { exam: { include: { department: { select: { name: true, code: true } } } } },
+                    orderBy: { exam: { startTime: 'asc' } }
+                }),
+                db_1.prisma.submission.findMany({
+                    where: { studentId: userId },
+                    select: {
+                        id: true,
+                        examId: true,
+                        totalScore: true,
+                        isPassed: true,
+                        percentage: true,
+                        status: true,
+                        grade: true,
+                        submitTime: true
                     }
-                },
-                include: {
-                    exam: {
-                        include: {
-                            subject: { select: { name: true, code: true } }
-                        }
-                    }
-                },
-                orderBy: { exam: { startTime: 'asc' } }
+                })
+            ]);
+            const subMap = new Map(studentSubmissions.map(s => [s.examId, s]));
+            const exams = assignments.map(a => {
+                const submission = subMap.get(a.examId);
+                return {
+                    ...a.exam,
+                    assignmentId: a.id,
+                    status: a.status,
+                    startTime: a.startTime || a.exam.startTime,
+                    submitTime: a.submitTime,
+                    submission: submission ? {
+                        id: submission.id,
+                        status: submission.status,
+                        totalScore: submission.status === 'PUBLISHED' ? submission.totalScore : null,
+                        percentage: submission.status === 'PUBLISHED' ? submission.percentage : null,
+                        grade: submission.status === 'PUBLISHED' ? submission.grade : null,
+                        isPassed: submission.status === 'PUBLISHED' ? submission.isPassed : null,
+                        maxPossibleScore: a.exam.totalMarks || 300,
+                        totalMarks: a.exam.totalMarks || 300,
+                    } : null
+                };
             });
-            const exams = assignments.map(a => ({
-                ...a.exam,
-                assignmentId: a.id,
-                status: a.status,
-                startTime: a.startTime || a.exam.startTime,
-                submitTime: a.submitTime
-            }));
             return res.status(200).json({ success: true, data: exams });
         }
     }
@@ -50,7 +68,7 @@ const getExams = async (req, res, next) => {
 };
 exports.getExams = getExams;
 const createExam = async (req, res, next) => {
-    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, subjectId, questionIds } = req.body;
+    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, departmentId, questionIds } = req.body;
     try {
         // Create exam
         const exam = await db_1.prisma.exam.create({
@@ -66,7 +84,7 @@ const createExam = async (req, res, next) => {
                 fullscreenRequired: !!fullscreenRequired,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
-                subjectId,
+                departmentId,
                 status: 'DRAFT'
             }
         });
@@ -98,7 +116,7 @@ const createExam = async (req, res, next) => {
 exports.createExam = createExam;
 const updateExam = async (req, res, next) => {
     const { id } = req.params;
-    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, status, subjectId, questionIds } = req.body;
+    const { title, description, instructions, duration, passingMarks, allowNegativeMarking, shuffleQuestions, shuffleOptions, fullscreenRequired, startTime, endTime, status, departmentId, questionIds } = req.body;
     try {
         const existing = await db_1.prisma.exam.findUnique({ where: { id } });
         if (!existing) {
@@ -119,7 +137,7 @@ const updateExam = async (req, res, next) => {
                 startTime: startTime ? new Date(startTime) : existing.startTime,
                 endTime: endTime ? new Date(endTime) : existing.endTime,
                 status: status || existing.status,
-                subjectId: subjectId || existing.subjectId
+                departmentId: departmentId || existing.departmentId
             }
         });
         // Re-map questions if questionIds list was provided
@@ -174,17 +192,50 @@ const deleteExam = async (req, res, next) => {
 };
 exports.deleteExam = deleteExam;
 const assignExam = async (req, res, next) => {
-    const { examId, studentIds } = req.body; // array of student user ids
+    const { examId, studentIds, emails } = req.body;
     try {
         const exam = await db_1.prisma.exam.findUnique({ where: { id: examId } });
         if (!exam) {
             return res.status(404).json({ success: false, message: 'Exam not found.' });
         }
-        if (!Array.isArray(studentIds) || studentIds.length === 0) {
-            return res.status(400).json({ success: false, message: 'Student list is required.' });
+        let targetStudentIds = [];
+        if (Array.isArray(studentIds)) {
+            targetStudentIds = [...studentIds];
+        }
+        // Parse email list
+        let emailList = [];
+        if (typeof emails === 'string') {
+            emailList = emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e.length > 0 && e.includes('@'));
+        }
+        else if (Array.isArray(emails)) {
+            emailList = emails.map(e => e.trim()).filter(e => e.length > 0 && e.includes('@'));
+        }
+        // Find or create students on the fly for each email
+        for (const email of emailList) {
+            let student = await db_1.prisma.user.findUnique({ where: { email } });
+            if (!student) {
+                student = await db_1.prisma.user.create({
+                    data: {
+                        email,
+                        passwordHash: '',
+                        firstName: email.split('@')[0],
+                        lastName: '',
+                        role: 'STUDENT',
+                        status: 'ACTIVE'
+                    }
+                });
+            }
+            if (student.role === 'STUDENT') {
+                targetStudentIds.push(student.id);
+            }
+        }
+        // Deduplicate target student IDs
+        targetStudentIds = Array.from(new Set(targetStudentIds));
+        if (targetStudentIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid students or email addresses provided.' });
         }
         let assigned = 0;
-        for (const sId of studentIds) {
+        for (const sId of targetStudentIds) {
             const exist = await db_1.prisma.examAssignment.findUnique({
                 where: { examId_studentId: { examId, studentId: sId } }
             });
@@ -209,6 +260,10 @@ const assignExam = async (req, res, next) => {
     }
 };
 exports.assignExam = assignExam;
+/**
+ * Validates candidate assignment permissions, verifies the active schedule window,
+ * updates student STARTED timestamp, and delivers sanitized exam questions with optional shuffling.
+ */
 const getExamQuestionsForStudent = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user?.id || '';
@@ -236,7 +291,9 @@ const getExamQuestionsForStudent = async (req, res, next) => {
                                 options: true,
                                 score: true,
                                 difficulty: true,
-                                fileUrl: true
+                                fileUrl: true,
+                                subject: { select: { id: true, name: true, code: true } },
+                                tags: true
                             }
                         }
                     }
@@ -264,11 +321,38 @@ const getExamQuestionsForStudent = async (req, res, next) => {
                 }
             });
         }
-        let questions = exam.examQuestions.map(eq => eq.question);
-        // Shuffle questions if toggled
-        if (exam.shuffleQuestions) {
-            questions = questions.sort(() => Math.random() - 0.5);
-        }
+
+        // Section-Based Sequential Progression (Section 1: Physics -> Section 2: Chemistry -> Section 3: Mathematics)
+        const physicsList = [];
+        const chemistryList = [];
+        const mathList = [];
+        const generalList = [];
+
+        exam.examQuestions.forEach(eq => {
+            const q = eq.question;
+            const sName = (q.subject?.name || (q.tags && q.tags[0]) || '').toLowerCase();
+            if (sName.includes('phys')) {
+                physicsList.push({ ...q, sectionName: 'Section 1: Physics', sectionKey: 'Physics' });
+            } else if (sName.includes('chem')) {
+                chemistryList.push({ ...q, sectionName: 'Section 2: Chemistry', sectionKey: 'Chemistry' });
+            } else if (sName.includes('math')) {
+                mathList.push({ ...q, sectionName: 'Section 3: Mathematics', sectionKey: 'Mathematics' });
+            } else {
+                generalList.push({ ...q, sectionName: 'Section 4: General', sectionKey: 'General' });
+            }
+        });
+
+        // Strict Sectional Shuffling Rule: Shuffle ONLY within section boundaries, NEVER mix across sections
+        const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+        const finalPhysics = exam.shuffleQuestions ? shuffle(physicsList) : physicsList;
+        const finalChemistry = exam.shuffleQuestions ? shuffle(chemistryList) : chemistryList;
+        const finalMath = exam.shuffleQuestions ? shuffle(mathList) : mathList;
+        const finalGeneral = exam.shuffleQuestions ? shuffle(generalList) : generalList;
+
+        // Concatenate sections in exact sequential order
+        let questions = [...finalPhysics, ...finalChemistry, ...finalMath, ...finalGeneral];
+
         // Shuffle options of MCQs if options shuffle is active
         if (exam.shuffleOptions) {
             questions = questions.map(q => {
@@ -302,3 +386,19 @@ const getExamQuestionsForStudent = async (req, res, next) => {
     }
 };
 exports.getExamQuestionsForStudent = getExamQuestionsForStudent;
+const bulkDeleteExams = async (req, res, next) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0)
+        return res.status(400).json({ success: false, message: 'Provide an array of exam IDs.' });
+    try {
+        await db_1.prisma.examAssignment.deleteMany({ where: { examId: { in: ids } } });
+        await db_1.prisma.examQuestion.deleteMany({ where: { examId: { in: ids } } });
+        await db_1.prisma.submission.deleteMany({ where: { examId: { in: ids } } });
+        const { count } = await db_1.prisma.exam.deleteMany({ where: { id: { in: ids } } });
+        return res.status(200).json({ success: true, message: `Deleted ${count} exam(s).` });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.bulkDeleteExams = bulkDeleteExams;

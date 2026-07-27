@@ -2,12 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteDepartment = exports.updateDepartment = exports.createDepartment = exports.getDepartments = void 0;
 const db_1 = require("../../database/db");
+/**
+ * Retrieves all academic departments with nested candidate user and examination counters,
+ * sorted alphabetically by department name.
+ */
 const getDepartments = async (req, res, next) => {
     try {
         const departments = await db_1.prisma.department.findMany({
             include: {
                 _count: {
-                    select: { users: { where: { role: 'STUDENT' } }, subjects: true }
+                    select: { users: { where: { role: 'STUDENT' } }, exams: true, questions: true }
                 }
             },
             orderBy: { name: 'asc' }

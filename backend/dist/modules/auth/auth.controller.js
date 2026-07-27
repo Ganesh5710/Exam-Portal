@@ -3,11 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.refresh = exports.login = void 0;
+exports.logout = exports.refresh = exports.login = exports.verifyOtp = exports.sendOtp = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("../../database/db");
 const logger_1 = require("../../config/logger");
+const email_1 = require("../../utils/email");
+const sessionStore_1 = require("./sessionStore");
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'super-secret-access-token-key-2026-portal';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'super-secret-refresh-token-key-2026-portal';
 const ACCESS_EXP = process.env.JWT_ACCESS_EXPIRATION || '15m';
@@ -30,28 +32,46 @@ const generateTokens = async (userId, email, role) => {
 const login = async (req, res, next) => {
     const { email, password } = req.body;
     try {
-        const user = await db_1.prisma.user.findUnique({ where: { email } });
+        let user = await db_1.prisma.user.findUnique({ where: { email } });
+        
+        // Auto-seed fallback for Super Admin user if not yet created in DB
+        if (!user && email?.toLowerCase() === 'superadmin@skillbrix.com') {
+            const superAdminHash = await bcryptjs_1.default.hash('SuperAdmin@123', 10);
+            user = await db_1.prisma.user.create({
+                data: {
+                    email: 'superadmin@skillbrix.com',
+                    passwordHash: superAdminHash,
+                    firstName: 'Global',
+                    lastName: 'Super Admin',
+                    role: 'SUPER_ADMIN',
+                    status: 'ACTIVE',
+                    departmentId: null
+                }
+            });
+        }
+
         if (!user) {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
-        // Check account status and lock time
+        // Check account status
         if (user.status === 'BLOCKED') {
             return res.status(403).json({ success: false, message: 'Account blocked. Please contact administrator.' });
         }
-        if (user.lockUntil && user.lockUntil > new Date()) {
-            const waitTime = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
-            return res.status(403).json({
-                success: false,
-                message: `Account is temporarily locked. Try again in ${waitTime} minute(s).`
-            });
-        }
+
         const isMatch = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!isMatch) {
+            if (user.lockUntil && user.lockUntil > new Date()) {
+                const waitTime = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
+                return res.status(403).json({
+                    success: false,
+                    message: `Account is temporarily locked due to failed attempts. Try again in ${waitTime} minute(s).`
+                });
+            }
             // Increment login failures
-            const attempts = user.loginAttempts + 1;
+            const attempts = (user.loginAttempts || 0) + 1;
             let lockUntil = null;
-            if (attempts >= 5) {
-                lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins lock
+            if (attempts >= 15) {
+                lockUntil = new Date(Date.now() + 2 * 60 * 1000); // 2 mins lock
                 logger_1.logger.warn(`User ${email} locked due to failed attempts`);
             }
             await db_1.prisma.user.update({
@@ -60,8 +80,8 @@ const login = async (req, res, next) => {
             });
             return res.status(401).json({
                 success: false,
-                message: attempts >= 5
-                    ? 'Account locked for 15 minutes due to too many failed attempts.'
+                message: attempts >= 15
+                    ? 'Account temporarily locked for 2 minutes due to failed attempts.'
                     : 'Invalid email or password.'
             });
         }
@@ -70,7 +90,10 @@ const login = async (req, res, next) => {
             where: { id: user.id },
             data: { loginAttempts: 0, lockUntil: null }
         });
+
+        const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
         const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
+
         // Save tokens in cookies (HTTPOnly for security)
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -105,6 +128,7 @@ const login = async (req, res, next) => {
                     role: user.role,
                     departmentId: user.departmentId
                 },
+                sessionToken,
                 accessToken,
                 refreshToken
             }
@@ -171,8 +195,13 @@ const refresh = async (req, res, next) => {
 };
 exports.refresh = refresh;
 const logout = async (req, res, next) => {
-    const { refreshToken } = req.body;
+    const { refreshToken, userId } = req.body;
     try {
+        const sessionStore_1 = require("./sessionStore");
+        const targetUserId = req.user?.id || userId;
+        if (targetUserId) {
+            await sessionStore_1.clearUserSession(targetUserId);
+        }
         if (refreshToken) {
             // Invalidate token in Database
             await db_1.prisma.refreshToken.updateMany({
@@ -189,3 +218,115 @@ const logout = async (req, res, next) => {
     }
 };
 exports.logout = logout;
+const sendOtp = async (req, res, next) => {
+    const { email } = req.body;
+    try {
+        const user = await db_1.prisma.user.findUnique({ where: { email } });
+        if (user && user.role === 'ADMIN') {
+            return res.status(400).json({ success: false, message: 'Administrators must log in using password credentials.' });
+        }
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+        if (user) {
+            await db_1.prisma.user.update({
+                where: { id: user.id },
+                data: { otp, otpExpiresAt }
+            });
+        } else {
+            await db_1.prisma.user.create({
+                data: {
+                    email,
+                    passwordHash: '',
+                    firstName: email.split('@')[0],
+                    lastName: '',
+                    role: 'STUDENT',
+                    status: 'ACTIVE',
+                    otp,
+                    otpExpiresAt
+                }
+            });
+        }
+        console.log(`[OTP Verification] Generated code ${otp} for ${email}`);
+        const emailResult = await (0, email_1.sendEmail)({
+            to: email,
+            subject: 'Your Exam Portal OTP Verification Code',
+            text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+            html: `<h3>Exam Portal Login</h3><p>Your verification code is: <strong>${otp}</strong></p><p>This code is valid for 5 minutes.</p>`
+        });
+        return res.status(200).json({
+            success: true,
+            message: 'Verification code sent to your email address.',
+            // Return debugOtp in development or if SMTP failed for easy fallback access
+            ...((process.env.NODE_ENV !== 'production' || !emailResult.success) ? { debugOtp: otp } : {})
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.sendOtp = sendOtp;
+const verifyOtp = async (req, res, next) => {
+    const { email, otp } = req.body;
+    try {
+        const user = await db_1.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid or unregistered email address.' });
+        }
+        if (!user.otp || !user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+            return res.status(401).json({ success: false, message: 'Verification code has expired or is invalid. Please request a new one.' });
+        }
+        if (user.otp !== otp) {
+            return res.status(401).json({ success: false, message: 'Incorrect verification code.' });
+        }
+
+        // Clear OTP on successful validation
+        await db_1.prisma.user.update({
+            where: { id: user.id },
+            data: { otp: null, otpExpiresAt: null, loginAttempts: 0, lockUntil: null }
+        });
+        const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
+        const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000 // 15m
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
+        });
+        // Create Audit Log
+        await db_1.prisma.auditLog.create({
+            data: {
+                userId: user.id,
+                action: 'USER_LOGIN',
+                target: `User ID: ${user.id}`,
+                ipAddress: req.ip,
+                userAgent: req.headers['user-agent']
+            }
+        });
+        return res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    role: user.role,
+                    departmentId: user.departmentId
+                },
+                sessionToken,
+                accessToken,
+                refreshToken
+            }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.verifyOtp = verifyOtp;

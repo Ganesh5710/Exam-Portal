@@ -12,6 +12,10 @@ const backupDir = path_1.default.join(__dirname, '../../../backups');
 if (!fs_1.default.existsSync(backupDir)) {
     fs_1.default.mkdirSync(backupDir, { recursive: true });
 }
+/**
+ * Generates an encrypted JSON backup snapshot of all system tables in a single transaction.
+ * Saves the generated snapshot to the disk storage backup directory.
+ */
 const createBackup = async (req, res, next) => {
     try {
         logger_1.logger.info('Database Backup: Starting export job.');
