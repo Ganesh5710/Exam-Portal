@@ -83,6 +83,28 @@ app.get('/', (req, res) => {
 const os_1 = __importDefault(require("os"));
 
 // Health check endpoint with live Railway RAM & memory diagnostics
+app.get('/ram-status', (req, res) => {
+    const mem = process.memoryUsage();
+    const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
+    const systemFreeMemMB = Math.round((os_1.default.freemem() / 1024 / 1024) * 10) / 10;
+    const processRssMB = Math.round((mem.rss / 1024 / 1024) * 10) / 10;
+    const processHeapTotalMB = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
+    const processHeapUsedMB = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
+
+    res.status(200).json({
+        status: 'OK',
+        platform: 'Railway Cloud Engine',
+        memory: {
+            processRssMB: `${processRssMB} MB`,
+            processHeapTotalMB: `${processHeapTotalMB} MB`,
+            processHeapUsedMB: `${processHeapUsedMB} MB`,
+            systemTotalRAM: `${systemTotalMemMB} MB (${Math.round(systemTotalMemMB / 1024 * 10) / 10} GB)`,
+            systemFreeRAM: `${systemFreeMemMB} MB (${Math.round(systemFreeMemMB / 1024 * 10) / 10} GB)`
+        },
+        timestamp: new Date()
+    });
+});
+
 app.get('/health', (req, res) => {
     const mem = process.memoryUsage();
     const systemTotalMemMB = Math.round((os_1.default.totalmem() / 1024 / 1024) * 10) / 10;
