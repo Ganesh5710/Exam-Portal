@@ -17,6 +17,7 @@ try {
     } catch (_) {
         console.warn("Email utility module import fallback engaged.");
     }
+}
 let sessionStore_1 = {
     registerUserSession: () => {},
     clearUserSession: () => {},
