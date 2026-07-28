@@ -56,10 +56,29 @@ const generateTokens = async (userId, email, role) => {
 const login = async (req, res, next) => {
     const { email, password } = req.body;
     try {
-        let user = await db_1.prisma.user.findUnique({ where: { email } });
+        const cleanEmail = email ? email.trim() : '';
+        let user = await db_1.prisma.user.findFirst({
+            where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+        });
         
+        // Auto-seed fallback for Admin user if not yet created in DB
+        if (!user && cleanEmail.toLowerCase() === 'skillbrix@admin.in') {
+            const adminHash = await bcryptjs_1.default.hash('Admin@123', 10);
+            user = await db_1.prisma.user.create({
+                data: {
+                    email: 'Skillbrix@admin.in',
+                    passwordHash: adminHash,
+                    firstName: 'System',
+                    lastName: 'Administrator',
+                    role: 'ADMIN',
+                    status: 'ACTIVE',
+                    departmentId: null
+                }
+            });
+        }
+
         // Auto-seed fallback for Super Admin user if not yet created in DB
-        if (!user && email?.toLowerCase() === 'superadmin@skillbrix.com') {
+        if (!user && cleanEmail.toLowerCase() === 'superadmin@skillbrix.com') {
             const superAdminHash = await bcryptjs_1.default.hash('SuperAdmin@123', 10);
             user = await db_1.prisma.user.create({
                 data: {
