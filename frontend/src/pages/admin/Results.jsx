@@ -78,7 +78,7 @@ export const Results = () => {
 
   // ─── Fetch submissions ─────────────────────────────────────────
   const fetchSubmissions = useCallback(
-    async (page = 1, currentLimit = pageSize) => {
+    async (page = 1, currentLimit = pageSize, isRetry = false) => {
       setLoading(true);
       setFetchError(false);
       try {
@@ -87,7 +87,7 @@ export const Results = () => {
         if (examFilter !== "ALL") params.examId = examFilter;
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
-        const res = await api.get("/submissions", { params, timeout: 10000 });
+        const res = await api.get("/submissions", { params, timeout: 45000 });
         const subs = res.data.data?.submissions || res.data.submissions || res.data.data || [];
         const pag = res.data.data?.pagination || res.data.pagination || {
           page,
@@ -100,8 +100,12 @@ export const Results = () => {
         setPagination(pag);
       } catch (err) {
         console.error("Error loading submissions:", err);
+        if (!isRetry) {
+          setTimeout(() => fetchSubmissions(page, currentLimit, true), 1000);
+          return;
+        }
         setFetchError(true);
-        toast.error("Failed to load submissions. Please retry.");
+        toast.error("Failed to load submissions. Please click Retry.");
       } finally {
         setLoading(false);
       }
