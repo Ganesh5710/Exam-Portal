@@ -5,7 +5,7 @@ const client_1 = require("@prisma/client");
 const logger_1 = require("../config/logger");
 const dbUrl = process.env.DATABASE_URL || '';
 const formattedUrl = dbUrl && !dbUrl.includes('connection_limit')
-  ? (dbUrl.includes('?') ? `${dbUrl}&connection_limit=5&pool_timeout=15` : `${dbUrl}?connection_limit=5&pool_timeout=15`)
+  ? (dbUrl.includes('?') ? `${dbUrl}&connection_limit=2&pool_timeout=30` : `${dbUrl}?connection_limit=2&pool_timeout=30`)
   : dbUrl;
 
 const prisma = new client_1.PrismaClient({
