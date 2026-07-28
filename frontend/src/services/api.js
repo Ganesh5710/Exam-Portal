@@ -8,7 +8,8 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl && !envUrl.includes("onrender.com")) return envUrl;
   return "https://exam-portal-production-9abb.up.railway.app/api/v1";
 };
 
