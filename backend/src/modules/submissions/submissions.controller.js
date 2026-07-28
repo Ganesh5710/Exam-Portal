@@ -507,7 +507,6 @@ const getSubmissions = async (req, res, next) => {
                 exam: {
                     select: {
                         title: true,
-                        totalMarks: true,
                         passingMarks: true,
                         duration: true
                     }
