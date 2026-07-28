@@ -488,26 +488,36 @@ const getSubmissions = async (req, res, next) => {
                 ]
             };
         }
-        const [submissions, total] = await Promise.all([
-            db_1.prisma.submission.findMany({
-                where,
-                include: {
-                    student: { select: { firstName: true, lastName: true, email: true } },
-                    exam: {
-                        select: {
-                            title: true,
-                            totalMarks: true,
-                            passingMarks: true,
-                            duration: true
-                        }
+        const submissions = await db_1.prisma.submission.findMany({
+            where,
+            select: {
+                id: true,
+                examId: true,
+                studentId: true,
+                totalScore: true,
+                percentage: true,
+                grade: true,
+                isPassed: true,
+                status: true,
+                violationsCount: true,
+                submitTime: true,
+                createdAt: true,
+                updatedAt: true,
+                student: { select: { firstName: true, lastName: true, email: true } },
+                exam: {
+                    select: {
+                        title: true,
+                        totalMarks: true,
+                        passingMarks: true,
+                        duration: true
                     }
-                },
-                orderBy: { updatedAt: 'desc' },
-                skip,
-                take: limit
-            }),
-            db_1.prisma.submission.count({ where })
-        ]);
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit
+        });
+        const total = await db_1.prisma.submission.count({ where });
         return res.status(200).json({
             success: true,
             data: {

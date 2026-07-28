@@ -235,6 +235,9 @@ model Submission {
   updatedAt       DateTime         @updatedAt
 
   @@unique([examId, studentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([studentId])
 }
 
 model Answer {
