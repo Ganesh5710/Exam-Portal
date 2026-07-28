@@ -34,6 +34,7 @@ router.post('/submit', (0, auth_1.restrictTo)('STUDENT'), (0, validate_1.validat
 router.get('/my-submission/:examId', (0, auth_1.restrictTo)('STUDENT'), submissions_controller_1.getMySubmission);
 // Admin & Super Admin routing
 router.get('/', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.getSubmissions);
+router.get('/:id', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.getSubmissionById);
 router.put('/:id', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.updateSubmission);
 router.post('/bulk-publish', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.bulkPublishSubmissions);
 router.delete('/bulk', (0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'), submissions_controller_1.bulkDeleteSubmissions);

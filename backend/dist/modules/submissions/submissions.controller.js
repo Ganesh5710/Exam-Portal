@@ -527,6 +527,43 @@ const getSubmissions = async (req, res, next) => {
     }
 };
 exports.getSubmissions = getSubmissions;
+const getSubmissionById = async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const submission = await db_1.prisma.submission.findUnique({
+            where: { id },
+            include: {
+                student: { select: { id: true, firstName: true, lastName: true, email: true } },
+                exam: {
+                    include: {
+                        examQuestions: {
+                            include: {
+                                question: {
+                                    include: { subject: true }
+                                }
+                            }
+                        }
+                    }
+                },
+                answers: {
+                    include: {
+                        question: {
+                            include: { subject: true }
+                        }
+                    }
+                }
+            }
+        });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Submission not found.' });
+        }
+        return res.status(200).json({ success: true, data: submission });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getSubmissionById = getSubmissionById;
 const updateSubmission = async (req, res, next) => {
     const { id } = req.params;
     const { status, totalScore, percentage, grade, isPassed } = req.body;
