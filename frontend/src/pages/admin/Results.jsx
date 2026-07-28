@@ -62,12 +62,13 @@ export const Results = () => {
   // Publish state
   const [publishing, setPublishing] = useState(null);
 
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(25);
+  const [fetchError, setFetchError] = useState(false);
 
   // ─── Fetch exam options ─────────────────────────────────────────
   const fetchExams = useCallback(async () => {
     try {
-      const res = await api.get("/exams");
+      const res = await api.get("/exams", { timeout: 10000 });
       const examData = res.data.data?.exams || res.data.data || [];
       setExams(examData.map((e) => ({ id: e.id, title: e.title })));
     } catch {
@@ -79,13 +80,14 @@ export const Results = () => {
   const fetchSubmissions = useCallback(
     async (page = 1, currentLimit = pageSize) => {
       setLoading(true);
+      setFetchError(false);
       try {
         const params = { page, limit: currentLimit };
         if (statusFilter !== "ALL") params.status = statusFilter;
         if (examFilter !== "ALL") params.examId = examFilter;
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
-        const res = await api.get("/submissions", { params });
+        const res = await api.get("/submissions", { params, timeout: 10000 });
         const subs = res.data.data?.submissions || res.data.submissions || res.data.data || [];
         const pag = res.data.data?.pagination || res.data.pagination || {
           page,
@@ -98,7 +100,8 @@ export const Results = () => {
         setPagination(pag);
       } catch (err) {
         console.error("Error loading submissions:", err);
-        toast.error("Failed to load submissions.");
+        setFetchError(true);
+        toast.error("Failed to load submissions. Please retry.");
       } finally {
         setLoading(false);
       }
