@@ -7,11 +7,7 @@
  */
 import axios from "axios";
 
-const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl && !envUrl.includes("onrender.com")) return envUrl;
-  return "https://exam-portal-production-9abb.up.railway.app/api/v1";
-};
+const getBaseUrl = () => "https://exam-portal-production-9abb.up.railway.app/api/v1";
 
 const api = axios.create({
   baseURL: getBaseUrl(),
