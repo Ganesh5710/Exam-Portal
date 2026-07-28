@@ -3,10 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 const client_1 = require("@prisma/client");
 const logger_1 = require("../config/logger");
+const dbUrl = process.env.DATABASE_URL || '';
+const formattedUrl = dbUrl && !dbUrl.includes('connection_limit')
+  ? (dbUrl.includes('?') ? `${dbUrl}&connection_limit=5&pool_timeout=15` : `${dbUrl}?connection_limit=5&pool_timeout=15`)
+  : dbUrl;
+
 const prisma = new client_1.PrismaClient({
+    datasources: dbUrl ? { db: { url: formattedUrl } } : undefined,
     log: [
-        { level: 'query', emit: 'event' },
-        { level: 'info', emit: 'stdout' },
         { level: 'warn', emit: 'stdout' },
         { level: 'error', emit: 'stdout' },
     ],
