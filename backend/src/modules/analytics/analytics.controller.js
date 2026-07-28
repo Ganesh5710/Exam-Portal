@@ -9,12 +9,13 @@ const gemini_1 = require("../../config/gemini");
  */
 const getDashboardSummaryMetrics = async (req, res, next) => {
     try {
-        const [studentsCount, examsCount, activeExamsCount, completedSubmissions] = await db_1.prisma.$transaction([
-            db_1.prisma.user.count({ where: { role: 'STUDENT' } }),
-            db_1.prisma.exam.count(),
-            db_1.prisma.exam.count({ where: { status: 'PUBLISHED' } }),
-            db_1.prisma.submission.findMany({ select: { totalScore: true, isPassed: true, percentage: true } })
-        ]);
+        const studentsCount = await db_1.prisma.user.count({ where: { role: 'STUDENT' } });
+        const deptsCount = await db_1.prisma.department.count();
+        const questionsCount = await db_1.prisma.question.count();
+        const examsCount = await db_1.prisma.exam.count();
+        const activeExamsCount = await db_1.prisma.exam.count({ where: { status: 'PUBLISHED' } });
+        const completedSubmissions = await db_1.prisma.submission.findMany({ select: { totalScore: true, isPassed: true, percentage: true } });
+
         const totalSubmissions = completedSubmissions.length;
         const avgScore = totalSubmissions > 0
             ? completedSubmissions.reduce((sum, s) => sum + s.percentage, 0) / totalSubmissions
@@ -23,22 +24,16 @@ const getDashboardSummaryMetrics = async (req, res, next) => {
         const passPercentage = totalSubmissions > 0 ? (passCount / totalSubmissions) * 100 : 0;
         const highestScore = totalSubmissions > 0 ? Math.max(...completedSubmissions.map(s => s.percentage)) : 0;
         const lowestScore = totalSubmissions > 0 ? Math.min(...completedSubmissions.map(s => s.percentage)) : 0;
-        // Get today's exams
-        const today = new Date();
-        const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-        const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-        const todaysExamsCount = await db_1.prisma.exam.count({
-            where: {
-                startTime: { gte: startOfDay, lte: endOfDay }
-            }
-        });
+
         return res.status(200).json({
             success: true,
             data: {
                 totalStudents: studentsCount,
+                totalDepartments: deptsCount,
+                totalQuestions: questionsCount,
                 totalExams: examsCount,
-                liveExams: activeExamsCount,
-                todaysExams: todaysExamsCount,
+                activeExams: activeExamsCount,
+                completedExams: totalSubmissions,
                 avgScore: parseFloat(avgScore.toFixed(2)),
                 highestScore: parseFloat(highestScore.toFixed(2)),
                 lowestScore: parseFloat(lowestScore.toFixed(2)),

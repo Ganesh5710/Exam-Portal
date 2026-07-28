@@ -5,7 +5,7 @@ const analytics_controller_1 = require("./analytics.controller");
 const auth_1 = require("../../middleware/auth");
 const router = (0, express_1.Router)();
 router.use(auth_1.protect);
-router.use((0, auth_1.restrictTo)('ADMIN'));
+router.use((0, auth_1.restrictTo)('ADMIN', 'SUPER_ADMIN'));
 router.get('/summary', analytics_controller_1.getDashboardSummaryMetrics);
 router.get('/exam/:examId', analytics_controller_1.getExamPerformanceAnalytics);
 router.post('/assistant', analytics_controller_1.runAssistantQuery);

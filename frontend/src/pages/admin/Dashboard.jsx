@@ -36,103 +36,18 @@ export const Dashboard = () => {
   const fetchDashboardData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const [
-        usersRes,
-        deptsRes,
-        questionsRes,
-        examsRes,
-        submissionsRes,
-      ] = await Promise.allSettled([
-        api.get("/users?all=true"),
-        api.get("/departments"),
-        api.get("/questions"),
-        api.get("/exams"),
-        api.get("/submissions"),
-      ]);
-
-      // Count students
-      let totalStudents = 0;
-      if (usersRes.status === "fulfilled") {
-        const usersData = usersRes.value.data?.data;
-        if (usersData?.students) {
-          totalStudents =
-            usersData.pagination?.total || usersData.students.length;
-        } else if (Array.isArray(usersData)) {
-          totalStudents = usersData.length;
-        }
-      }
-
-      // Count departments
-      let totalDepartments = 0;
-      if (deptsRes.status === "fulfilled") {
-        const deptsData = deptsRes.value.data?.data;
-        totalDepartments = Array.isArray(deptsData) ? deptsData.length : 0;
-      }
-
-      // Count questions
-      let totalQuestions = 0;
-      if (questionsRes.status === "fulfilled") {
-        const questionsData = questionsRes.value.data?.data;
-        totalQuestions = Array.isArray(questionsData)
-          ? questionsData.length
-          : 0;
-      }
-
-      // Count exams by status
-      let activeExams = 0;
-      let completedExams = 0;
-      let totalExams = 0;
-      if (examsRes.status === "fulfilled") {
-        const examsData = examsRes.value.data?.data;
-        if (Array.isArray(examsData)) {
-          totalExams = examsData.length;
-          activeExams = examsData.filter(
-            (e) => e.status === "PUBLISHED",
-          ).length;
-          completedExams = examsData.filter(
-            (e) => e.status === "COMPLETED",
-          ).length;
-        }
-      }
-
-      // Score analytics from submissions
-      let averageScore = 0;
-      let passRate = 0;
-      if (submissionsRes.status === "fulfilled") {
-        const submissionsData = submissionsRes.value.data?.data;
-        const submissions =
-          submissionsData?.submissions ||
-          (Array.isArray(submissionsData) ? submissionsData : []);
-        if (submissions.length > 0) {
-          const completedSubs = submissions.filter(
-            (s) => s.status === "COMPLETED" || s.totalScore !== undefined,
-          );
-          if (completedSubs.length > 0) {
-            const totalScore = completedSubs.reduce(
-              (sum, s) => sum + (s.totalScore || 0),
-              0,
-            );
-            // Prevent division-by-zero errors when calculating average scores and pass rates
-            averageScore = completedSubs.length > 0 ?
-              Math.round((totalScore / completedSubs.length) * 10) / 10 : 0;
-            const passed = completedSubs.filter(
-              (s) => (s.totalScore || 0) >= 40,
-            ).length;
-            passRate = completedSubs.length > 0 ? 
-              Math.round((passed / completedSubs.length) * 100) : 0;
-          }
-        }
-      }
+      const summaryRes = await api.get("/analytics/summary");
+      const summary = summaryRes.data?.data || {};
 
       setStats({
-        totalStudents,
-        totalDepartments,
-        totalExams,
-        totalQuestions,
-        activeExams,
-        completedExams,
-        averageScore,
-        passRate,
+        totalStudents: summary.totalStudents || 0,
+        totalDepartments: summary.totalDepartments || 0,
+        totalExams: summary.totalExams || 0,
+        totalQuestions: summary.totalQuestions || 0,
+        activeExams: summary.activeExams || 0,
+        completedExams: summary.completedExams || 0,
+        averageScore: summary.avgScore || 0,
+        passRate: summary.passPercentage || 0,
       });
 
       // Build recent activity from fetched data
