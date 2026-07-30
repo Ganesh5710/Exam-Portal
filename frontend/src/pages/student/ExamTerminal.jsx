@@ -79,7 +79,7 @@ const CandidateWebcamPreview = ({
     if (!socket || !user) return;
 
     const frameTimer = setInterval(() => {
-      if (activeVideoRef.current && activeVideoRef.current.readyState === 4) {
+      if (activeVideoRef.current && activeVideoRef.current.readyState >= 2) {
         try {
           const c = document.createElement("canvas");
           c.width = 360;

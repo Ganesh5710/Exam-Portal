@@ -31,9 +31,12 @@ const CandidateLiveStreamFrame = React.memo(({ session, socket, candStatus, getS
   useEffect(() => {
     if (!socket || !session?.studentId) return;
 
-    // Listen to real-time frame fallback stream over Socket
+    // Listen to real-time frame fallback stream over Socket (both individual and broadcast channels)
     const handleFrame = (data) => {
-      if (data?.frame) {
+      const targetId = String(session.studentId);
+      const incomingId = String(data?.studentId || "");
+
+      if (data?.frame && (incomingId === targetId || !data.studentId)) {
         setFrameSrc(data.frame);
       }
       if (data?.quality) {
@@ -41,7 +44,9 @@ const CandidateLiveStreamFrame = React.memo(({ session, socket, candStatus, getS
       }
     };
 
-    socket.on(`candidate-frame::${session.studentId}`, handleFrame);
+    const channelName = `candidate-frame::${session.studentId}`;
+    socket.on(channelName, handleFrame);
+    socket.on("candidate-frame-broadcast", handleFrame);
 
     // Initialize WebRTC PeerConnection using Google STUN servers
     try {
@@ -97,7 +102,8 @@ const CandidateLiveStreamFrame = React.memo(({ session, socket, candStatus, getS
       socket.on("webrtc-ice-candidate", handleIceCandidate);
 
       return () => {
-        socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+        socket.off(channelName, handleFrame);
+        socket.off("candidate-frame-broadcast", handleFrame);
         socket.off("webrtc-answer", handleAnswer);
         socket.off("webrtc-ice-candidate", handleIceCandidate);
         if (pcRef.current) {
@@ -108,7 +114,8 @@ const CandidateLiveStreamFrame = React.memo(({ session, socket, candStatus, getS
     } catch (err) {
       console.warn("WebRTC initialization error:", err);
       return () => {
-        socket.off(`candidate-frame::${session.studentId}`, handleFrame);
+        socket.off(channelName, handleFrame);
+        socket.off("candidate-frame-broadcast", handleFrame);
       };
     }
   }, [socket, session?.studentId]);
