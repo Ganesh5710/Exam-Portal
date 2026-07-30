@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import {
   Users,
@@ -19,6 +20,7 @@ import {
 import toast from "react-hot-toast";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalDepartments: 0,
@@ -161,6 +163,7 @@ export const Dashboard = () => {
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
       borderColor: "border-blue-500/20",
+      path: "/admin/students",
     },
     {
       label: "Departments",
@@ -169,6 +172,7 @@ export const Dashboard = () => {
       color: "text-violet-400",
       bgColor: "bg-violet-500/10",
       borderColor: "border-violet-500/20",
+      path: "/admin/departments",
     },
     {
       label: "Total Exams",
@@ -177,6 +181,7 @@ export const Dashboard = () => {
       color: "text-cyan-400",
       bgColor: "bg-cyan-500/10",
       borderColor: "border-cyan-500/20",
+      path: "/admin/exams",
     },
     {
       label: "Questions",
@@ -185,6 +190,7 @@ export const Dashboard = () => {
       color: "text-amber-400",
       bgColor: "bg-amber-500/10",
       borderColor: "border-amber-500/20",
+      path: "/admin/questions",
     },
     {
       label: "Active Exams",
@@ -193,6 +199,7 @@ export const Dashboard = () => {
       color: "text-emerald-400",
       bgColor: "bg-emerald-500/10",
       borderColor: "border-emerald-500/20",
+      path: "/admin/exams",
     },
     {
       label: "Completed Exams",
@@ -201,6 +208,7 @@ export const Dashboard = () => {
       color: "text-teal-400",
       bgColor: "bg-teal-500/10",
       borderColor: "border-teal-500/20",
+      path: "/admin/results",
     },
     {
       label: "Average Score",
@@ -209,6 +217,7 @@ export const Dashboard = () => {
       color: "text-pink-400",
       bgColor: "bg-pink-500/10",
       borderColor: "border-pink-500/20",
+      path: "/admin/results",
     },
     {
       label: "Pass Rate",
@@ -217,6 +226,7 @@ export const Dashboard = () => {
       color: "text-orange-400",
       bgColor: "bg-orange-500/10",
       borderColor: "border-orange-500/20",
+      path: "/admin/results",
     },
   ];
 
@@ -285,7 +295,8 @@ export const Dashboard = () => {
           return (
             <div
               key={i}
-              className={`group relative bg-slate-900/80 border ${card.borderColor} rounded-xl p-6 hover:bg-slate-900 transition-all duration-300 hover:shadow-lg hover:shadow-slate-900/50 overflow-hidden`}
+              onClick={() => navigate(card.path)}
+              className={`group relative bg-slate-900/80 border ${card.borderColor} rounded-xl p-6 hover:bg-slate-900 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-950/20 overflow-hidden`}
             >
               {/* Subtle gradient overlay on hover */}
               <div
@@ -294,15 +305,16 @@ export const Dashboard = () => {
 
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-medium text-slate-400 tracking-wide">
+                  <span className="text-sm font-medium text-slate-400 tracking-wide group-hover:text-slate-200 transition-colors">
                     {card.label}
                   </span>
-                  <div className={`p-2.5 rounded-lg ${card.bgColor}`}>
+                  <div className={`p-2.5 rounded-lg ${card.bgColor} flex items-center gap-1`}>
                     <Icon size={20} className={card.color} />
+                    <ChevronRight size={14} className="text-slate-500 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
                 <div>
-                  <span className="text-3xl font-bold tracking-tight text-white">
+                  <span className="text-3xl font-bold tracking-tight text-white group-hover:text-purple-300 transition-colors">
                     {card.value}
                   </span>
                 </div>
