@@ -50,33 +50,37 @@ api.interceptors.response.use(
       return api(originalRequest);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (error.response?.status === 401) {
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+        try {
+          const refreshToken = localStorage.getItem("refreshToken");
+          if (!refreshToken) throw new Error("No refresh token available");
 
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token available");
+          // Request a new token pair
+          const refreshUrl = getBaseUrl() + "/auth/refresh";
+          const response = await axios.post(refreshUrl, { refreshToken });
+          const { accessToken, refreshToken: newRefreshToken } = response.data.data;
 
-        // Request a new token pair
-        const refreshUrl = getBaseUrl() + "/auth/refresh";
-        const response = await axios.post(refreshUrl, {
-          refreshToken,
-        });
-        const { accessToken, refreshToken: newRefreshToken } =
-          response.data.data;
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", newRefreshToken);
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", newRefreshToken);
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Invalidate session
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Clear stale tokens and force login redirect
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // Clear stale session on second failed attempt
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         window.location.href = "/login";
-        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
