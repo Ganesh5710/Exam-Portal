@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import {
@@ -15,7 +15,6 @@ import {
   AlertTriangle,
   Send,
   Loader2,
-  InboxIcon,
   Trash2,
   Pencil,
   Download,
@@ -23,60 +22,79 @@ import {
   BarChart2,
   CheckSquare,
   Square,
+  Eye,
+  RefreshCw,
+  Printer,
+  Sparkles,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  User,
+  BookOpen,
+  SlidersHorizontal,
 } from "lucide-react";
 
-// ─── Results Component ──────────────────────────────────────────────
 export const Results = () => {
+  // Main Data States
   const [submissions, setSubmissions] = useState([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
+
+  // Filters & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [examFilter, setExamFilter] = useState("ALL");
-  const [exams, setExams] = useState([]);
+  const [pageSize, setPageSize] = useState(25);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 25,
+    total: 0,
+    totalPages: 1,
+  });
 
-  // Edit modal state
+  // Modal States
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailedData, setDetailedData] = useState(null);
+
+  // Manual Edit Score Modal
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editSubmission, setEditSubmission] = useState(null);
   const [editScore, setEditScore] = useState("");
   const [editPercentage, setEditPercentage] = useState("");
   const [editGrade, setEditGrade] = useState("");
-  const [editStatus, setEditStatus] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [editStatus, setEditStatus] = useState("COMPLETED");
+  const [savingEdit, setSavingEdit] = useState(false);
 
-  // Delete confirmation state
+  // Delete & Bulk Delete States
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  // Bulk select state
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkPublishing, setBulkPublishing] = useState(false);
 
-  // Publish state
-  const [publishing, setPublishing] = useState(null);
+  // Single Action Loading States
+  const [publishingId, setPublishingId] = useState(null);
+  const [gradingAnswerId, setGradingAnswerId] = useState(null);
+  const [gradeInputs, setGradeInputs] = useState({});
 
-  const [pageSize, setPageSize] = useState(25);
-  const [fetchError, setFetchError] = useState(false);
-
-  // ─── Fetch exam options ─────────────────────────────────────────
+  // ─── 1. Fetch Exams List ─────────────────────────────────────────
   const fetchExams = useCallback(async () => {
     try {
-      const res = await api.get("/exams", { timeout: 10000 });
+      const res = await api.get("/exams", { timeout: 15000 });
       const examData = res.data.data?.exams || res.data.data || [];
-      setExams(examData.map((e) => ({ id: e.id, title: e.title })));
+      setExams(Array.isArray(examData) ? examData : []);
     } catch {
-      // silently fail
+      // Ignore exam filter fetch failures gracefully
     }
   }, []);
 
-  // ─── Fetch submissions ─────────────────────────────────────────
+  // ─── 2. Fetch Submissions Grid ───────────────────────────────────
   const fetchSubmissions = useCallback(
     async (page = 1, currentLimit = pageSize, isRetry = false) => {
       setLoading(true);
@@ -87,7 +105,7 @@ export const Results = () => {
         if (examFilter !== "ALL") params.examId = examFilter;
         if (searchQuery.trim()) params.search = searchQuery.trim();
 
-        const res = await api.get("/submissions", { params, timeout: 45000 });
+        const res = await api.get("/submissions", { params, timeout: 30000 });
         const subs = res.data.data?.submissions || res.data.submissions || res.data.data || [];
         const pag = res.data.data?.pagination || res.data.pagination || {
           page,
@@ -99,15 +117,17 @@ export const Results = () => {
         setSubmissions(Array.isArray(subs) ? subs : []);
         setPagination(pag);
       } catch (err) {
-        console.error("Error loading submissions:", err);
+        console.error("Error fetching submissions:", err);
         if (!isRetry) {
+          // Automatic 1s fallback retry to absorb network hiccups
           setTimeout(() => fetchSubmissions(page, currentLimit, true), 1000);
           return;
         }
         setFetchError(true);
-        toast.error("Failed to load submissions. Please click Retry.");
+        toast.error("Failed to load examination results.");
       } finally {
         setLoading(false);
+        setRefreshing(false);
       }
     },
     [statusFilter, examFilter, searchQuery, pageSize],
@@ -116,31 +136,118 @@ export const Results = () => {
   useEffect(() => {
     fetchExams();
   }, [fetchExams]);
+
   useEffect(() => {
     fetchSubmissions(1);
   }, [fetchSubmissions]);
 
-  // ─── Open Edit Modal ──────────────────────────────────────────
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchSubmissions(pagination.page);
+  };
+
+  // ─── 3. Compute KPI Analytics Cards ──────────────────────────────
+  const kpis = useMemo(() => {
+    const total = pagination.total || submissions.length || 0;
+    if (!submissions || submissions.length === 0) {
+      return { total, passRate: 0, avgScore: 0, pendingCount: 0 };
+    }
+    const completed = submissions.filter((s) => s.status === "COMPLETED" || s.status === "PUBLISHED");
+    const passed = completed.filter((s) => s.isPassed || (s.percentage || 0) >= 40).length;
+    const passRate = completed.length > 0 ? Math.round((passed / completed.length) * 100) : 0;
+    const totalPct = completed.reduce((acc, s) => acc + (s.percentage || 0), 0);
+    const avgScore = completed.length > 0 ? (totalPct / completed.length).toFixed(1) : 0;
+    const pendingCount = submissions.filter((s) => s.status === "PENDING").length;
+
+    return { total, passRate, avgScore, pendingCount };
+  }, [submissions, pagination.total]);
+
+  // ─── 4. Detailed Submission Modal (Review Mode) ────────────────
+  const openDetailModal = async (sub) => {
+    setSelectedSubmission(sub);
+    setDetailModalOpen(true);
+    setDetailLoading(true);
+    setDetailedData(null);
+    setGradeInputs({});
+
+    try {
+      const res = await api.get(`/submissions/${sub.id}`, { timeout: 20000 });
+      const data = res.data.data || res.data;
+      setDetailedData(data);
+
+      // Pre-fill descriptive answer grading inputs
+      if (data.answers && Array.isArray(data.answers)) {
+        const initialInputs = {};
+        data.answers.forEach((ans) => {
+          if (ans.question?.type === "DESCRIPTIVE" || ans.question?.type === "SHORT_ANSWER") {
+            initialInputs[ans.id] = {
+              score: ans.scoreAwarded?.toString() || "0",
+              feedback: ans.feedback || "",
+            };
+          }
+        });
+        setGradeInputs(initialInputs);
+      }
+    } catch {
+      toast.error("Could not load complete answer breakdown.");
+      setDetailedData(sub); // Fallback to basic row data
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  // ─── 5. Grade Descriptive Answer Inline ─────────────────────────
+  const handleGradeAnswer = async (answerId, maxScore) => {
+    const input = gradeInputs[answerId];
+    if (!input) return;
+    const scoreVal = parseFloat(input.score);
+    if (isNaN(scoreVal) || scoreVal < 0 || scoreVal > maxScore) {
+      toast.error(`Score must be between 0 and ${maxScore}`);
+      return;
+    }
+
+    setGradingAnswerId(answerId);
+    try {
+      await api.post(`/submissions/grade/${answerId}`, {
+        scoreAwarded: scoreVal,
+        feedback: input.feedback,
+      });
+      toast.success("Answer scored successfully!");
+
+      // Refresh detailed modal data
+      if (selectedSubmission) {
+        const res = await api.get(`/submissions/${selectedSubmission.id}`);
+        setDetailedData(res.data.data || res.data);
+      }
+      fetchSubmissions(pagination.page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save score.");
+    } finally {
+      setGradingAnswerId(null);
+    }
+  };
+
+  // ─── 6. Single Result Edit Modal ───────────────────────────────
   const openEditModal = (sub) => {
     setEditSubmission(sub);
     setEditScore(sub.totalScore?.toString() || "0");
     setEditPercentage(sub.percentage?.toString() || "0");
-    setEditGrade(sub.grade || "");
-    setEditStatus(sub.status || "PENDING");
+    setEditGrade(sub.grade || "F");
+    setEditStatus(sub.status || "COMPLETED");
     setEditModalOpen(true);
   };
 
-  // ─── Save edits ────────────────────────────────────────────────
   const handleSaveEdit = async () => {
     if (!editSubmission) return;
     const score = parseFloat(editScore);
     const pct = parseFloat(editPercentage);
+
     if (isNaN(score) || score < 0) {
-      toast.error("Please enter a valid score.");
+      toast.error("Please enter a valid numeric score.");
       return;
     }
 
-    setSaving(true);
+    setSavingEdit(true);
     try {
       await api.put(`/submissions/${editSubmission.id}`, {
         totalScore: score,
@@ -148,81 +255,93 @@ export const Results = () => {
         grade: editGrade.trim() || undefined,
         status: editStatus,
       });
-      toast.success("Submission updated successfully!");
+      toast.success("Candidate score updated successfully!");
       setEditModalOpen(false);
       fetchSubmissions(pagination.page);
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to update submission.",
-      );
+      toast.error(err.response?.data?.message || "Failed to update submission.");
     } finally {
-      setSaving(false);
+      setSavingEdit(false);
     }
   };
 
-  // ─── Publish ───────────────────────────────────────────────────
+  // ─── 7. Single Result Publish / Unpublish ───────────────────────
   const handlePublish = async (sub) => {
-    setPublishing(sub.id);
+    setPublishingId(sub.id);
+    const newStatus = sub.status === "PUBLISHED" ? "COMPLETED" : "PUBLISHED";
     try {
       await api.put(`/submissions/${sub.id}`, {
-        status: "PUBLISHED",
-        totalScore: sub.totalScore,
+        status: newStatus,
       });
-      toast.success("Result published to student!");
+      toast.success(
+        newStatus === "PUBLISHED"
+          ? "Result published to student portal!"
+          : "Result unpublished.",
+      );
       fetchSubmissions(pagination.page);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to publish result.");
     } finally {
-      setPublishing(null);
+      setPublishingId(null);
     }
   };
 
-  // ─── Open Delete Confirm ──────────────────────────────────────
+  // ─── 8. Delete Single Submission ───────────────────────────────
   const openDeleteModal = (sub) => {
     setDeleteTarget(sub);
     setDeleteModalOpen(true);
   };
 
-  // ─── Confirm Delete ────────────────────────────────────────────
-  const handleDelete = async () => {
+  const handleDeleteSingle = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
       await api.delete(`/submissions/${deleteTarget.id}`);
-      toast.success("Submission deleted successfully.");
+      toast.success("Submission deleted & candidate assignment reset.");
       setDeleteModalOpen(false);
       setDeleteTarget(null);
       fetchSubmissions(pagination.page);
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to delete submission.",
-      );
+      toast.error(err.response?.data?.message || "Failed to delete submission.");
     } finally {
       setDeleting(false);
     }
   };
 
-  // ── Bulk select helpers ───────────────────────────────────────────────
-  const allSelected =
-    submissions.length > 0 && submissions.every((s) => selectedIds.has(s.id));
-  const someSelected =
-    submissions.some((s) => selectedIds.has(s.id)) && !allSelected;
-
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelectedIds(new Set());
+  // ─── 9. Bulk Selection Helpers ─────────────────────────────────
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = new Set(submissions.map((s) => s.id));
+      setSelectedIds(allIds);
     } else {
-      setSelectedIds(new Set(submissions.map((s) => s.id)));
+      setSelectedIds(new Set());
     }
   };
 
-  const toggleSelect = (id) => {
+  const handleToggleSelect = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  };
+
+  const handleBulkPublish = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkPublishing(true);
+    try {
+      await api.post("/submissions/bulk-publish", {
+        ids: Array.from(selectedIds),
+      });
+      toast.success(`Published ${selectedIds.size} selected result(s)!`);
+      setSelectedIds(new Set());
+      fetchSubmissions(pagination.page);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Bulk publish failed.");
+    } finally {
+      setBulkPublishing(false);
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -232,986 +351,893 @@ export const Results = () => {
       await api.delete("/submissions/bulk", {
         data: { ids: Array.from(selectedIds) },
       });
-      toast.success(`Deleted ${selectedIds.size} submission(s) successfully!`);
+      toast.success(`Deleted ${selectedIds.size} submission(s).`);
       setSelectedIds(new Set());
       setShowBulkDeleteModal(false);
       fetchSubmissions(pagination.page);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Bulk delete failed.");
+      toast.error(err.response?.data?.message || "Bulk deletion failed.");
     } finally {
       setBulkDeleting(false);
     }
   };
 
-  // Publishes the selected checkboxed exam submissions to the student workspace
-  const handleBulkPublish = async () => {
-    if (selectedIds.size === 0) return;
-    try {
-      await api.post("/submissions/bulk-publish", {
-        ids: Array.from(selectedIds),
-      });
-      toast.success(`Published ${selectedIds.size} result(s) successfully!`);
-      setSelectedIds(new Set());
-      fetchSubmissions(pagination.page);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Bulk publish failed.");
+  // ─── 10. Export to CSV & Print ──────────────────────────────────
+  const handleExportCSV = () => {
+    if (!submissions || submissions.length === 0) {
+      toast.error("No submissions available to export.");
+      return;
     }
+
+    const headers = [
+      "Student Name",
+      "Email",
+      "Exam Title",
+      "Score",
+      "Max Score",
+      "Percentage",
+      "Grade",
+      "Status",
+      "Pass/Fail",
+      "Violations",
+      "Submitted At",
+    ];
+
+    const rows = submissions.map((s) => [
+      `"${s.student?.firstName || ""} ${s.student?.lastName || ""}"`,
+      `"${s.student?.email || ""}"`,
+      `"${s.exam?.title || ""}"`,
+      s.totalScore ?? 0,
+      s.exam?.totalMarks || 100,
+      `${(s.percentage || 0).toFixed(1)}%`,
+      `"${s.grade || "N/A"}"`,
+      `"${s.status || ""}"`,
+      s.isPassed ? "PASSED" : "FAILED",
+      s.violationsCount || 0,
+      `"${s.submitTime ? new Date(s.submitTime).toLocaleString() : "N/A"}"`,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Exam_Results_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("CSV Export downloaded!");
   };
 
-  // Releases all completed and graded submissions to the user feed at once
-  const handlePublishAll = async () => {
-    const confirm = window.confirm(
-      "Are you sure you want to publish ALL unpublished exam results to the user feed at once?",
-    );
-    if (!confirm) return;
-
-    try {
-      await api.post("/submissions/bulk-publish");
-      toast.success("Successfully published all exam results!");
-      fetchSubmissions(pagination.page);
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Failed to publish all results.",
-      );
-    }
+  const handlePrintReport = () => {
+    window.print();
   };
 
-  // Fetches up to 5,000 candidate submissions matching current filters and downloads as CSV (Excel compatible)
-  const handleExportCSV = async () => {
-    const loadingToastId = toast.loading("Generating Excel export...");
-    try {
-      let exportData = [];
-
-      // Step 1: Try fetching all matching submissions from server
-      try {
-        const params = { limit: 5000 };
-        if (statusFilter !== "ALL") params.status = statusFilter;
-        if (examFilter !== "ALL") params.examId = examFilter;
-        if (searchQuery.trim()) params.search = searchQuery.trim();
-
-        const res = await api.get("/submissions", { params });
-        exportData = res.data.data?.submissions || res.data.submissions || [];
-      } catch (fetchErr) {
-        console.warn("Backend fetch for export failed, falling back to local view state:", fetchErr);
-      }
-
-      // Step 2: Fall back to locally loaded submissions if API returned empty or failed
-      if (!exportData || exportData.length === 0) {
-        exportData = submissions || [];
-      }
-
-      toast.dismiss(loadingToastId);
-
-      if (!exportData || exportData.length === 0) {
-        toast.error("No submission records found to export.");
-        return;
-      }
-
-      // Collect all distinct subject names across all submissions
-      const subjectSet = new Set();
-      exportData.forEach((sub) => {
-        if (sub && sub.answers && Array.isArray(sub.answers)) {
-          sub.answers.forEach((ans) => {
-            if (!ans) return;
-            const subjName = ans.question?.subject?.name || (ans.question?.tags && Array.isArray(ans.question.tags) && ans.question.tags[0]) || null;
-            if (subjName) subjectSet.add(subjName);
-          });
-        }
-      });
-      const subjectList = Array.from(subjectSet);
-
-      // Headers
-      const baseHeaders = [
-        "Student Name",
-        "Email",
-        "Exam Title",
-        "Total Score",
-        "Max Score",
-        "Percentage",
-      ];
-      const subjectHeaders = subjectList.map((s) => `${s} Marks`);
-      const trailingHeaders = ["Violations Count", "Status", "Submitted At"];
-      const headers = [...baseHeaders, ...subjectHeaders, ...trailingHeaders];
-
-      // Rows
-      const rows = exportData.map((sub, idx) => {
-        const studentName = sub?.student
-          ? `${sub.student.firstName || ""} ${sub.student.lastName || ""}`.trim() || sub.student.email
-          : sub?.studentName || `Student ${idx + 1}`;
-
-        const email = sub?.student?.email || sub?.studentEmail || "N/A";
-        const examTitle = sub?.exam?.title || sub?.examTitle || "N/A";
-        const totalScore = sub?.totalScore ?? sub?.score ?? 0;
-
-        const maxMark = sub?.exam?.examQuestions && Array.isArray(sub.exam.examQuestions) && sub.exam.examQuestions.length > 0
-          ? sub.exam.examQuestions.reduce((sum, eq) => sum + (eq.question?.score ?? 0), 0)
-          : (sub?.exam?.passingMarks || sub?.maxScore || 100);
-
-        let pctStr = "0.0%";
-        if (typeof sub?.percentage === "number" && !isNaN(sub.percentage)) {
-          pctStr = `${sub.percentage.toFixed(1)}%`;
-        } else if (totalScore && maxMark) {
-          pctStr = `${((totalScore / maxMark) * 100).toFixed(1)}%`;
-        }
-
-        // Compute subject scores
-        const subjScores = {};
-        if (sub?.answers && Array.isArray(sub.answers)) {
-          sub.answers.forEach((ans) => {
-            if (!ans) return;
-            const subjName = ans.question?.subject?.name || (ans.question?.tags && Array.isArray(ans.question.tags) && ans.question.tags[0]) || "General";
-            if (!subjScores[subjName]) {
-              subjScores[subjName] = { obtained: 0, total: 0 };
-            }
-            subjScores[subjName].obtained += ans.scoreAwarded || 0;
-            subjScores[subjName].total += ans.question?.score || 1;
-          });
-        }
-
-        const baseRow = [
-          studentName,
-          email,
-          examTitle,
-          totalScore,
-          maxMark,
-          pctStr,
-        ];
-
-        const subjectValues = subjectList.map((sName) => {
-          if (subjScores[sName]) {
-            return `${subjScores[sName].obtained}/${subjScores[sName].total}`;
-          }
-          return "N/A";
-        });
-
-        const trailingRow = [
-          sub?.violationsCount ?? 0,
-          sub?.status || "COMPLETED",
-          sub?.submitTime ? new Date(sub.submitTime).toLocaleString("en-IN") : new Date().toLocaleString("en-IN"),
-        ];
-
-        return [...baseRow, ...subjectValues, ...trailingRow].map((val) => `"${String(val ?? "").replace(/"/g, '""')}"`);
-      });
-
-      // Include UTF-8 BOM byte for Excel compatibility
-      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `exam_results_${Date.now()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast.success("Exam results exported to Excel (CSV) successfully!");
-    } catch (err) {
-      toast.dismiss(loadingToastId);
-      console.error("Export error:", err);
-      toast.error(`Export failed: ${err.message || "Unknown error"}`);
+  // ─── Helper Badge Colors ────────────────────────────────────────
+  const getGradeBadge = (grade) => {
+    switch (grade) {
+      case "A+":
+      case "A":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "B":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      case "C":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      case "D":
+        return "bg-orange-500/10 text-orange-400 border-orange-500/20";
+      default:
+        return "bg-rose-500/10 text-rose-400 border-rose-500/20";
     }
-  };
-
-  // ─── Helpers ───────────────────────────────────────────────────
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "PENDING":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-            <Clock size={11} /> Pending
-          </span>
-        );
-      case "COMPLETED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <CheckCircle2 size={11} /> Completed
-          </span>
-        );
-      case "GRADED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
-            <BarChart2 size={11} /> Graded
-          </span>
-        );
       case "PUBLISHED":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <Award size={11} /> Published
-          </span>
-        );
+        return "bg-indigo-500/10 text-indigo-400 border-indigo-500/30 icon-sparkles";
+      case "COMPLETED":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      case "PENDING":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/30";
       default:
-        return <span className="text-xs text-slate-500">{status}</span>;
+        return "bg-slate-500/10 text-slate-400 border-slate-500/30";
     }
   };
 
-  // Logic helper to compute the maximum total exam score dynamically and format passing statuses
-  const getScoreDisplay = (sub) => {
-    const passed = sub.isPassed;
-    const score = sub.totalScore ?? 0;
-    // Map max marks by summing up score weights of nested questions inside the exam questions list
-    const maxMark =
-      sub.exam?.examQuestions && sub.exam.examQuestions.length > 0
-        ? sub.exam.examQuestions.reduce(
-            (sum, eq) => sum + (eq.question?.score ?? 0),
-            0,
-          )
-        : (sub.exam?.passingMarks ?? 0);
-    return (
-      <div className="flex items-center gap-2">
-        <span
-          className="text-sm font-bold text-emerald-400"
-        >
-          {score}
-        </span>
-        <span className="text-slate-500 text-xs">/ {maxMark}</span>
-      </div>
-    );
-  };
-
-  // ─── Loading Skeleton ──────────────────────────────────────────
-  if (loading && submissions.length === 0) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-slate-800 rounded w-1/4" />
-        <div className="h-4 bg-slate-800/60 rounded w-1/3" />
-        <div className="flex gap-4 mt-6">
-          <div className="h-10 bg-slate-800 rounded-lg flex-1 max-w-md" />
-          <div className="h-10 bg-slate-800 rounded-lg w-40" />
-          <div className="h-10 bg-slate-800 rounded-lg w-40" />
-        </div>
-        <div className="glass-card rounded-xl overflow-hidden mt-4">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="flex gap-4 p-4 border-b border-slate-800/50"
-            >
-              <div className="h-4 bg-slate-800 rounded flex-1" />
-              <div className="h-4 bg-slate-800 rounded w-32" />
-              <div className="h-4 bg-slate-800 rounded w-24" />
-              <div className="h-4 bg-slate-800 rounded w-20" />
-              <div className="h-4 bg-slate-800 rounded w-28" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ─── Main Render ───────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+      {/* ─── Page Title Header ───────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <TrendingUp className="text-violet-500" size={28} />
-            Exam Results
+          <h1 className="text-3xl font-bold text-slate-100 tracking-tight flex items-center gap-3">
+            <BarChart2 className="w-8 h-8 text-purple-400" />
+            Results & Assessment Review
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Review, grade, edit, delete and publish student examination results.
+          <p className="text-slate-400 text-sm mt-1">
+            Review candidate answer sheets, evaluate descriptive responses, override marks, and publish official grades.
           </p>
         </div>
-        <div className="flex gap-3">
+
+        {/* Global Controls */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleExportCSV}
-            className="px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg flex items-center gap-2 transition-all uppercase tracking-wider"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition-all"
           >
-            <Download size={15} /> Export Excel
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-purple-400" : ""}`} />
+            Refresh
           </button>
           <button
-            onClick={handlePublishAll}
-            className="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-semibold text-xs rounded-lg flex items-center gap-2 shadow-lg shadow-violet-600/20 transition-all uppercase tracking-wider"
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-sm font-semibold transition-all shadow-lg shadow-purple-950/20"
           >
-            <Award size={15} /> Publish All Results
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <button
+            onClick={handlePrintReport}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-sm font-semibold transition-all"
+          >
+            <Printer className="w-4 h-4" />
+            Print Report
           </button>
         </div>
       </div>
 
-      {/* Filters & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-            size={18}
-          />
-          <input
-            type="text"
-            placeholder="Search by student name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
-          />
+      {/* ─── Top KPI Metric Cards ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Submissions</p>
+              <h3 className="text-2xl font-bold text-slate-100 mt-1">{kpis.total}</h3>
+            </div>
+            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+              <FileText className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+            <span className="text-purple-400 font-semibold">Active Records</span> in system
+          </div>
         </div>
 
-        {/* Exam Filter */}
-        <div className="relative">
-          <Filter
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-            size={16}
-          />
-          <select
-            value={examFilter}
-            onChange={(e) => setExamFilter(e.target.value)}
-            className="appearance-none pl-9 pr-8 py-2.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all cursor-pointer"
-          >
-            <option value="ALL">All Exams</option>
-            {exams.map((exam) => (
-              <option key={exam.id} value={exam.id}>
-                {exam.title}
-              </option>
-            ))}
-          </select>
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pass Rate</p>
+              <h3 className="text-2xl font-bold text-emerald-400 mt-1">{kpis.passRate}%</h3>
+            </div>
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Award className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+            <span className="text-emerald-400 font-semibold">Candidates</span> meeting passing threshold
+          </div>
         </div>
 
-        {/* Status Filter */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
-          {["ALL", "PENDING", "COMPLETED", "GRADED", "PUBLISHED"].map(
-            (status) => (
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Average Score</p>
+              <h3 className="text-2xl font-bold text-blue-400 mt-1">{kpis.avgScore}%</h3>
+            </div>
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+            <span className="text-blue-400 font-semibold">Cohort Mean</span> score performance
+          </div>
+        </div>
+
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Evaluation</p>
+              <h3 className="text-2xl font-bold text-amber-400 mt-1">{kpis.pendingCount}</h3>
+            </div>
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+              <Clock className="w-6 h-6" />
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+            <span className="text-amber-400 font-semibold">Requires</span> manual teacher grading
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Search, Filters & Bulk Actions Bar ─────────────────── */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-4 backdrop-blur-md">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search candidate by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all"
+            />
+          </div>
+
+          {/* Exam Dropdown Filter */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <select
+                value={examFilter}
+                onChange={(e) => setExamFilter(e.target.value)}
+                className="appearance-none bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 pr-9 text-sm text-slate-300 font-medium focus:outline-none focus:border-purple-500 cursor-pointer"
+              >
+                <option value="ALL">All Examinations</option>
+                {exams.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.title}
+                  </option>
+                ))}
+              </select>
+              <Filter className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            {/* Items Per Page */}
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <span>Rows:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-slate-950/80 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center justify-between border-t border-slate-800/80 pt-3 overflow-x-auto">
+          <div className="flex items-center gap-1.5">
+            {["ALL", "PENDING", "COMPLETED", "PUBLISHED"].map((tab) => (
               <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  statusFilter === status
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/20"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                key={tab}
+                onClick={() => setStatusFilter(tab)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                  statusFilter === tab
+                    ? "bg-purple-600 text-white shadow-md shadow-purple-900/30"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
                 }`}
               >
-                {status === "ALL"
-                  ? "All"
-                  : status.charAt(0) + status.slice(1).toLowerCase()}
+                {tab === "ALL" ? "All Submissions" : tab}
               </button>
-            ),
+            ))}
+          </div>
+
+          {/* Bulk Selection Quick Menu */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 bg-purple-950/40 border border-purple-500/30 px-3 py-1.5 rounded-xl animate-fadeIn">
+              <span className="text-xs font-semibold text-purple-300">
+                {selectedIds.size} Selected
+              </span>
+              <button
+                onClick={handleBulkPublish}
+                disabled={bulkPublishing}
+                className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1 transition-all"
+              >
+                {bulkPublishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                Publish Selected
+              </button>
+              <button
+                onClick={() => setShowBulkDeleteModal(true)}
+                className="px-2.5 py-1 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-xs font-medium flex items-center gap-1 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Selected
+              </button>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Results Table */}
-      <div className="glass-card rounded-xl overflow-hidden border border-slate-800/50">
-        {submissions.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="p-4 rounded-full bg-slate-800/50 mb-4">
-              <InboxIcon size={40} className="text-slate-600" />
+      {/* ─── Submissions Data Grid ───────────────────────────────── */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl backdrop-blur-md">
+        {loading ? (
+          <div className="p-12 text-center space-y-4">
+            <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto" />
+            <p className="text-slate-400 text-sm font-medium">Loading candidate submissions...</p>
+          </div>
+        ) : fetchError ? (
+          <div className="p-12 text-center space-y-4">
+            <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto" />
+            <p className="text-slate-300 font-semibold">Failed to fetch result records.</p>
+            <button
+              onClick={() => fetchSubmissions(pagination.page)}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg"
+            >
+              Retry Connection
+            </button>
+          </div>
+        ) : submissions.length === 0 ? (
+          <div className="p-16 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center mx-auto text-slate-400">
+              <FileText className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-300">
-              No Submissions Found
-            </h3>
-            <p className="text-sm text-slate-500 mt-1 max-w-sm">
-              {searchQuery || statusFilter !== "ALL" || examFilter !== "ALL"
-                ? "Try adjusting your filters or search query."
-                : "No exam submissions have been recorded yet."}
+            <h3 className="text-slate-200 font-semibold">No Submissions Found</h3>
+            <p className="text-slate-400 text-xs max-w-sm mx-auto">
+              No student examination submissions match your search or status criteria.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="px-5 py-4 w-10">
-                    <button
-                      onClick={toggleSelectAll}
-                      className="text-slate-400 hover:text-violet-400 transition-colors"
-                    >
-                      {allSelected ? (
-                        <CheckSquare size={16} className="text-violet-400" />
-                      ) : someSelected ? (
-                        <CheckSquare size={16} className="text-violet-400/50" />
-                      ) : (
-                        <Square size={16} />
-                      )}
-                    </button>
+                <tr className="bg-slate-950/60 border-b border-slate-800 text-slate-400 font-semibold text-xs tracking-wider uppercase">
+                  <th className="p-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === submissions.length && submissions.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                    />
                   </th>
-                  {[
-                    "Student",
-                    "Email",
-                    "Exam",
-                    "Score",
-                    "Subject Breakdown",
-                    "Violations",
-                    "Status",
-                    "Submitted",
-                    "Actions",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-4"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  <th className="p-4">Candidate</th>
+                  <th className="p-4">Exam Title</th>
+                  <th className="p-4">Score / Pct</th>
+                  <th className="p-4">Grade</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4">Violations</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {submissions.map((sub) => (
-                  <tr
-                    key={sub.id}
-                    className={`hover:bg-slate-800/30 transition-colors group ${selectedIds.has(sub.id) ? "bg-violet-500/5" : ""}`}
-                  >
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() => toggleSelect(sub.id)}
-                        className="text-slate-500 hover:text-violet-400 transition-colors"
-                      >
-                        {selectedIds.has(sub.id) ? (
-                          <CheckSquare size={16} className="text-violet-400" />
-                        ) : (
-                          <Square size={16} />
-                        )}
-                      </button>
-                    </td>
-                    {/* Student */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-600/20 flex items-center justify-center text-violet-400 text-xs font-bold uppercase shrink-0">
-                          {sub.student?.firstName?.[0] || "?"}
-                          {sub.student?.lastName?.[0] || ""}
-                        </div>
-                        <span className="text-sm font-medium text-white whitespace-nowrap">
-                          {sub.student?.firstName} {sub.student?.lastName}
-                        </span>
-                      </div>
-                    </td>
+              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                {submissions.map((sub) => {
+                  const studentName = sub.student
+                    ? `${sub.student.firstName || ""} ${sub.student.lastName || ""}`.trim() || "Candidate"
+                    : "Candidate";
+                  const initial = studentName.charAt(0).toUpperCase();
+                  const isSelected = selectedIds.has(sub.id);
 
-                    {/* Email */}
-                    <td className="px-5 py-4">
-                      <span className="text-sm text-slate-400">
-                        {sub.student?.email || "—"}
-                      </span>
-                    </td>
-
-                    {/* Exam */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <FileText
-                          size={14}
-                          className="text-slate-500 shrink-0"
+                  return (
+                    <tr
+                      key={sub.id}
+                      className={`hover:bg-slate-800/40 transition-colors ${
+                        isSelected ? "bg-purple-950/20" : ""
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <td className="p-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(sub.id)}
+                          className="rounded bg-slate-900 border-slate-700 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         />
-                        <span className="text-sm text-slate-300 max-w-[180px] truncate">
-                          {sub.exam?.title || "—"}
-                        </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Score */}
-                    <td className="px-5 py-4">{getScoreDisplay(sub)}</td>
-
-                    {/* Subject Breakdown */}
-                    <td className="px-5 py-4">
-                      {(() => {
-                        const sec = sub.sectionScores;
-                        if (sec && (sec.Physics !== undefined || sec.Chemistry !== undefined || sec.Mathematics !== undefined)) {
-                          return (
-                            <div className="flex flex-wrap gap-1.5 max-w-[260px]">
-                              {sec.Physics !== undefined && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-500/10 border border-sky-500/20 text-sky-300">
-                                  <span className="text-slate-400">Physics:</span>
-                                  <span className="text-white">{sec.Physics}</span>
-                                </span>
-                              )}
-                              {sec.Chemistry !== undefined && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                                  <span className="text-slate-400">Chemistry:</span>
-                                  <span className="text-white">{sec.Chemistry}</span>
-                                </span>
-                              )}
-                              {sec.Mathematics !== undefined && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 border border-amber-500/20 text-amber-300">
-                                  <span className="text-slate-400">Math:</span>
-                                  <span className="text-white">{sec.Mathematics}</span>
-                                </span>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        const subjMap = {};
-                        if (sub.answers && Array.isArray(sub.answers)) {
-                          sub.answers.forEach((ans) => {
-                            const name = ans.question?.subject?.name || (ans.question?.tags && ans.question.tags[0]) || "General";
-                            if (!subjMap[name]) subjMap[name] = { obtained: 0, total: 0 };
-                            subjMap[name].obtained += ans.scoreAwarded || 0;
-                            subjMap[name].total += ans.question?.score || 1;
-                          });
-                        }
-                        const entries = Object.entries(subjMap);
-                        if (entries.length === 0) {
-                          return <span className="text-xs text-slate-500">—</span>;
-                        }
-                        return (
-                          <div className="flex flex-wrap gap-1.5 max-w-[260px]">
-                            {entries.map(([name, data]) => (
-                              <span
-                                key={name}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-violet-500/10 border border-violet-500/20 text-violet-300"
-                              >
-                                <span className="text-slate-400">{name}:</span>
-                                <span className="text-white">{data.obtained}/{data.total}</span>
-                              </span>
-                            ))}
+                      {/* Candidate Avatar & Details */}
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-bold text-sm shrink-0">
+                            {initial}
                           </div>
-                        );
-                      })()}
-                    </td>
+                          <div>
+                            <p className="font-semibold text-slate-100 leading-snug">{studentName}</p>
+                            <p className="text-xs text-slate-400 font-mono">{sub.student?.email || "N/A"}</p>
+                          </div>
+                        </div>
+                      </td>
 
+                      {/* Exam Title */}
+                      <td className="p-4 font-medium text-slate-200">
+                        {sub.exam?.title || "Exam Paper"}
+                      </td>
 
+                      {/* Score / Percentage */}
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-100">{sub.totalScore ?? 0} pts</span>
+                          <span className="text-xs text-slate-400 font-mono">
+                            ({(sub.percentage || 0).toFixed(1)}%)
+                          </span>
+                        </div>
+                        <div className="w-24 h-1.5 bg-slate-800 rounded-full mt-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              sub.isPassed || (sub.percentage || 0) >= 40
+                                ? "bg-emerald-400"
+                                : "bg-rose-400"
+                            }`}
+                            style={{ width: `${Math.min(100, Math.max(0, sub.percentage || 0))}%` }}
+                          />
+                        </div>
+                      </td>
 
-                    {/* Violations */}
-                    <td className="px-5 py-4">
-                      {(sub.violationsCount ?? 0) > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
-                          <AlertTriangle size={10} /> {sub.violationsCount}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-600">—</span>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-5 py-4">{getStatusBadge(sub.status)}</td>
-
-                    {/* Submitted At */}
-                    <td className="px-5 py-4">
-                      <span className="text-sm text-slate-400 whitespace-nowrap">
-                        {formatDate(sub.submitTime)}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => openEditModal(sub)}
-                          title="Edit submission"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-all shadow-lg shadow-violet-500/20"
+                      {/* Grade Pill */}
+                      <td className="p-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-lg border text-xs font-bold ${getGradeBadge(
+                            sub.grade || "F",
+                          )}`}
                         >
-                          <Pencil size={12} /> Edit
-                        </button>
+                          {sub.grade || "N/A"}
+                        </span>
+                      </td>
 
-                        {/* Publish Button */}
-                        {sub.status !== "PUBLISHED" && (
+                      {/* Status Pill */}
+                      <td className="p-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border text-xs font-semibold ${getStatusBadge(
+                            sub.status,
+                          )}`}
+                        >
+                          {sub.status === "PUBLISHED" && <Sparkles className="w-3 h-3" />}
+                          {sub.status || "PENDING"}
+                        </span>
+                      </td>
+
+                      {/* Proctoring Violations */}
+                      <td className="p-4">
+                        {sub.violationsCount > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            {sub.violationsCount} Alert(s)
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-mono">0 Alerts</span>
+                        )}
+                      </td>
+
+                      {/* Row Action Buttons */}
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openDetailModal(sub)}
+                            title="Inspect Paper & Grade Answers"
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
+                          >
+                            <Eye className="w-4 h-4 text-purple-400" />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(sub)}
+                            title="Override Score / Grade"
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
+                          >
+                            <Pencil className="w-4 h-4 text-blue-400" />
+                          </button>
                           <button
                             onClick={() => handlePublish(sub)}
-                            disabled={publishing === sub.id}
-                            title="Publish result to student"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                            disabled={publishingId === sub.id}
+                            title={sub.status === "PUBLISHED" ? "Unpublish Result" : "Publish to Student"}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
                           >
-                            {publishing === sub.id ? (
-                              <Loader2 size={12} className="animate-spin" />
+                            {publishingId === sub.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
                             ) : (
-                              <Send size={12} />
+                              <Send className={`w-4 h-4 ${sub.status === "PUBLISHED" ? "text-emerald-400" : "text-slate-400"}`} />
                             )}
-                            Publish
                           </button>
-                        )}
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => openDeleteModal(sub)}
-                          title="Delete submission"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600/80 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-all shadow-lg shadow-red-500/20"
-                        >
-                          <Trash2 size={12} /> Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() => openDeleteModal(sub)}
+                            title="Delete Submission"
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-slate-700 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
 
-        {/* Pagination & Rows Selector */}
-        <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-slate-800 bg-slate-900/30">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400">Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                const newLimit = parseInt(e.target.value);
-                setPageSize(newLimit);
-                fetchSubmissions(1, newLimit);
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-violet-500 transition-colors"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100 (Show All)</option>
-              <option value={250}>250</option>
-              <option value={500}>500</option>
-            </select>
-            <p className="text-xs text-slate-500">
-              Showing <span className="text-slate-300 font-medium">{submissions.length}</span> of{" "}
-              <span className="text-slate-300 font-medium">{pagination.total}</span> total results
-            </p>
-          </div>
+        {/* ─── Pagination Footer ─────────────────────────────────── */}
+        {!loading && submissions.length > 0 && (
+          <div className="p-4 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div>
+              Showing <span className="font-semibold text-slate-200">{submissions.length}</span> of{" "}
+              <span className="font-semibold text-slate-200">{pagination.total}</span> result records
+            </div>
 
-          {pagination.totalPages > 1 && (
             <div className="flex items-center gap-2">
-              <p className="text-xs text-slate-400 mr-2">
-                Page <span className="text-white font-medium">{pagination.page}</span> of{" "}
-                <span className="text-white font-medium">{pagination.totalPages}</span>
-              </p>
               <button
                 disabled={pagination.page <= 1}
                 onClick={() => fetchSubmissions(pagination.page - 1)}
-                className="p-2 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 transition-all"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft className="w-4 h-4" />
               </button>
+              <span className="font-medium text-slate-300 px-2">
+                Page {pagination.page} of {pagination.totalPages || 1}
+              </span>
               <button
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => fetchSubmissions(pagination.page + 1)}
-                className="p-2 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 transition-all"
               >
-                <ChevronRight size={16} />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* ── Floating Bulk Action Bar ─────────────────────────────────── */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-4 px-6 py-3.5 bg-slate-900 border border-violet-500/30 rounded-2xl shadow-2xl shadow-violet-500/10 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <CheckSquare size={16} className="text-violet-400" />
-            <span className="text-violet-400">{selectedIds.size}</span>{" "}
-            submission{selectedIds.size !== 1 ? "s" : ""} selected
+      {/* ─── DETAILED PAPER REVIEW MODAL ───────────────────────────── */}
+      {detailModalOpen && selectedSubmission && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-100 leading-snug">
+                    Candidate Examination Review Sheet
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {selectedSubmission.student?.firstName} {selectedSubmission.student?.lastName} (
+                    {selectedSubmission.student?.email})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDetailModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body Scroll Area */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-300 text-sm">
+              {detailLoading ? (
+                <div className="p-12 text-center space-y-3">
+                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto" />
+                  <p className="text-slate-400 text-xs">Loading complete answer sheet & questions...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Summary Bar inside Modal */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Exam Title</p>
+                      <p className="font-semibold text-slate-200 mt-0.5">
+                        {detailedData?.exam?.title || selectedSubmission.exam?.title}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Total Score</p>
+                      <p className="font-bold text-purple-400 mt-0.5">
+                        {detailedData?.totalScore ?? selectedSubmission.totalScore ?? 0} pts (
+                        {(detailedData?.percentage ?? selectedSubmission.percentage ?? 0).toFixed(1)}%)
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Grade / Status</p>
+                      <p className="font-semibold text-emerald-400 mt-0.5">
+                        Grade {detailedData?.grade || selectedSubmission.grade || "N/A"} -{" "}
+                        {detailedData?.isPassed || selectedSubmission.isPassed ? "PASSED" : "FAILED"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Proctoring Alerts</p>
+                      <p className="font-semibold text-rose-400 mt-0.5">
+                        {detailedData?.violationsCount || selectedSubmission.violationsCount || 0} Alert(s)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Answers & Questions Breakdown */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-slate-200 tracking-wide uppercase flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-purple-400" />
+                      Question-by-Question Evaluation
+                    </h4>
+
+                    {detailedData?.answers && detailedData.answers.length > 0 ? (
+                      detailedData.answers.map((ans, idx) => {
+                        const q = ans.question;
+                        const isDescriptive = q?.type === "DESCRIPTIVE" || q?.type === "SHORT_ANSWER";
+
+                        return (
+                          <div
+                            key={ans.id || idx}
+                            className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <span className="font-bold text-slate-100 text-sm">
+                                Q{idx + 1}. {q?.text || "Question Prompt"}
+                              </span>
+                              <span className="text-xs font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md border border-slate-700 shrink-0">
+                                Max {q?.score || 1} pt(s)
+                              </span>
+                            </div>
+
+                            {/* Multiple Choice Options Display */}
+                            {q?.options && Array.isArray(q.options) && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                                {q.options.map((opt, oIdx) => {
+                                  const isCorrectOpt = oIdx === q.correctAnswer;
+                                  const isStudentChoice =
+                                    typeof ans.studentAnswer === "number"
+                                      ? ans.studentAnswer === oIdx
+                                      : false;
+
+                                  return (
+                                    <div
+                                      key={oIdx}
+                                      className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                                        isCorrectOpt
+                                          ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-300"
+                                          : isStudentChoice
+                                          ? "bg-rose-950/30 border-rose-500/40 text-rose-300"
+                                          : "bg-slate-900/60 border-slate-800 text-slate-400"
+                                      }`}
+                                    >
+                                      <span>
+                                        {String.fromCharCode(65 + oIdx)}. {opt}
+                                      </span>
+                                      {isCorrectOpt && <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                                      {isStudentChoice && !isCorrectOpt && (
+                                        <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Descriptive Answer Evaluation Box */}
+                            {isDescriptive && (
+                              <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-3 mt-2">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-400 uppercase">
+                                    Student Response:
+                                  </p>
+                                  <p className="text-xs text-slate-200 font-mono mt-1 bg-slate-950 p-2.5 rounded-lg border border-slate-800 whitespace-pre-wrap">
+                                    {typeof ans.studentAnswer === "string"
+                                      ? ans.studentAnswer
+                                      : JSON.stringify(ans.studentAnswer) || "No response provided."}
+                                  </p>
+                                </div>
+
+                                {/* Scoring Form for Teacher */}
+                                <div className="flex flex-col sm:flex-row items-end gap-3 pt-2 border-t border-slate-800">
+                                  <div className="w-full sm:w-32">
+                                    <label className="text-xs text-slate-400 font-medium">Award Points:</label>
+                                    <input
+                                      type="number"
+                                      step="0.5"
+                                      min="0"
+                                      max={q?.score || 10}
+                                      value={gradeInputs[ans.id]?.score || ""}
+                                      onChange={(e) =>
+                                        setGradeInputs((prev) => ({
+                                          ...prev,
+                                          [ans.id]: {
+                                            ...prev[ans.id],
+                                            score: e.target.value,
+                                          },
+                                        }))
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 mt-1"
+                                    />
+                                  </div>
+
+                                  <div className="flex-1 w-full">
+                                    <label className="text-xs text-slate-400 font-medium">Teacher Feedback:</label>
+                                    <input
+                                      type="text"
+                                      placeholder="Optional remarks..."
+                                      value={gradeInputs[ans.id]?.feedback || ""}
+                                      onChange={(e) =>
+                                        setGradeInputs((prev) => ({
+                                          ...prev,
+                                          [ans.id]: {
+                                            ...prev[ans.id],
+                                            feedback: e.target.value,
+                                          },
+                                        }))
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 mt-1"
+                                    />
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleGradeAnswer(ans.id, q?.score || 10)}
+                                    disabled={gradingAnswerId === ans.id}
+                                    className="px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1 transition-all shrink-0"
+                                  >
+                                    {gradingAnswerId === ans.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                    )}
+                                    Save Score
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No detailed question responses found.</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setDetailModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
+              >
+                Close Review Sheet
+              </button>
+            </div>
           </div>
-          <div className="w-px h-5 bg-slate-700" />
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            className="text-xs text-slate-400 hover:text-white transition-colors"
-          >
-            Clear
-          </button>
-          <button
-            onClick={handleBulkPublish}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-emerald-500/20"
-          >
-            <Award size={14} /> Publish {selectedIds.size} Selected
-          </button>
-          <button
-            onClick={() => setShowBulkDeleteModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-red-500/20"
-          >
-            <Trash2 size={14} /> Delete {selectedIds.size} Selected
-          </button>
         </div>
       )}
 
-      {/* ── Bulk Delete Confirm Modal ────────────────────────────────── */}
-      {showBulkDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => !bulkDeleting && setShowBulkDeleteModal(false)}
-          />
-          <div className="relative bg-slate-900 border border-red-500/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-800 bg-red-500/5">
-              <div className="p-2.5 rounded-xl bg-red-500/10 text-red-400">
-                <AlertOctagon size={22} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">
-                  Delete {selectedIds.size} Submissions?
-                </h2>
-                <p className="text-xs text-slate-400">
-                  This permanently deletes all selected student submission
-                  records and their answers.
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-5">
-              <p className="text-sm text-slate-400">
-                This action{" "}
-                <span className="text-red-400 font-semibold">
-                  cannot be undone
-                </span>
-                . All answers, auto-evaluation logs, and manual grading records
-                for the selected submissions will be permanently wiped.
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800">
+      {/* ─── MANUAL EDIT SCORE MODAL ──────────────────────────────── */}
+      {editModalOpen && editSubmission && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-blue-400" />
+                Override Candidate Score
+              </h3>
               <button
-                onClick={() => !bulkDeleting && setShowBulkDeleteModal(false)}
-                disabled={bulkDeleting}
-                className="px-4 py-2.5 text-sm text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
+                onClick={() => setEditModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="text-slate-400 font-medium">Total Score Points:</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={editScore}
+                  onChange={(e) => setEditScore(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-400 font-medium">Percentage (%):</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={editPercentage}
+                  onChange={(e) => setEditPercentage(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-400 font-medium">Grade Pill:</label>
+                <select
+                  value={editGrade}
+                  onChange={(e) => setEditGrade(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="A+">A+</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                  <option value="F">F</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-400 font-medium">Result Status:</label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
+                >
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="PUBLISHED">PUBLISHED</option>
+                  <option value="PENDING">PENDING</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5"
+              >
+                {savingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Overrides"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── SINGLE DELETE CONFIRMATION MODAL ───────────────────────── */}
+      {deleteModalOpen && deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-100">Delete Candidate Submission?</h3>
+            <p className="text-xs text-slate-400">
+              Are you sure you want to delete the submission for{" "}
+              <span className="text-slate-200 font-semibold">
+                {deleteTarget.student?.firstName} {deleteTarget.student?.lastName}
+              </span>
+              ? This action will reset the candidate's exam assignment state.
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSingle}
+                disabled={deleting}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5"
+              >
+                {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete Submission"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── BULK DELETE CONFIRMATION MODAL ─────────────────────────── */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+              <AlertOctagon className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-100">Bulk Delete Submissions?</h3>
+            <p className="text-xs text-slate-400">
+              You are about to delete <span className="text-rose-400 font-bold">{selectedIds.size}</span> selected
+              candidate submission(s). This cannot be undone.
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5"
               >
-                {bulkDeleting ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" /> Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={15} /> Delete All {selectedIds.size}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Edit / Modify Modal ──────────────────────────────────────── */}
-      {editModalOpen && editSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => !saving && setEditModalOpen(false)}
-          />
-          <div className="relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-gradient-to-r from-violet-600/10 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
-                  <Pencil size={18} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">
-                    Edit Submission
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    {editSubmission.student?.firstName}{" "}
-                    {editSubmission.student?.lastName} ·{" "}
-                    {editSubmission.exam?.title}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => !saving && setEditModalOpen(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-6 space-y-5">
-              {/* Score & Percentage row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                    Total Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editScore}
-                    onChange={(e) => setEditScore(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
-                    placeholder="Score..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                    Percentage (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={editPercentage}
-                    onChange={(e) => setEditPercentage(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
-                    placeholder="e.g. 85.5"
-                  />
-                </div>
-              </div>
-
-              {/* Grade & Status row */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                    Grade
-                  </label>
-                  <select
-                    value={editGrade}
-                    onChange={(e) => setEditGrade(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
-                  >
-                    <option value="">— None —</option>
-                    {["A+", "A", "B", "C", "D", "F"].map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">
-                    Status
-                  </label>
-                  <select
-                    value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white font-bold focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all"
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="GRADED">Graded</option>
-                    <option value="PUBLISHED">Published</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Pass/Fail Preview */}
-              {editScore &&
-                !isNaN(parseFloat(editScore)) &&
-                editSubmission.exam?.passingMarks && (
-                  <div
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm ${parseFloat(editScore) >= editSubmission.exam.passingMarks ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}
-                  >
-                    {parseFloat(editScore) >=
-                    editSubmission.exam.passingMarks ? (
-                      <>
-                        <CheckCircle2 size={14} /> Score meets the passing
-                        threshold of {editSubmission.exam.passingMarks}
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle size={14} /> Score is below the passing
-                        threshold of {editSubmission.exam.passingMarks}
-                      </>
-                    )}
-                  </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800 bg-slate-900/50">
-              <button
-                onClick={() => !saving && setEditModalOpen(false)}
-                disabled={saving}
-                className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" /> Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={15} /> Save Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Delete Confirmation Modal ─────────────────────────────────── */}
-      {deleteModalOpen && deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => !deleting && setDeleteModalOpen(false)}
-          />
-          <div className="relative bg-slate-900 border border-red-500/30 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-800 bg-red-500/5">
-              <div className="p-2.5 rounded-xl bg-red-500/10 text-red-400">
-                <AlertOctagon size={22} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">
-                  Delete Submission?
-                </h2>
-                <p className="text-xs text-slate-400">
-                  This action cannot be undone.
-                </p>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-5">
-              <div className="bg-slate-800/50 rounded-xl p-4 space-y-2 border border-slate-700/50">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Student</span>
-                  <span className="text-white font-medium">
-                    {deleteTarget.student?.firstName}{" "}
-                    {deleteTarget.student?.lastName}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Email</span>
-                  <span className="text-slate-300">
-                    {deleteTarget.student?.email}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Exam</span>
-                  <span className="text-slate-300 max-w-[200px] text-right truncate">
-                    {deleteTarget.exam?.title}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Score</span>
-                  <span className="text-slate-300">
-                    {deleteTarget.totalScore} /{" "}
-                    {deleteTarget.exam?.passingMarks}
-                  </span>
-                </div>
-              </div>
-              <p className="text-sm text-slate-400 mt-4">
-                Deleting this submission will permanently remove all associated
-                answers and scores. Are you sure?
-              </p>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800">
-              <button
-                onClick={() => !deleting && setDeleteModalOpen(false)}
-                disabled={deleting}
-                className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50"
-              >
-                {deleting ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" /> Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={15} /> Delete Submission
-                  </>
-                )}
+                {bulkDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Bulk Delete"}
               </button>
             </div>
           </div>
