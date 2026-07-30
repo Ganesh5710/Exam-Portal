@@ -510,6 +510,17 @@ const getSubmissions = async (req, res, next) => {
                         passingMarks: true,
                         duration: true
                     }
+                },
+                answers: {
+                    select: {
+                        scoreAwarded: true,
+                        question: {
+                            select: {
+                                score: true,
+                                subject: { select: { name: true } }
+                            }
+                        }
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' },
