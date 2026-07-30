@@ -114,10 +114,10 @@ export const Login = () => {
           {loading ? (
             <>
               <Loader2 className="animate-spin" size={16} />
-              Authenticating Access...
+              Logging in...
             </>
           ) : (
-            "Authenticate Access"
+            "Log In"
           )}
         </button>
       </form>
