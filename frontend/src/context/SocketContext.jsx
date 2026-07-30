@@ -26,16 +26,16 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const configuredApiUrl = import.meta.env.VITE_API_URL || "";
-    // Normalize VITE_API_URL prefix into base server protocol target for Socket client
-    const socketUrl = configuredApiUrl ? configuredApiUrl.replace(/\/api\/v1\/?$/, "") : window.location.origin;
+    // Hardcode live Railway server URL for Socket.io WebSocket connection
+    const socketUrl = "https://exam-portal-production-9abb.up.railway.app";
     
     // Connect client using auto-recovery, timeout delays, and reconnect limitations
     const newSocket = io(socketUrl, {
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 20,
       reconnectionDelay: 1000,
+      transports: ["websocket", "polling"],
     });
 
     newSocket.on("connect", () => {
