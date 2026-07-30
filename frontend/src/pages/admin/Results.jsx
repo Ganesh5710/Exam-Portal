@@ -32,6 +32,7 @@ import {
   User,
   BookOpen,
   SlidersHorizontal,
+  Layers,
 } from "lucide-react";
 
 export const Results = () => {
@@ -65,7 +66,6 @@ export const Results = () => {
   const [editSubmission, setEditSubmission] = useState(null);
   const [editScore, setEditScore] = useState("");
   const [editPercentage, setEditPercentage] = useState("");
-  const [editGrade, setEditGrade] = useState("");
   const [editStatus, setEditStatus] = useState("COMPLETED");
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -82,6 +82,26 @@ export const Results = () => {
   const [publishingId, setPublishingId] = useState(null);
   const [gradingAnswerId, setGradingAnswerId] = useState(null);
   const [gradeInputs, setGradeInputs] = useState({});
+
+  // ─── Subject-Wise Breakdown Calculator ────────────────────────
+  const getSubjectWiseBreakdown = (answers) => {
+    if (!answers || !Array.isArray(answers) || answers.length === 0) return [];
+
+    const map = {};
+    answers.forEach((ans) => {
+      const sName =
+        ans.question?.subject?.name ||
+        (ans.question?.tags && ans.question?.tags[0]) ||
+        "General";
+      if (!map[sName]) {
+        map[sName] = { name: sName, score: 0, maxScore: 0 };
+      }
+      map[sName].score += ans.scoreAwarded || 0;
+      map[sName].maxScore += ans.question?.score || 1;
+    });
+
+    return Object.values(map);
+  };
 
   // ─── 1. Fetch Exams List ─────────────────────────────────────────
   const fetchExams = useCallback(async () => {
@@ -119,7 +139,6 @@ export const Results = () => {
       } catch (err) {
         console.error("Error fetching submissions:", err);
         if (!isRetry) {
-          // Automatic 1s fallback retry to absorb network hiccups
           setTimeout(() => fetchSubmissions(page, currentLimit, true), 1000);
           return;
         }
@@ -175,7 +194,6 @@ export const Results = () => {
       const data = res.data.data || res.data;
       setDetailedData(data);
 
-      // Pre-fill descriptive answer grading inputs
       if (data.answers && Array.isArray(data.answers)) {
         const initialInputs = {};
         data.answers.forEach((ans) => {
@@ -190,7 +208,7 @@ export const Results = () => {
       }
     } catch {
       toast.error("Could not load complete answer breakdown.");
-      setDetailedData(sub); // Fallback to basic row data
+      setDetailedData(sub);
     } finally {
       setDetailLoading(false);
     }
@@ -214,7 +232,6 @@ export const Results = () => {
       });
       toast.success("Answer scored successfully!");
 
-      // Refresh detailed modal data
       if (selectedSubmission) {
         const res = await api.get(`/submissions/${selectedSubmission.id}`);
         setDetailedData(res.data.data || res.data);
@@ -232,7 +249,6 @@ export const Results = () => {
     setEditSubmission(sub);
     setEditScore(sub.totalScore?.toString() || "0");
     setEditPercentage(sub.percentage?.toString() || "0");
-    setEditGrade(sub.grade || "F");
     setEditStatus(sub.status || "COMPLETED");
     setEditModalOpen(true);
   };
@@ -252,7 +268,6 @@ export const Results = () => {
       await api.put(`/submissions/${editSubmission.id}`, {
         totalScore: score,
         percentage: isNaN(pct) ? undefined : pct,
-        grade: editGrade.trim() || undefined,
         status: editStatus,
       });
       toast.success("Candidate score updated successfully!");
@@ -373,29 +388,33 @@ export const Results = () => {
       "Student Name",
       "Email",
       "Exam Title",
-      "Score",
-      "Max Score",
+      "Total Score",
       "Percentage",
-      "Grade",
+      "Subject Breakdown",
       "Status",
       "Pass/Fail",
       "Violations",
       "Submitted At",
     ];
 
-    const rows = submissions.map((s) => [
-      `"${s.student?.firstName || ""} ${s.student?.lastName || ""}"`,
-      `"${s.student?.email || ""}"`,
-      `"${s.exam?.title || ""}"`,
-      s.totalScore ?? 0,
-      s.exam?.totalMarks || 100,
-      `${(s.percentage || 0).toFixed(1)}%`,
-      `"${s.grade || "N/A"}"`,
-      `"${s.status || ""}"`,
-      s.isPassed ? "PASSED" : "FAILED",
-      s.violationsCount || 0,
-      `"${s.submitTime ? new Date(s.submitTime).toLocaleString() : "N/A"}"`,
-    ]);
+    const rows = submissions.map((s) => {
+      const sbList = getSubjectWiseBreakdown(s.answers)
+        .map((sb) => `${sb.name}: ${sb.score}/${sb.maxScore}`)
+        .join(" | ");
+
+      return [
+        `"${s.student?.firstName || ""} ${s.student?.lastName || ""}"`,
+        `"${s.student?.email || ""}"`,
+        `"${s.exam?.title || ""}"`,
+        s.totalScore ?? 0,
+        `${(s.percentage || 0).toFixed(1)}%`,
+        `"${sbList || "N/A"}"`,
+        `"${s.status || ""}"`,
+        s.isPassed ? "PASSED" : "FAILED",
+        s.violationsCount || 0,
+        `"${s.submitTime ? new Date(s.submitTime).toLocaleString() : "N/A"}"`,
+      ];
+    });
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -413,23 +432,6 @@ export const Results = () => {
 
   const handlePrintReport = () => {
     window.print();
-  };
-
-  // ─── Helper Badge Colors ────────────────────────────────────────
-  const getGradeBadge = (grade) => {
-    switch (grade) {
-      case "A+":
-      case "A":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-      case "B":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
-      case "C":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-      case "D":
-        return "bg-orange-500/10 text-orange-400 border-orange-500/20";
-      default:
-        return "bg-rose-500/10 text-rose-400 border-rose-500/20";
-    }
   };
 
   const getStatusBadge = (status) => {
@@ -455,7 +457,7 @@ export const Results = () => {
             Results & Assessment Review
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Review candidate answer sheets, evaluate descriptive responses, override marks, and publish official grades.
+            Review candidate answer sheets, evaluate subject-wise performance, override scores, and publish results.
           </p>
         </div>
 
@@ -686,8 +688,8 @@ export const Results = () => {
                   </th>
                   <th className="p-4">Candidate</th>
                   <th className="p-4">Exam Title</th>
-                  <th className="p-4">Score / Pct</th>
-                  <th className="p-4">Grade</th>
+                  <th className="p-4">Total Score / Pct</th>
+                  <th className="p-4">Subject Wise Marks</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Violations</th>
                   <th className="p-4 text-right">Actions</th>
@@ -700,6 +702,7 @@ export const Results = () => {
                     : "Candidate";
                   const initial = studentName.charAt(0).toUpperCase();
                   const isSelected = selectedIds.has(sub.id);
+                  const subjects = getSubjectWiseBreakdown(sub.answers);
 
                   return (
                     <tr
@@ -756,15 +759,24 @@ export const Results = () => {
                         </div>
                       </td>
 
-                      {/* Grade Pill */}
+                      {/* Subject Wise Marks */}
                       <td className="p-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-lg border text-xs font-bold ${getGradeBadge(
-                            sub.grade || "F",
-                          )}`}
-                        >
-                          {sub.grade || "N/A"}
-                        </span>
+                        {subjects.length === 0 ? (
+                          <span className="text-xs text-slate-500 font-mono">Overall Score</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5 max-w-xs">
+                            {subjects.map((s) => (
+                              <span
+                                key={s.name}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold bg-slate-950/80 border-slate-800 text-slate-200"
+                              >
+                                <span className="text-purple-400 font-bold">{s.name}:</span>
+                                <span className="text-emerald-400 font-bold">{s.score}</span>
+                                <span className="text-slate-500">/{s.maxScore}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </td>
 
                       {/* Status Pill */}
@@ -796,14 +808,14 @@ export const Results = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openDetailModal(sub)}
-                            title="Inspect Paper & Grade Answers"
+                            title="Inspect Paper & Subject Breakdown"
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
                           >
                             <Eye className="w-4 h-4 text-purple-400" />
                           </button>
                           <button
                             onClick={() => openEditModal(sub)}
-                            title="Override Score / Grade"
+                            title="Override Total Score"
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
                           >
                             <Pencil className="w-4 h-4 text-blue-400" />
@@ -921,9 +933,8 @@ export const Results = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400 font-semibold uppercase">Grade / Status</p>
+                      <p className="text-xs text-slate-400 font-semibold uppercase">Pass Status</p>
                       <p className="font-semibold text-emerald-400 mt-0.5">
-                        Grade {detailedData?.grade || selectedSubmission.grade || "N/A"} -{" "}
                         {detailedData?.isPassed || selectedSubmission.isPassed ? "PASSED" : "FAILED"}
                       </p>
                     </div>
@@ -932,6 +943,49 @@ export const Results = () => {
                       <p className="font-semibold text-rose-400 mt-0.5">
                         {detailedData?.violationsCount || selectedSubmission.violationsCount || 0} Alert(s)
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Dedicated Subject-Wise Performance Breakdown Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-purple-400" />
+                      Subject-Wise Marks Breakdown
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {getSubjectWiseBreakdown(
+                        detailedData?.answers || selectedSubmission.answers,
+                      ).map((sb) => {
+                        const pct =
+                          sb.maxScore > 0
+                            ? Math.round((sb.score / sb.maxScore) * 100)
+                            : 0;
+
+                        return (
+                          <div
+                            key={sb.name}
+                            className="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2"
+                          >
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-bold text-slate-200">{sb.name}</span>
+                              <span className="font-bold text-purple-400">
+                                {sb.score} / {sb.maxScore} pts
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  pct >= 40 ? "bg-emerald-400" : "bg-rose-400"
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-slate-400 text-right font-mono">
+                              {pct}% Accuracy
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -945,7 +999,8 @@ export const Results = () => {
                     {detailedData?.answers && detailedData.answers.length > 0 ? (
                       detailedData.answers.map((ans, idx) => {
                         const q = ans.question;
-                        const isDescriptive = q?.type === "DESCRIPTIVE" || q?.type === "SHORT_ANSWER";
+                        const isDescriptive =
+                          q?.type === "DESCRIPTIVE" || q?.type === "SHORT_ANSWER";
 
                         return (
                           <div
@@ -1128,22 +1183,6 @@ export const Results = () => {
                   onChange={(e) => setEditPercentage(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
                 />
-              </div>
-
-              <div>
-                <label className="text-slate-400 font-medium">Grade Pill:</label>
-                <select
-                  value={editGrade}
-                  onChange={(e) => setEditGrade(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm mt-1 focus:outline-none focus:border-purple-500"
-                >
-                  <option value="A+">A+</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                  <option value="D">D</option>
-                  <option value="F">F</option>
-                </select>
               </div>
 
               <div>
