@@ -74,34 +74,70 @@ const CandidateWebcamPreview = ({
     };
   }, [streamRef, activeVideoRef]);
 
-  // Continuous frame emitter to Admin Proctoring Console (Ultra-lightweight 360x270 @ 0.45 quality ~7KB for zero RAM overhead)
+  // High-Definition frame emitter to Admin Proctoring Console (Crisp 640x480 @ 0.85 HD Quality)
+  const [qualityMode, setQualityMode] = useState("STANDARD");
+
   useEffect(() => {
     if (!socket || !user) return;
+
+    const studentId = user.id || user._id;
+
+    const handleQuality = (data) => {
+      if (data?.quality) setQualityMode(data.quality);
+    };
+
+    socket.on(`video-quality-mode::${studentId}`, handleQuality);
+    socket.on("video-quality-mode-global", handleQuality);
 
     const frameTimer = setInterval(() => {
       if (activeVideoRef.current && activeVideoRef.current.readyState >= 2) {
         try {
+          const videoWidth = activeVideoRef.current.videoWidth || 640;
+          const videoHeight = activeVideoRef.current.videoHeight || 480;
+
+          // Determine target dimensions based on selected quality mode
+          let targetW = 640;
+          let targetH = 480;
+          let jpegQuality = 0.85;
+
+          if (qualityMode === "MAX_HD") {
+            targetW = 1280;
+            targetH = 720;
+            jpegQuality = 0.92;
+          } else if (qualityMode === "LOW") {
+            targetW = 480;
+            targetH = 360;
+            jpegQuality = 0.65;
+          }
+
           const c = document.createElement("canvas");
-          c.width = 360;
-          c.height = 270;
+          c.width = targetW;
+          c.height = targetH;
           const ctx = c.getContext("2d");
           if (ctx) {
-            ctx.drawImage(activeVideoRef.current, 0, 0, 360, 270);
-            const dataUrl = c.toDataURL("image/jpeg", 0.45);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(activeVideoRef.current, 0, 0, targetW, targetH);
+            const dataUrl = c.toDataURL("image/jpeg", jpegQuality);
             socket.emit("candidate-frame", {
-              studentId: user.id || user._id,
+              studentId,
               examId: exam?.id,
               frame: dataUrl,
+              quality: qualityMode,
             });
           }
         } catch (err) {
           // Ignore capture error
         }
       }
-    }, 300);
+    }, 250);
 
-    return () => clearInterval(frameTimer);
-  }, [socket, user, exam?.id, activeVideoRef]);
+    return () => {
+      clearInterval(frameTimer);
+      socket.off(`video-quality-mode::${studentId}`, handleQuality);
+      socket.off("video-quality-mode-global", handleQuality);
+    };
+  }, [socket, user, exam?.id, activeVideoRef, qualityMode]);
 
   return (
     <div className="relative aspect-video w-full bg-slate-950 rounded-lg overflow-hidden border border-slate-800 flex items-center justify-center">
