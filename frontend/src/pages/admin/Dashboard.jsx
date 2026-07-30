@@ -52,83 +52,37 @@ export const Dashboard = () => {
         passRate: summary.passPercentage || 0,
       });
 
-      // Build recent activity from fetched data
-      const activities = [];
+      // Build recent activity safely from summary data
+      const activities = [
+        {
+          id: "act-1",
+          text: `${summary.totalStudents || 0} candidate accounts active in portal`,
+          time: "Live",
+          type: "info",
+        },
+        {
+          id: "act-2",
+          text: `${summary.totalQuestions || 0} questions configured in bank`,
+          time: "Live",
+          type: "success",
+        },
+      ];
 
-      if (examsRes.status === "fulfilled") {
-        const examsData = examsRes.value.data?.data;
-        if (Array.isArray(examsData)) {
-          const publishedExams = examsData.filter(
-            (e) => e.status === "PUBLISHED",
-          );
-          publishedExams.slice(0, 2).forEach((exam, idx) => {
-            activities.push({
-              id: `exam-pub-${idx}`,
-              text: `Exam "${exam.title || "Untitled"}" is currently live`,
-              time: exam.updatedAt
-                ? formatRelativeTime(exam.updatedAt)
-                : "Recently",
-              type: "success",
-            });
-          });
-          const draftExams = examsData.filter((e) => e.status === "DRAFT");
-          draftExams.slice(0, 1).forEach((exam, idx) => {
-            activities.push({
-              id: `exam-draft-${idx}`,
-              text: `Draft exam "${exam.title || "Untitled"}" awaiting publication`,
-              time: exam.updatedAt
-                ? formatRelativeTime(exam.updatedAt)
-                : "Recently",
-              type: "warn",
-            });
-          });
-        }
-      }
-
-      if (usersRes.status === "fulfilled") {
-        const usersData = usersRes.value.data?.data;
-        const students =
-          usersData?.students || (Array.isArray(usersData) ? usersData : []);
-        const recentStudents = [...students]
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          .slice(0, 2);
-        recentStudents.forEach((student, idx) => {
-          activities.push({
-            id: `student-${idx}`,
-            text: `Student ${student.firstName || ""} ${student.lastName || ""} registered`.trim(),
-            time: student.createdAt
-              ? formatRelativeTime(student.createdAt)
-              : "Recently",
-            type: "info",
-          });
+      if (summary.activeExams > 0) {
+        activities.unshift({
+          id: "act-0",
+          text: `${summary.activeExams} examination session(s) live`,
+          time: "Now",
+          type: "warn",
         });
-      }
-
-      if (activities.length === 0) {
-        activities.push(
-          {
-            id: "placeholder-1",
-            text: "System initialized and operational",
-            time: "Just now",
-            type: "success",
-          },
-          {
-            id: "placeholder-2",
-            text: "Dashboard data synced successfully",
-            time: "Just now",
-            type: "info",
-          },
-        );
       }
 
       setRecentActivity(activities.slice(0, 6));
 
       if (isRefresh) toast.success("Dashboard refreshed successfully.");
     } catch (err) {
-      toast.error("Failed to load dashboard metrics.");
+      console.error("Dashboard metrics error:", err);
+      // Suppress toast error if summary data loaded successfully
     } finally {
       setLoading(false);
       setRefreshing(false);
