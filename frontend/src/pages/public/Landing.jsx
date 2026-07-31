@@ -1226,12 +1226,12 @@ export const Landing = () => {
 
             {/* Right CTAs */}
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="#features"
+              <Link
+                to="/login"
                 className="hidden sm:block px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all hover:bg-white/[0.06]"
               >
-                Docs
-              </a>
+                Log In
+              </Link>
               {/* Divider */}
               <div className="hidden sm:block w-px h-5 bg-white/[0.1]" />
               <Link
