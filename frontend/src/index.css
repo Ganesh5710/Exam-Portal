@@ -225,3 +225,114 @@
   background-color: #f8fafc !important;
 }
 
+/* ===================================================
+   SKILLBRIX LANDING PAGE — PREMIUM ANIMATION SYSTEM
+   =================================================== */
+
+/* Glow orb slow drift & pulse */
+@keyframes orb-drift-1 {
+  0%   { transform: translate(0,    0)   scale(1);    opacity: 0.18; }
+  30%  { transform: translate(40px, -30px) scale(1.06); opacity: 0.22; }
+  60%  { transform: translate(-20px, 20px) scale(0.96); opacity: 0.15; }
+  100% { transform: translate(0,    0)   scale(1);    opacity: 0.18; }
+}
+@keyframes orb-drift-2 {
+  0%   { transform: translate(0, 0)      scale(1);    opacity: 0.14; }
+  40%  { transform: translate(-50px, 40px) scale(1.08); opacity: 0.20; }
+  70%  { transform: translate(30px, -15px) scale(0.94); opacity: 0.11; }
+  100% { transform: translate(0, 0)      scale(1);    opacity: 0.14; }
+}
+@keyframes orb-drift-3 {
+  0%   { transform: translate(0, 0)      scale(1);    opacity: 0.12; }
+  50%  { transform: translate(25px, 50px)  scale(1.05); opacity: 0.18; }
+  100% { transform: translate(0, 0)      scale(1);    opacity: 0.12; }
+}
+
+/* Hero card floating animation */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* Spotlight pulse behind hero headline */
+@keyframes spotlight-breathe {
+  0%, 100% { opacity: 0.28; transform: scale(1); }
+  50%       { opacity: 0.40; transform: scale(1.06); }
+}
+
+/* Live recording dot glow pulse */
+@keyframes live-glow {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(239, 68, 68, 0.5); }
+  50%       { box-shadow: 0 0 10px 4px rgba(239, 68, 68, 0.85); }
+}
+@keyframes live-glow-blue {
+  0%, 100% { box-shadow: 0 0 4px 2px rgba(79, 123, 255, 0.4); }
+  50%       { box-shadow: 0 0 14px 5px rgba(79, 123, 255, 0.8); }
+}
+@keyframes live-glow-green {
+  0%, 100% { box-shadow: 0 0 4px 2px rgba(16, 185, 129, 0.4); }
+  50%       { box-shadow: 0 0 12px 4px rgba(16, 185, 129, 0.8); }
+}
+
+/* Candidate video frame flicker / alert flash */
+@keyframes alert-frame-pulse {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 0px rgba(239,68,68,0); }
+  50%       { border-color: rgba(239, 68, 68, 0.9); box-shadow: 0 0 16px 2px rgba(239,68,68,0.5); }
+}
+
+/* Gradient shimmer sweep on CTAs */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+/* Stat counter bar fill */
+@keyframes bar-fill {
+  from { width: 0%; }
+}
+
+/* Noise grain drift (very subtle) */
+@keyframes noise-drift {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-2px, 2px); }
+  40%  { transform: translate(2px, -2px); }
+  60%  { transform: translate(-1px, 1px); }
+  80%  { transform: translate(1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Utility classes for landing page */
+.landing-orb-1 { animation: orb-drift-1 18s ease-in-out infinite; }
+.landing-orb-2 { animation: orb-drift-2 22s ease-in-out infinite; }
+.landing-orb-3 { animation: orb-drift-3 26s ease-in-out infinite; }
+.landing-float { animation: float-y 5s ease-in-out infinite; }
+.landing-spotlight { animation: spotlight-breathe 6s ease-in-out infinite; }
+.landing-live-dot { animation: live-glow 1.6s ease-in-out infinite; }
+.landing-live-blue { animation: live-glow-blue 1.8s ease-in-out infinite; }
+.landing-live-green { animation: live-glow-green 2s ease-in-out infinite; }
+.landing-alert-frame { animation: alert-frame-pulse 1.2s ease-in-out infinite; }
+.landing-noise { animation: noise-drift 8s steps(4) infinite; }
+
+/* Shimmer button gradient */
+.landing-cta-primary {
+  background: linear-gradient(110deg, #4F7BFF 0%, #7C5CFC 40%, #06B6D4 60%, #4F7BFF 100%);
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Glass card base */
+.glass-card {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Section clip-path angled divider top */
+.clip-top-right {
+  clip-path: polygon(0 4%, 100% 0%, 100% 100%, 0 100%);
+}
+.clip-top-left {
+  clip-path: polygon(0 0%, 100% 4%, 100% 100%, 0 100%);
+}
+
