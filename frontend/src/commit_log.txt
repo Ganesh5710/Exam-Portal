@@ -29,3 +29,4 @@ Commit 28: feat(terminal): add mobile question palette slide-up sheet backdrop -
 Commit 29: refactor(demo): add negative marking calculation helper - 2026-07-31T16:49:09.165Z
 Commit 30: style(terminal): highlight bookmarked questions in palette grid - 2026-07-31T16:49:09.666Z
 Commit 31: docs: add environment variable setup guide for Railway deployment - 2026-07-31T16:49:10.284Z
+Commit 32: refactor(proctoring): optimize canvas frame draw quality - 2026-07-31T16:49:10.894Z
