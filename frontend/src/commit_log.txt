@@ -16,3 +16,4 @@ Commit 15: style(landing): fine-tune noise overlay grain opacity - 2026-07-31T16
 Commit 16: feat(terminal): add keyboard shortcuts for option selection (A/B/C/D) - 2026-07-31T16:49:01.942Z
 Commit 17: refactor(landing): optimize drifting orb keyframe keyframes - 2026-07-31T16:49:02.450Z
 Commit 18: style(buttons): refine primary CTA shimmer sweep duration - 2026-07-31T16:49:03.007Z
+Commit 19: docs: detail Socket.io volatile emit rationale in technical guide - 2026-07-31T16:49:03.534Z
