@@ -297,12 +297,12 @@ function HeroSection() {
             className="flex flex-col sm:flex-row gap-4 pt-1"
           >
             <Link
-              to="/login"
+              to="/demo"
               className="landing-cta-primary group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-white font-bold text-base transition-all hover:-translate-y-0.5 hover:shadow-xl"
               style={{ boxShadow: "0 8px 32px rgba(79,123,255,0.3)" }}
             >
               <Shield size={17} />
-              Book a Demo
+              Try Live Demo
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
@@ -1006,12 +1006,12 @@ function FinalCTASection() {
 
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
-              to="/login"
+              to="/demo"
               className="landing-cta-primary group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-white font-bold text-base transition-all hover:-translate-y-1"
               style={{ boxShadow: "0 8px 32px rgba(79,123,255,0.35)" }}
             >
               <Shield size={18} />
-              Schedule a Live Demo
+              Try Live Demo — Free
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
@@ -1235,11 +1235,11 @@ export const Landing = () => {
               {/* Divider */}
               <div className="hidden sm:block w-px h-5 bg-white/[0.1]" />
               <Link
-                to="/login"
+                to="/demo"
                 className="landing-cta-primary group px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-1.5 transition-all hover:-translate-y-0.5 hover:shadow-lg"
                 style={{ boxShadow: "0 4px 16px rgba(79,123,255,0.35)" }}
               >
-                Request Demo
+                Try Demo
                 <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>

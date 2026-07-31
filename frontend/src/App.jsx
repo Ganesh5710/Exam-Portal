@@ -12,6 +12,7 @@ import SuperAdminLayout from "./layouts/SuperAdminLayout";
 // Page Imports
 import Login from "./pages/auth/Login";
 import Landing from "./pages/public/Landing";
+import DemoExam from "./pages/public/DemoExam";
 import Dashboard from "./pages/admin/Dashboard";
 import LiveMonitor from "./pages/admin/LiveMonitor";
 import Students from "./pages/admin/Students";
@@ -84,6 +85,7 @@ export const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
+        <Route path="/demo" element={<DemoExam />} />
 
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
