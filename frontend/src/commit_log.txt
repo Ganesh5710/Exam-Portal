@@ -26,3 +26,4 @@ Commit 25: docs: update API route list in backend documentation - 2026-07-31T16:
 Commit 26: refactor(auth): add rate-limit response headers for login endpoint - 2026-07-31T16:49:07.519Z
 Commit 27: style(landing): balance section clip-path transition angles - 2026-07-31T16:49:08.089Z
 Commit 28: feat(terminal): add mobile question palette slide-up sheet backdrop - 2026-07-31T16:49:08.682Z
+Commit 29: refactor(demo): add negative marking calculation helper - 2026-07-31T16:49:09.165Z
