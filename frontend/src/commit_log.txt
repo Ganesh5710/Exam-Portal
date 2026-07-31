@@ -4,3 +4,4 @@ Commit 3: style(landing): enhance radial spotlight gradient performance - 2026-0
 Commit 4: feat(proctoring): add high-precision frame rate throttler - 2026-07-31T16:48:55.503Z
 Commit 5: refactor(terminal): modularize question status palette logic - 2026-07-31T16:48:56.073Z
 Commit 6: style(terminal): polish subject-wise badge indicator contrast - 2026-07-31T16:48:56.650Z
+Commit 7: docs: update project README with deployment architecture breakdown - 2026-07-31T16:48:57.222Z
