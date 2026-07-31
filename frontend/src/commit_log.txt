@@ -1,1 +1,2 @@
 Commit 1: docs: add technical documentation for demo exam engine - 2026-07-31T16:48:53.799Z
+Commit 2: refactor(landing): optimize floating navbar blur and backdrop filter - 2026-07-31T16:48:54.450Z
