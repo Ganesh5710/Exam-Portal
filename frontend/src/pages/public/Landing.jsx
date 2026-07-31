@@ -1159,64 +1159,94 @@ export const Landing = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          STICKY NAV
+          FLOATING ISLAND NAV
           ═══════════════════════════════════════════════════════════════ */}
-      <motion.header
-        className="sticky top-0 z-50 transition-all duration-300"
-        style={navScrolled ? {
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          background: "rgba(5,6,15,0.85)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-        } : {}}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #4F7BFF, #7C5CFC)", boxShadow: "0 4px 20px rgba(79,123,255,0.35)" }}>
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-black" style={{ color: "#f0f4ff" }}>
-                Skill
-                <span style={{
-                  background: "linear-gradient(135deg, #4F7BFF, #06B6D4)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}>brix</span>
-              </span>
-              <p className="hidden sm:block text-[9px] text-slate-600 tracking-[0.2em] uppercase -mt-0.5">
-                Enterprise Proctoring
-              </p>
-            </div>
-          </Link>
+      {/* Spacer so page content doesn't sit under the fixed nav */}
+      <div className="h-[88px]" />
 
-          {/* Nav links */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-400">
-            {[["#features", "Features"], ["#how-it-works", "How it Works"], ["#security", "Security"]].map(([href, label]) => (
-              <a key={label} href={href} className="hover:text-white transition-colors">{label}</a>
-            ))}
-          </nav>
-
-          {/* CTA row */}
-          <div className="flex items-center gap-3">
-            <a href="#features" className="hidden sm:block px-4 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:text-white transition-colors glass-card">
-              Docs
-            </a>
-            <Link
-              to="/login"
-              className="landing-cta-primary group px-5 py-2.5 rounded-xl text-white text-sm font-bold flex items-center gap-1.5 transition-all hover:-translate-y-0.5"
-              style={{ boxShadow: "0 4px 20px rgba(79,123,255,0.3)" }}
-            >
-              Request Demo
-              <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-5xl pointer-events-auto"
+        >
+          <div
+            className="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl transition-all duration-300"
+            style={navScrolled ? {
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              background: "rgba(5,6,15,0.82)",
+              border: "1px solid rgba(79,123,255,0.2)",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.05), 0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(79,123,255,0.08)",
+            } : {
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              background: "rgba(5,6,15,0.55)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+            }}
+          >
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105"
+                style={{ background: "linear-gradient(135deg, #4F7BFF, #7C5CFC)", boxShadow: "0 4px 16px rgba(79,123,255,0.4)" }}
+              >
+                <Shield className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-black" style={{ color: "#f0f4ff" }}>
+                  Skill
+                  <span style={{
+                    background: "linear-gradient(135deg, #4F7BFF, #06B6D4)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}>brix</span>
+                </span>
+                <p className="hidden sm:block text-[8px] text-slate-600 tracking-[0.2em] uppercase -mt-0.5">
+                  Enterprise Proctoring
+                </p>
+              </div>
             </Link>
+
+            {/* Nav links — centered */}
+            <nav className="hidden lg:flex items-center gap-1">
+              {[["#features", "Features"], ["#how-it-works", "How it Works"], ["#security", "Security"]].map(([href, label]) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="px-3.5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-all hover:bg-white/[0.06]"
+                >
+                  {label}
+                </a>
+              ))}
+            </nav>
+
+            {/* Right CTAs */}
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="#features"
+                className="hidden sm:block px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all hover:bg-white/[0.06]"
+              >
+                Docs
+              </a>
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-5 bg-white/[0.1]" />
+              <Link
+                to="/login"
+                className="landing-cta-primary group px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-1.5 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                style={{ boxShadow: "0 4px 16px rgba(79,123,255,0.35)" }}
+              >
+                Request Demo
+                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-        </div>
-      </motion.header>
+        </motion.header>
+      </div>
+
 
       {/* ═══════════════════════════════════════════════════════════════
           PAGE SECTIONS
