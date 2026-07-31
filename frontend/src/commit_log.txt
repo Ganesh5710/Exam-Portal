@@ -21,3 +21,4 @@ Commit 20: refactor(backend): streamline Prisma query error logging - 2026-07-31
 Commit 21: style(landing): align mobile hero badge typography tracking - 2026-07-31T16:49:04.518Z
 Commit 22: feat(proctoring): add face-absence threshold configuration - 2026-07-31T16:49:05.005Z
 Commit 23: refactor(terminal): optimize question text renderer for inline LaTeX - 2026-07-31T16:49:05.513Z
+Commit 24: style(results): polish subject-wise score breakdown layout - 2026-07-31T16:49:06.239Z
