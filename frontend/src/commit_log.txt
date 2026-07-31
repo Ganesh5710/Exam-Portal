@@ -2,3 +2,4 @@ Commit 1: docs: add technical documentation for demo exam engine - 2026-07-31T16
 Commit 2: refactor(landing): optimize floating navbar blur and backdrop filter - 2026-07-31T16:48:54.450Z
 Commit 3: style(landing): enhance radial spotlight gradient performance - 2026-07-31T16:48:54.995Z
 Commit 4: feat(proctoring): add high-precision frame rate throttler - 2026-07-31T16:48:55.503Z
+Commit 5: refactor(terminal): modularize question status palette logic - 2026-07-31T16:48:56.073Z
