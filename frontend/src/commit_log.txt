@@ -38,3 +38,4 @@ Commit 37: docs: document database migration steps using Prisma CLI - 2026-07-31
 Commit 38: refactor(landing): optimize scroll listener debounce for nav - 2026-07-31T16:49:13.960Z
 Commit 39: style(results): enhance pass/fail badge glow effect - 2026-07-31T16:49:14.547Z
 Commit 40: feat(proctoring): add latency telemetry ping indicator - 2026-07-31T16:49:15.194Z
+Commit 41: refactor(terminal): streamline question navigation state handlers - 2026-07-31T16:49:16.054Z
