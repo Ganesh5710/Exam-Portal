@@ -19,3 +19,4 @@ Commit 18: style(buttons): refine primary CTA shimmer sweep duration - 2026-07-3
 Commit 19: docs: detail Socket.io volatile emit rationale in technical guide - 2026-07-31T16:49:03.534Z
 Commit 20: refactor(backend): streamline Prisma query error logging - 2026-07-31T16:49:04.017Z
 Commit 21: style(landing): align mobile hero badge typography tracking - 2026-07-31T16:49:04.518Z
+Commit 22: feat(proctoring): add face-absence threshold configuration - 2026-07-31T16:49:05.005Z
