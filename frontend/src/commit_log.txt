@@ -13,3 +13,4 @@ Commit 12: style(results): improve score progress bar animation timing - 2026-07
 Commit 13: docs: document Supabase session pooler connection settings - 2026-07-31T16:49:00.335Z
 Commit 14: refactor(security): enforce strict CSP headers in helmet config - 2026-07-31T16:49:00.844Z
 Commit 15: style(landing): fine-tune noise overlay grain opacity - 2026-07-31T16:49:01.399Z
+Commit 16: feat(terminal): add keyboard shortcuts for option selection (A/B/C/D) - 2026-07-31T16:49:01.942Z
