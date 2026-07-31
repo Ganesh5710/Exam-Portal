@@ -34,3 +34,4 @@ Commit 33: style(landing): adjust problem flip card hover elevation - 2026-07-31
 Commit 34: feat(terminal): add fullscreen exit alert modal trigger - 2026-07-31T16:49:11.969Z
 Commit 35: refactor(backend): format Pino audit log timestamps to ISO format - 2026-07-31T16:49:12.457Z
 Commit 36: style(navbar): refine floating pill top margin and shadow glow - 2026-07-31T16:49:12.956Z
+Commit 37: docs: document database migration steps using Prisma CLI - 2026-07-31T16:49:13.477Z
