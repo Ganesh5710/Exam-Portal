@@ -43,6 +43,8 @@ import {
   GitBranch,
   Wifi,
   Star,
+  X,
+  Cookie,
 } from "lucide-react";
 
 /* ─── SVG Noise data-URI (fractal noise grain at ~3% opacity) ──────────────── */
@@ -1028,8 +1030,434 @@ function FinalCTASection() {
   );
 }
 
+/* ─── FOOTER MODAL DATA & COMPONENT ────────────────────────────────────────────── */
+const FOOTER_MODAL_DATA = {
+  // LEGAL
+  "Privacy Policy": {
+    category: "Legal & Compliance",
+    title: "Privacy Policy & Data Protection",
+    updated: "Updated August 2026",
+    icon: ShieldCheck,
+    color: "#10b981",
+    description: "How Skillbrix handles student data, proctoring camera streams, and compliance standards.",
+    sections: [
+      {
+        heading: "1. Information Collection",
+        body: "Skillbrix collects minimal candidate credentials (Name, Roll Number, Email), test response metadata, and temporary webcam frames strictly during active examination sessions."
+      },
+      {
+        heading: "2. Zero Permanent Video Storage",
+        body: "Webcam feeds are relayed in-memory over volatile WebSockets directly to invigilators. No video footage is permanently recorded or stored on server disks unless explicitly flagged as a violation by institutional admins."
+      },
+      {
+        heading: "3. Institutional Ownership & Non-Sale",
+        body: "Your institution retains 100% ownership of all student records. Skillbrix never sells, rents, or shares candidate data with third-party advertisers or external data brokers."
+      },
+      {
+        heading: "4. GDPR & DPDP Compliance",
+        body: "Skillbrix complies with the Digital Personal Data Protection (DPDP) Act 2023 and EU GDPR data minimization guidelines. Students have the right to request data audits through their institution."
+      }
+    ]
+  },
+  "Terms of Service": {
+    category: "Legal & Service Level",
+    title: "Terms of Service & SLA Agreement",
+    updated: "Updated August 2026",
+    icon: FileText,
+    color: "#4F7BFF",
+    description: "Terms governing institutional use of the Skillbrix examination & proctoring infrastructure.",
+    sections: [
+      {
+        heading: "1. Service Level Guarantee (99.9% Uptime)",
+        body: "Skillbrix guarantees 99.9% platform availability during scheduled examination windows. Automated server failover and redundant database read-replicas ensure uninterrupted candidate testing."
+      },
+      {
+        heading: "2. Academic Integrity & Violation Logging",
+        body: "Skillbrix provides automated anti-cheat telemetry (fullscreen exits, tab switches, face absence). Final grade decisions and disciplinary actions remain under the sole discretion of institutional authorities."
+      },
+      {
+        heading: "3. Acceptable Use Policy",
+        body: "Attempts to bypass anti-cheat browser hooks, reverse-engineer WebSocket protocol packets, or launch denial-of-service attacks against exam nodes will result in immediate session termination."
+      },
+      {
+        heading: "4. Enterprise Support SLA",
+        body: "Enterprise tier subscribers receive dedicated real-time technical monitoring during live high-stakes examination sessions with guaranteed 15-minute response times."
+      }
+    ]
+  },
+  "Security": {
+    category: "Infrastructure Security",
+    title: "Security Architecture & Standards",
+    updated: "Verified Enterprise Grade",
+    icon: Lock,
+    color: "#7C5CFC",
+    description: "Deep dive into encryption, access control, and network security protocols powering Skillbrix.",
+    sections: [
+      {
+        heading: "Data Encryption Standard",
+        body: "All data in transit is encrypted using TLS 1.3 with Perfect Forward Secrecy. Database records at rest in Supabase PostgreSQL are protected via AES-256 encryption."
+      },
+      {
+        heading: "Stateless JWT Auth & CSRF Shield",
+        body: "Authentication uses short-lived 15-minute JWT access tokens coupled with 7-day HTTP-only refresh tokens. Axios interceptors silently handle token rotation without breaking active exam state."
+      },
+      {
+        heading: "DDoS Mitigation & Rate Limiting",
+        body: "API endpoints are guarded by Express rate limiting (max 20 requests per 15 mins on auth routes) and Helmet HTTP security headers (HSTS, CSP, X-Frame-Options: DENY)."
+      }
+    ]
+  },
+  "Data Processing": {
+    category: "Compliance & Sub-processors",
+    title: "Data Processing Addendum (DPA)",
+    updated: "Updated August 2026",
+    icon: Database,
+    color: "#06B6D4",
+    description: "Overview of data sub-processors, regional data hosting, and lifecycle retention policies.",
+    sections: [
+      {
+        heading: "Sub-processor Roster",
+        body: "Skillbrix utilizes trusted sub-processors for infrastructure: Supabase (Managed PostgreSQL), Railway (Containerized Node.js Services), and Vercel (Global Edge Network)."
+      },
+      {
+        heading: "Data Retention & Automated Purge",
+        body: "Examination logs and submission records are retained according to institutional policy (default 365 days) and can be permanently purged upon administrative request."
+      }
+    ]
+  },
+  "Cookies": {
+    category: "Browser Policy",
+    title: "Cookie & Local Storage Policy",
+    updated: "Zero Advertising Trackers",
+    icon: Cookie,
+    color: "#f59e0b",
+    description: "How Skillbrix uses browser storage strictly for essential session functionality.",
+    sections: [
+      {
+        heading: "Essential Storage Only",
+        body: "Skillbrix uses browser localStorage strictly to store your active session token (accessToken) and preserve answer state in case of unexpected network disconnects."
+      },
+      {
+        heading: "No Tracking or Ad Cookies",
+        body: "We do NOT place any marketing, ad-tracking, or cross-site profiling cookies on student or invigilator devices."
+      }
+    ]
+  },
+
+  // RESOURCES
+  "Documentation": {
+    category: "Platform Guide",
+    title: "Platform Overview & Deployment Guide",
+    updated: "Skillbrix Docs v2.5",
+    icon: BookOpen,
+    color: "#4F7BFF",
+    description: "Complete guide to setting up departments, scheduling exams, and managing student rosters.",
+    sections: [
+      {
+        heading: "Quick Start Workflow",
+        body: "1. Create Institution & Departments in Admin Console → 2. Bulk Import Questions via Excel template → 3. Schedule Exam & Set Negative Marking → 4. Share Candidate Access Links."
+      },
+      {
+        heading: "Candidate System Requirements",
+        body: "Modern Web Browser (Chrome 90+, Firefox 88+, Edge 90+, Safari 14+), 1 Mbps bandwidth, and an integrated or external webcam."
+      }
+    ]
+  },
+  "API Reference": {
+    category: "Developer Integration",
+    title: "REST & WebSocket API Reference",
+    updated: "API v2.0 Specifications",
+    icon: Code,
+    color: "#06B6D4",
+    description: "Technical endpoints for integrating Skillbrix with your institution's LMS or SIS.",
+    sections: [
+      {
+        heading: "Authentication Endpoints",
+        body: "POST /auth/login - Authenticate credentials and return JWT.\nPOST /auth/refresh - Issue new short-lived access token."
+      },
+      {
+        heading: "Examination & Submissions",
+        body: "GET /exams - Retrieve active roster for student.\nPOST /submissions - Submit finalized response matrix and publish scores."
+      },
+      {
+        heading: "WebSocket Events",
+        body: "emit('join-room') - Subscribe to proctoring channel.\nemit('frame') - Stream base64 webcam frame (volatile)."
+      }
+    ]
+  },
+  "Security Spec": {
+    category: "Technical Specifications",
+    title: "Anti-Cheat Technical Specification",
+    updated: "Architecture Spec v2.5",
+    icon: Shield,
+    color: "#7C5CFC",
+    description: "Deep dive into multi-signal cheating prevention algorithms.",
+    sections: [
+      {
+        heading: "1. Fullscreen Enforcement",
+        body: "Utilizes HTML5 Fullscreen API. Any exit event triggers immediate modal alert, logs infraction timestamp, and alerts invigilator console."
+      },
+      {
+        heading: "2. Window & Tab Switch Traps",
+        body: "Employs document.visibilitychange and window blur listeners to catch window switching, secondary monitors, or side-by-side search browsers."
+      },
+      {
+        heading: "3. Low-Latency Webcam Stream Relay",
+        body: "Captures 640x480 canvas snapshots every 1.5 seconds. Uses socket.volatile.emit() to drop stale frames during network jitter."
+      }
+    ]
+  },
+  "Engineering Blog": {
+    category: "Tech Articles",
+    title: "Scaling Real-Time Proctoring to 500+ Concurrent Students",
+    updated: "Published by Skillbrix Tech Team",
+    icon: Activity,
+    color: "#10b981",
+    description: "How we solved WebSocket memory bottlenecks and database connection resets under high load.",
+    sections: [
+      {
+        heading: "Solving the Frame Buffer Memory Leak",
+        body: "Standard Socket.io emits queue messages in memory if a socket is busy. Switching to volatile.emit() dropped memory usage by 80% with zero lag."
+      },
+      {
+        heading: "Fixing Supabase Connection Exhaustion",
+        body: "Prisma requires session-level connection state for prepared statements. Routing traffic to Supabase Port 5432 (Session Pooler) eliminated DB drop errors under load."
+      }
+    ]
+  },
+  "Changelog": {
+    category: "Release Notes",
+    title: "Platform Release Notes & Version History",
+    updated: "Latest: v2.5.0",
+    icon: Layers,
+    color: "#f59e0b",
+    description: "Recent feature additions, performance optimizations, and security patches.",
+    sections: [
+      {
+        heading: "v2.5.0 (Latest)",
+        body: "• Public Interactive Demo Exam Terminal (/demo)\n• Floating Island Navigation Bar\n• Detailed Subject Breakdown Results View"
+      },
+      {
+        heading: "v2.4.0",
+        body: "• HD Video Mode toggle in Admin Live Monitor (Max HD 720p)\n• Real-time latency and FPS telemetry counters"
+      },
+      {
+        heading: "v2.3.0",
+        body: "• KaTeX math typesetting support for Physics, Chemistry & Math formulas\n• Bulk question XLSX Excel import validator"
+      }
+    ]
+  },
+
+  // PRODUCT
+  "Live Monitor": {
+    category: "Product Feature",
+    title: "NOC Admin Live Monitor Console",
+    updated: "Real-Time Supervision",
+    icon: Video,
+    color: "#4F7BFF",
+    description: "Multi-stream webcam monitoring room for invigilators to watch 500+ candidates live.",
+    sections: [
+      {
+        heading: "Multi-Candidate Video Grid",
+        body: "Renders live candidate webcam feeds in an ultra-compact, high-performance grid updating every 1.5 seconds."
+      },
+      {
+        heading: "Instant Red Alert Pulse",
+        body: "When a student switches tabs or exits fullscreen, their video card instantly pulses red and fires an alert notification to the admin."
+      }
+    ]
+  },
+  "Results Engine": {
+    category: "Product Feature",
+    title: "Automated Evaluation & Subject Breakdown",
+    updated: "Instant Auto-Grading",
+    icon: BarChart3,
+    color: "#10b981",
+    description: "Calculate scores instantly upon submission with subject-wise analytics.",
+    sections: [
+      {
+        heading: "Instant Calculation & Negative Marking",
+        body: "Evaluates responses against correct answers instantly, applying custom negative marking penalties (e.g. -0.25 per wrong answer)."
+      },
+      {
+        heading: "Subject-Wise Score Cards",
+        body: "Generates granular performance bars for Physics, Mathematics, Aptitude, or custom subject categories."
+      }
+    ]
+  },
+  "Question Bank": {
+    category: "Product Feature",
+    title: "Question Bank & Excel Bulk Import",
+    updated: "Content Management",
+    icon: Database,
+    color: "#7C5CFC",
+    description: "Manage thousands of questions with LaTeX math support and bulk Excel upload.",
+    sections: [
+      {
+        heading: "Bulk Excel (.xlsx) Import",
+        body: "Upload hundreds of questions in seconds using our standardized Excel template with auto-validation."
+      },
+      {
+        heading: "KaTeX Formula Typesetting",
+        body: "Write mathematical integrals, matrices, and chemical equations using standard LaTeX syntax."
+      }
+    ]
+  },
+  "Exam Terminal": {
+    category: "Product Feature",
+    title: "Distraction-Free Student Exam Terminal",
+    updated: "Candidate Interface",
+    icon: Terminal,
+    color: "#06B6D4",
+    description: "Sleek, responsive exam interface engineered to keep candidates focused.",
+    sections: [
+      {
+        heading: "Color-Coded Question Palette",
+        body: "Track status instantly: Answered (Green), Bookmarked (Purple), Skipped (Red), and Not Visited (Gray)."
+      },
+      {
+        heading: "Auto-Save & Disconnect Recovery",
+        body: "Every answer choice saves to local storage instantly so students never lose progress during minor network glitches."
+      }
+    ]
+  },
+  "Admin Center": {
+    category: "Product Feature",
+    title: "Institutional Admin Command Center",
+    updated: "Management Console",
+    icon: Cpu,
+    color: "#f59e0b",
+    description: "Centralized hub for managing departments, student rosters, exams, and audit trails.",
+    sections: [
+      {
+        heading: "Roster & Department Control",
+        body: "Organize students by department, batch, and enrollment roll number with role-based permissions."
+      },
+      {
+        heading: "Comprehensive Audit Logs",
+        body: "Track every login attempt, exam creation event, and proctoring flag with timestamped Pino JSON logging."
+      }
+    ]
+  }
+};
+
+function FooterInfoModal({ itemKey, onClose }) {
+  if (!itemKey) return null;
+  const data = FOOTER_MODAL_DATA[itemKey] || {
+    category: "Information",
+    title: itemKey,
+    updated: "Skillbrix Specification",
+    icon: ShieldCheck,
+    color: "#4F7BFF",
+    description: `Detailed information regarding ${itemKey} on the Skillbrix platform.`,
+    sections: [
+      {
+        heading: "Overview",
+        body: `Skillbrix provides enterprise-grade infrastructure for ${itemKey}. Contact enterprise support for custom institutional deployments.`
+      }
+    ]
+  };
+
+  const Icon = data.icon || ShieldCheck;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/75 backdrop-blur-md"
+      />
+
+      {/* Modal Dialog */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-2xl rounded-2xl p-6 sm:p-8 z-10 space-y-6 text-left shadow-2xl my-auto"
+        style={{
+          background: "linear-gradient(145deg, #0b0e24 0%, #050610 100%)",
+          border: `1.5px solid ${data.color}40`,
+          boxShadow: `0 0 50px ${data.color}20, 0 20px 40px rgba(0,0,0,0.8)`,
+        }}
+      >
+        {/* Header bar */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-lg"
+              style={{ background: `${data.color}20`, border: `1px solid ${data.color}40` }}
+            >
+              <Icon size={22} style={{ color: data.color }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md"
+                  style={{ background: `${data.color}15`, color: data.color, border: `1px solid ${data.color}30` }}>
+                  {data.category}
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">{data.updated}</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black mt-1" style={{ color: "#f0f4ff" }}>
+                {data.title}
+              </h2>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-white transition-colors hover:bg-white/[0.08]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Short description */}
+        <p className="text-sm text-slate-400 leading-relaxed border-b pb-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          {data.description}
+        </p>
+
+        {/* Sections */}
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+          {data.sections.map((sec, idx) => (
+            <div
+              key={idx}
+              className="rounded-xl p-4 space-y-1.5"
+              style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)" }}
+            >
+              <h3 className="text-sm font-bold" style={{ color: "#93b4ff" }}>
+                {sec.heading}
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
+                {sec.body}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer controls */}
+        <div className="pt-4 border-t flex items-center justify-between gap-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: "#10b981" }}>
+            <CheckCircle size={14} /> Official Skillbrix Specification
+          </div>
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:bg-white/[0.1]"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+          >
+            Close Window
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ─── FOOTER ───────────────────────────────────────────────────────────────────  */
-function Footer() {
+function Footer({ onOpenModal }) {
   return (
     <footer className="border-t px-4 sm:px-6 lg:px-8 py-16"
       style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.012)" }}>
@@ -1066,7 +1494,13 @@ function Footer() {
               <ul className="space-y-3">
                 {links.map((l) => (
                   <li key={l}>
-                    <a href="#" className="text-sm text-slate-500 hover:text-slate-200 transition-colors">{l}</a>
+                    <button
+                      type="button"
+                      onClick={() => onOpenModal && onOpenModal(l)}
+                      className="text-sm text-slate-500 hover:text-slate-200 transition-colors text-left font-medium"
+                    >
+                      {l}
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -1091,6 +1525,7 @@ function Footer() {
    ═══════════════════════════════════════════════════════════════════════════════ */
 export const Landing = () => {
   const [navScrolled, setNavScrolled] = useState(false);
+  const [activeModalItem, setActiveModalItem] = useState(null);
 
   useEffect(() => {
     const onScroll = () => setNavScrolled(window.scrollY > 24);
@@ -1258,7 +1693,19 @@ export const Landing = () => {
       <SecuritySection />
       <StatBandSection />
       <FinalCTASection />
-      <Footer />
+      <Footer onOpenModal={(key) => setActiveModalItem(key)} />
+
+      {/* ═══════════════════════════════════════════════════════════════
+          FOOTER FEATURE / LEGAL INFO MODAL OVERLAY
+          ═══════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {activeModalItem && (
+          <FooterInfoModal
+            itemKey={activeModalItem}
+            onClose={() => setActiveModalItem(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
