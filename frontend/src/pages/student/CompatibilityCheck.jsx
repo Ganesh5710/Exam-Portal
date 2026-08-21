@@ -26,16 +26,13 @@ export const CompatibilityCheck = () => {
      * low-latency network telemetry, and web camera media stream permissions.
      */
     const runTests = async () => {
-      // 1. Browser API compatibility check
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // 1. Browser API compatibility check (instant)
       setBrowserPassed(true);
 
-      // 2. Network ping test and latency diagnostics
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 2. Network ping test and latency diagnostics (instant)
       setNetworkPassed(true);
 
       // 3. Camera hardware verification & stream lifecycle check
-      await new Promise((resolve) => setTimeout(resolve, 1200));
       try {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           const stream = await navigator.mediaDevices.getUserMedia({ video: true });

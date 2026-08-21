@@ -128,14 +128,26 @@ const login = async (req, res, next) => {
                     : 'Invalid email or password.'
             });
         }
-        // Reset login failures on success
-        await db_1.prisma.user.update({
-            where: { id: user.id },
-            data: { loginAttempts: 0, lockUntil: null }
-        });
+        // Execute token generation, login attempts reset, and audit log in parallel to maximize speed
+        const [tokens] = await Promise.all([
+            generateTokens(user.id, user.email, user.role),
+            db_1.prisma.user.update({
+                where: { id: user.id },
+                data: { loginAttempts: 0, lockUntil: null }
+            }).catch(e => console.warn('User login attempt reset notice:', e.message)),
+            db_1.prisma.auditLog.create({
+                data: {
+                    userId: user.id,
+                    action: 'USER_LOGIN',
+                    target: `User ID: ${user.id}`,
+                    ipAddress: req.ip,
+                    userAgent: req.headers['user-agent']
+                }
+            }).catch(e => console.warn('Audit log create notice:', e.message))
+        ]);
 
+        const { accessToken, refreshToken } = tokens;
         const sessionToken = sessionStore_1.registerUserSession(user.id, req.ip, req.headers['user-agent']);
-        const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
 
         // Save tokens in cookies (HTTPOnly for security)
         res.cookie('accessToken', accessToken, {
@@ -149,16 +161,6 @@ const login = async (req, res, next) => {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
-        });
-        // Create Audit Log
-        await db_1.prisma.auditLog.create({
-            data: {
-                userId: user.id,
-                action: 'USER_LOGIN',
-                target: `User ID: ${user.id}`,
-                ipAddress: req.ip,
-                userAgent: req.headers['user-agent']
-            }
         });
         return res.status(200).json({
             success: true,
