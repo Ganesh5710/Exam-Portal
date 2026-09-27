@@ -18,11 +18,17 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Attach access token to headers
+// Attach access token to headers (except on auth endpoints like login/refresh/otp)
 api.interceptors.request.use(
   (config) => {
+    const isAuthRoute =
+      config.url?.includes("/auth/login") ||
+      config.url?.includes("/auth/send-otp") ||
+      config.url?.includes("/auth/verify-otp") ||
+      config.url?.includes("/auth/refresh");
+
     const token = localStorage.getItem("accessToken");
-    if (token && config.headers) {
+    if (token && config.headers && !isAuthRoute) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -51,6 +57,17 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
+      const isAuthRoute =
+        originalRequest?.url?.includes("/auth/login") ||
+        originalRequest?.url?.includes("/auth/send-otp") ||
+        originalRequest?.url?.includes("/auth/verify-otp") ||
+        originalRequest?.url?.includes("/auth/refresh");
+
+      // For auth endpoints, directly return the error response to the calling form
+      if (isAuthRoute) {
+        return Promise.reject(error);
+      }
+
       if (!originalRequest._retry) {
         originalRequest._retry = true;
         try {

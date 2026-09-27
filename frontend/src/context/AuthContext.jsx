@@ -9,6 +9,28 @@ import api from "../services/api";
 
 const AuthContext = createContext(undefined);
 
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return true;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return true;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +44,21 @@ export const AuthProvider = ({ children }) => {
       // Verify availability of token metadata before matching user profile
       if (token && savedUser) {
         try {
-          setUser(JSON.parse(savedUser));
-          sessionStorage.setItem("tabSessionActive", "true");
+          if (isTokenExpired(token)) {
+            // Token expired (e.g., after extended inactivity/20 days), purge stale local session
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("user");
+            setUser(null);
+          } else {
+            setUser(JSON.parse(savedUser));
+            sessionStorage.setItem("tabSessionActive", "true");
+          }
         } catch (e) {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("user");
+          setUser(null);
         }
       }
       setLoading(false);

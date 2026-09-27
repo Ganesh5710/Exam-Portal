@@ -101,6 +101,12 @@ const login = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Account blocked. Please contact administrator.' });
         }
 
+        // If lock timer expired in the past, reset loginAttempts & lockUntil
+        if (user.lockUntil && user.lockUntil <= new Date()) {
+            user.loginAttempts = 0;
+            user.lockUntil = null;
+        }
+
         const isMatch = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!isMatch) {
             if (user.lockUntil && user.lockUntil > new Date()) {
@@ -128,6 +134,16 @@ const login = async (req, res, next) => {
                     : 'Invalid email or password.'
             });
         }
+        // Clean up expired refresh tokens for this user asynchronously in background
+        db_1.prisma.refreshToken.deleteMany({
+            where: {
+                OR: [
+                    { expiresAt: { lt: new Date() } },
+                    { userId: user.id }
+                ]
+            }
+        }).catch(e => console.warn('Old refresh token purge notice:', e.message));
+
         // Execute token generation, login attempts reset, and audit log in parallel to maximize speed
         const [tokens] = await Promise.all([
             generateTokens(user.id, user.email, user.role),

@@ -311,15 +311,15 @@ const getExamQuestionsForStudent = async (req, res, next) => {
         if (now > exam.endTime) {
             return res.status(403).json({ success: false, message: 'The exam schedule window has closed.' });
         }
-        // Track when the student starts the exam
+        // Track when the student starts the exam (non-blocking async for instant question delivery)
         if (assignment.status === 'ASSIGNED') {
-            await db_1.prisma.examAssignment.update({
+            db_1.prisma.examAssignment.update({
                 where: { id: assignment.id },
                 data: {
                     status: 'STARTED',
                     startTime: now
                 }
-            });
+            }).catch(e => console.warn('ExamAssignment STARTED update notice:', e.message));
         }
 
         // Section-Based Sequential Progression (Section 1: Physics -> Section 2: Chemistry -> Section 3: Mathematics)
