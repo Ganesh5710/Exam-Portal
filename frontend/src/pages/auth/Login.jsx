@@ -33,9 +33,11 @@ export const Login = () => {
         navigate("/student/exams", { replace: true });
       }
     } catch (err) {
+      console.error("Login attempt error:", err);
       const msg =
         err.response?.data?.message ||
-        "Login failed. Please check your credentials.";
+        err.message ||
+        "Unable to reach server. Please check your network connection.";
       toast.error(msg);
     } finally {
       setLoading(false);
