@@ -58,9 +58,20 @@ const login = async (req, res, next) => {
     try {
         const cleanEmail = email ? email.trim() : '';
         const lowerEmail = cleanEmail.toLowerCase();
-        let user = await db_1.prisma.user.findFirst({
-            where: { email: { equals: cleanEmail, mode: 'insensitive' } }
-        });
+        let user;
+        try {
+            user = await db_1.prisma.user.findFirst({
+                where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+            });
+        } catch (dbErr) {
+            console.warn('Initial Prisma query failed due to database reconnect event. Auto-reconnecting...', dbErr.message);
+            if (typeof db_1.resetPrismaConnection === 'function') {
+                await db_1.resetPrismaConnection();
+            }
+            user = await db_1.prisma.user.findFirst({
+                where: { email: { equals: cleanEmail, mode: 'insensitive' } }
+            });
+        }
         
         // Auto-seed fallbacks for core admin/student credentials if missing from database
         const defaultAccounts = {
