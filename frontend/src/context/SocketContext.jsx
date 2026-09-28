@@ -26,8 +26,16 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    // Hardcode live Railway server URL for Socket.io WebSocket connection
-    const socketUrl = "https://exam-portal-production-9abb.up.railway.app";
+    // Dynamic socket URL resolution for local dev, environment variables, and production domain
+    const getSocketUrl = () => {
+      if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+      if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL.replace(/\/api\/v1\/?$/, '');
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return 'http://localhost:5000';
+      if (typeof window !== 'undefined' && window.location.origin) return window.location.origin;
+      return 'http://localhost:5000';
+    };
+
+    const socketUrl = getSocketUrl();
     
     // Connect client using auto-recovery, timeout delays, and reconnect limitations
     const newSocket = io(socketUrl, {
