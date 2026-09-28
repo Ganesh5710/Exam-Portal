@@ -71,10 +71,9 @@ if (!fs_1.default.existsSync(uploadsPath)) {
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'Welcome to the SecureExam Enterprise Online Examination Portal API!',
+        message: 'Online Examination Portal API',
         version: '1.0.0',
         status: 'ONLINE',
-        platform: 'Railway High-Performance Engine',
         health: '/health',
         timestamp: new Date()
     });

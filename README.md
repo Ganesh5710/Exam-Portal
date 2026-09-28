@@ -1,292 +1,75 @@
 
 
-<div align="center">
+# Online Examination Portal
 
+Full-stack examination portal supporting Physics, Chemistry, and Mathematics test administration, automated scoring, AI-assisted question extraction, LaTeX math rendering, and real-time proctoring.
 
+## Features
 
-[![Live Frontend](https://img.shields.io/badge/🌐%20Live%20App-skillbrix--exam.vercel.app-22c55e?style=for-the-badge)](https://skillbrix-exam.vercel.app)
+### Admin Capabilities
+- **Dashboard & Analytics**: Overview of exams, student metrics, question counts, and submission scores.
+- **Question Bank**: Manage question items with LaTeX math formulas, media attachments, and options.
+- **AI Question Importer**: Extract questions from PDF, Word (.docx), Excel, or image files via Google Gemini API.
+- **Exam Management**: Configure timed exams, passing marks, negative marking, and question shuffling.
+- **Student Roster**: Import and organize candidate records by department.
 
-A full-stack, production-ready **Online Exam Portal** built for **JEE MAINS** examinations supporting Physics, Chemistry, and Mathematics — with AI-powered question importing, LaTeX math rendering, image/diagram support, and real-time exam taking.
+### Student Experience
+- **Exam Interface**: Section navigation, timers, inline LaTeX math rendering, and question status tracking.
+- **Instant Evaluation**: Automated answer evaluation and performance summaries upon submission.
 
-</div>
+## Tech Stack
 
+- **Frontend**: React, Vite, Tailwind CSS, KaTeX
+- **Backend**: Node.js, Express.js, Prisma ORM
+- **Database**: PostgreSQL
+- **Authentication**: JWT (Access and Refresh tokens)
+- **AI Integration**: Google Gemini Vision API
 
-
-
-
-### 👨‍💼 Admin Panel
-- **Dashboard** — Overview of exams, students, questions, and results
-- **Department Management** — Organize students and exams by department (JEE MAINS)
-- **Subject Management** — Physics, Chemistry, Mathematics
-- **Question Bank** — Create, edit, filter questions with full LaTeX math support
-- **AI Question Importer** — Upload PDF, Images (JPG/PNG), Word (.docx) or Excel files and auto-extract questions using Google Gemini AI
-- **Exam Builder** — Create time-limited exams with configurable scoring and negative marking
-- **Student Management** — Bulk import students from Excel/CSV
-- **Results Analytics** — View scores, rankings, and performance analytics
-
-### 🎓 Student Portal
-- **Real-time Exam Interface** — Clean timer-based exam UI with section navigation
-- **Math Rendering** — Beautifully rendered LaTeX matrices, fractions, integrals, Greek letters
-- **Image Support** — Physics/Chemistry diagrams displayed inline inside questions
-- **Instant Results** — Scores displayed immediately after exam submission
-- **Previous Results** — Full history of past exam attempts
-
-### 🤖 AI-Powered Features
-- **AI Question Import** — Upload a PDF/Image/Docx → Gemini Vision extracts all questions with full LaTeX formatting
-- **AI Question Generator** — Generate MCQ/Descriptive questions on any topic using Gemini AI
-- **OCR Engine** — Reads handwritten-style question papers and converts to structured JSON
-
-
-
-## 🖥️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 18, Vite, Vanilla CSS |
-| **Math Rendering** | KaTeX |
-| **Backend** | Node.js, Express.js |
-| **Database** | PostgreSQL (via Supabase) |
-| **ORM** | Prisma |
-| **Auth** | JWT (Access + Refresh tokens) |
-| **AI** | Google Gemini 2.0 Flash Vision API |
-| **File Parsing** | pdf-parse, mammoth (docx), xlsx |
-| **Frontend Hosting** | Vercel |
-| **Backend Hosting** | Render |
-| **Image Storage** | Cloudinary |
-
----
-
-##  Live Demo
-
-| Service | URL |
-|---|---|
-|  Frontend | [https://skillbrix-exam.vercel.app](https://skillbrix-exam.vercel.app) |
-|  Backend API | [https://exam-portal-xtx0.onrender.com](https://exam-portal-xtx0.onrender.com) |
-
----
-
-
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (Vercel)                    │
-│         React + Vite + KaTeX + Vanilla CSS              │
-└────────────────────────┬────────────────────────────────┘
-                         │ HTTPS REST API
-┌────────────────────────▼────────────────────────────────┐
-│                   BACKEND (Render)                      │
-│            Node.js + Express.js + Prisma                │
-│   ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│   │  Auth Module │  │ Import Module│  │  Exam Module │  │
-│   └─────────────┘  └──────┬───────┘  └──────────────┘  │
-│                           │ Gemini Vision API            │
-│   ┌────────────────────── ▼ ─────────────────────────┐  │
-│   │          Google Gemini 2.0 Flash (AI)             │  │
-│   └───────────────────────────────────────────────────┘  │
-└────────────────────────┬────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────┐
-│              PostgreSQL via Supabase                    │
-│        Users, Exams, Questions, Results, Settings       │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## ⚙️ Local Setup
+## Local Development Setup
 
 ### Prerequisites
-- Node.js v18+
-- PostgreSQL database (or Supabase account)
-- Google Gemini API Key (free from [aistudio.google.com](https://aistudio.google.com/app/apikey))
+- Node.js (v18+)
+- PostgreSQL database
+- Google Gemini API Key
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Ganesh5710/Exam-Portal.git
-cd Exam-Portal
-```
+### Installation
 
-### 2. Install All Dependencies
-```bash
-npm install
-npm install --prefix backend
-npm install --prefix frontend
-```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Ganesh5710/Exam-Portal.git
+   cd Exam-Portal
+   ```
 
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
+3. **Configure environment variables**:
+   - Create `backend/.env`:
+     ```env
+     PORT=5000
+     DATABASE_URL=postgresql://user:password@localhost:5432/examportal
+     JWT_ACCESS_SECRET=your_jwt_access_secret
+     JWT_REFRESH_SECRET=your_jwt_refresh_secret
+     GEMINI_API_KEY=your_gemini_api_key
+     ```
 
-### 5. Run Locally
-```bash
-# From project root — starts both backend (port 5000) and frontend (port 5173)
-npm run dev
-```
+4. **Initialize database schema**:
+   ```bash
+   cd backend
+   npx prisma migrate dev
+   ```
 
-| Service | URL |
-|---|---|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:5000/api |
+5. **Start application**:
+   ```bash
+   # From root directory (starts backend on 5000, frontend on 5173)
+   npm run dev
+   ```
 
----
+## License
 
-## 📁 Project Structure
-
-```
-Exam-Portal/
-├── backend/                   # Node.js + Express API server
-│   ├── prisma/
-│   │   ├── schema.prisma      # Database schema
-│   │   └── seed.js            # Database seeder
-│   ├── src/
-│   │   ├── config/
-│   │   │   ├── gemini.js      # Gemini AI client with model fallback
-│   │   │   └── logger.js
-│   │   └── modules/
-│   │       ├── auth/          # Login, refresh, logout
-│   │       ├── users/         # Student & admin management
-│   │       ├── questions/     # Question bank CRUD + AI generator
-│   │       ├── exams/         # Exam CRUD + attempt management
-│   │       ├── import/        # AI document/image import engine
-│   │       ├── departments/   # Department management
-│   │       └── subjects/      # Subject management
-│   └── package.json
-│
-├── frontend/                  # React + Vite SPA
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── common/
-│   │   │       └── MathContent.jsx   # KaTeX LaTeX renderer
-│   │   ├── pages/
-│   │   │   ├── admin/
-│   │   │   │   ├── Dashboard.jsx
-│   │   │   │   ├── Questions.jsx     # Question Bank
-│   │   │   │   ├── QuestionImport.jsx # AI Importer
-│   │   │   │   ├── Exams.jsx
-│   │   │   │   ├── Students.jsx
-│   │   │   │   ├── Results.jsx
-│   │   │   │   └── Settings.jsx
-│   │   │   └── student/
-│   │   │       ├── ExamList.jsx
-│   │   │       ├── ExamTerminal.jsx   # Exam taking interface
-│   │   │       └── Results.jsx
-│   │   └── App.jsx
-│   └── package.json
-│
-├── package.json               # Root scripts: dev, build, install-all
-└── README.md
-```
-
----
-
-## 🤖 AI Question Importer
-
-The AI Importer accepts the following file formats:
-
-| Format | Support |
-|---|---|
-| 📄 PDF | ✅ Full text + Vision fallback for custom fonts |
-| 🖼️ JPG/PNG/JPEG | ✅ Direct Gemini Vision processing |
-| 📝 Word (.docx) | ✅ Text extraction via mammoth |
-| 📊 Excel (.xlsx/.csv) | ✅ Structured row parsing |
-
-### How it Works:
-1. Upload your question paper (PDF, image, Word, or Excel)
-2. The backend sends the file to **Google Gemini 2.0 Flash Vision**
-3. Gemini extracts every question with full LaTeX formatting:
-   - Matrices → `\begin{bmatrix}...\end{bmatrix}`
-   - Fractions → `\frac{a}{b}`
-   - Integrals → `\int_{a}^{b}`
-   - Greek letters → `\alpha`, `\theta`, `\Delta`
-4. Preview the extracted questions and select which ones to import
-5. Questions are saved to the Question Bank
-
-### Setup:
-Add your **Google Gemini API Key** in:
-- **Admin → Settings → GEMINI_API_KEY**
-
-Get a free key at: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-
----
-
-## 📐 Math Rendering
-
-All mathematical content is rendered using **KaTeX** via the `MathContent.jsx` component.
-
-### Supported Syntax:
-
-```latex
-# Matrices
-$\begin{bmatrix} a & b \\ c & d \end{bmatrix}$
-
-# Fractions
-$\frac{d^2y}{dx^2} + \frac{dy}{dx} + y = 0$
-
-# Integrals
-$\int_{0}^{\pi} \sin(x)\,dx = 2$
-
-# Limits
-$\lim_{x \to 0} \frac{\sin x}{x} = 1$
-
-# Sums
-$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$
-
-# Greek Letters
-$\alpha + \beta + \gamma = \pi$
-
-# Vectors
-$\vec{F} = m\vec{a}$
-
-# Chemistry
-$H_2SO_4 \rightarrow 2H^+ + SO_4^{2-}$
-```
-
----
-
-## 🔌 API Overview
-
-### Authentication
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/login` | Login (admin/student) |
-| POST | `/api/auth/refresh` | Refresh access token |
-| POST | `/api/auth/logout` | Logout |
-
-### Questions
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/questions` | List questions (with filters) |
-| POST | `/api/questions` | Create question |
-| PUT | `/api/questions/:id` | Update question |
-| DELETE | `/api/questions/:id` | Delete question |
-| POST | `/api/questions/generate-ai` | AI generate questions |
-
-### Import
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/import/extract` | Upload file & extract questions via AI |
-| POST | `/api/import/save` | Save selected extracted questions |
-
-### Exams
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/exams` | List exams |
-| POST | `/api/exams` | Create exam |
-| POST | `/api/exams/:id/start` | Student starts exam |
-| POST | `/api/exams/:id/submit` | Student submits exam |
-| GET | `/api/exams/:id/results` | Get exam results |
-
-### Users / Students
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/users` | List students |
-| POST | `/api/users` | Create student |
-| POST | `/api/users/bulk-import` | Bulk import students from Excel |
-
----
-
-## 🌍 Deployment
-
-### Frontend (Vercel)
-1. Fork or clone this repository
+Proprietary software. All rights reserved.repository
 2. Connect to Vercel → Import the `frontend/` directory
 3. Set build command: `npm run build`
 4. Set output directory: `dist`

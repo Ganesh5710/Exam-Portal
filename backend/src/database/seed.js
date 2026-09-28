@@ -15,7 +15,6 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const logger_1 = require("../config/logger");
 const seedDatabase = async () => {
     try {
-        logger_1.logger.info('Database Seeder: Initializing Admin user check...');
         const adminEmail = 'Skillbrix@admin.in';
         let admin = await db_1.prisma.user.findUnique({ where: { email: adminEmail } });
         if (!admin) {
@@ -31,7 +30,6 @@ const seedDatabase = async () => {
                     departmentId: null
                 }
             });
-            logger_1.logger.info(`Seeded Admin User: ${adminEmail}`);
         }
 
         const superAdminEmail = 'superadmin@skillbrix.com';
@@ -49,10 +47,8 @@ const seedDatabase = async () => {
                     departmentId: null
                 }
             });
-            logger_1.logger.info(`Seeded Super Admin User: ${superAdminEmail}`);
         }
 
-        // Seed Default Core Academic Subjects if missing
         const defaultSubjects = [
             { name: 'Mathematics', code: 'MATH', description: 'Core Mathematics & Calculus' },
             { name: 'Physics', code: 'PHYS', description: 'Theoretical & Applied Physics' },
@@ -71,14 +67,11 @@ const seedDatabase = async () => {
                         description: sub.description
                     }
                 });
-                logger_1.logger.info(`Seeded Default Subject: ${sub.name} (${sub.code})`);
             }
         }
-
-        logger_1.logger.info('Database Seeder: Done.');
     }
     catch (err) {
-        logger_1.logger.error(`Database Seeder error: ${err.message}`);
+        logger_1.logger.error(`Database seeding error: ${err.message}`);
     }
 };
 exports.seedDatabase = seedDatabase;
