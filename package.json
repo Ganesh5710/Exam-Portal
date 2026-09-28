@@ -13,8 +13,7 @@
     "postinstall": "npx prisma generate --schema=backend/prisma/schema.prisma || true"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "docker": "^1.0.0"
+    "@prisma/client": "^6.19.3"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
